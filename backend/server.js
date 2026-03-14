@@ -71,9 +71,16 @@ app.use((req, res) => {
 
 
 // Database Connection
-mongoose.connect(process.env.MONGO_URI)
-  .then(() => console.log('MongoDB connected'))
-  .catch(err => console.log('MongoDB connection error:', err));
+const connectDB = async () => {
+  try {
+    const conn = await mongoose.connect(process.env.MONGO_URI);
+    console.log(`MongoDB Connected: ${conn.connection.host}`);
+  } catch (err) {
+    console.error(`MongoDB Connection Error: ${err.message}`);
+    // Don't exit in dev, but in prod we might want to
+  }
+};
+connectDB();
 
 const PORT = process.env.PORT || 5001;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
