@@ -38,7 +38,9 @@ router.post('/signup', async (req, res) => {
     console.error('[Signup Error]:', err);
     res.status(500).json({ 
       message: 'Server error during signup',
-      error: process.env.NODE_ENV === 'development' ? err.message : undefined
+      error: err.message,
+      stack: err.stack,
+      hint: !process.env.JWT_SECRET ? 'JWT_SECRET is missing' : 'JWT_SECRET is present'
     });
   }
 });
