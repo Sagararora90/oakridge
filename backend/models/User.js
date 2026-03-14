@@ -33,7 +33,7 @@ const ExamSchema = new mongoose.Schema({
   subject: { type: mongoose.Schema.Types.ObjectId },
   name: { type: String, required: true },
   date: { type: Date, required: true },
-  type: { type: String, enum: ['Midterm', 'Final', 'Quiz', 'Assignment'], default: 'Exam' }
+  type: { type: String, enum: ['Midterm', 'Final', 'Quiz', 'Assignment', 'Exam'], default: 'Exam' }
 });
 
 const UserSchema = new mongoose.Schema({

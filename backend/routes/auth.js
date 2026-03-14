@@ -39,8 +39,15 @@ router.post('/signup', async (req, res) => {
     res.status(500).json({ 
       message: 'Server error during signup',
       error: err.message,
+      name: err.name,
+      code: err.code,
       stack: err.stack,
-      hint: !process.env.JWT_SECRET ? 'JWT_SECRET is missing' : 'JWT_SECRET is present'
+      diagnostics: {
+        hasMongoUri: !!process.env.MONGO_URI,
+        hasJwtSecret: !!process.env.JWT_SECRET,
+        mongooseState: mongoose.connection.readyState,
+        env: process.env.NODE_ENV
+      }
     });
   }
 });
