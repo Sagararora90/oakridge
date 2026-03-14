@@ -47,6 +47,7 @@ app.use((req, res, next) => {
 });
 
 // Routes
+app.get('/', (req, res) => res.send('Oakridge API is running...'));
 app.get('/api/test', (req, res) => res.json({ message: 'API is working' }));
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/subjects', require('./routes/subjects'));
