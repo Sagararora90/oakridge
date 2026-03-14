@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Calendar, Plus, Trash2, BookOpen, Clock, AlertCircle } from 'lucide-react';
+import { Calendar, Plus, Trash2, BookOpen, Clock, AlertCircle, GraduationCap, X, ChevronRight } from 'lucide-react';
 import useStore from '../store/useStore';
+import toast from 'react-hot-toast';
 
 const Exams = () => {
   const { subjects, exams, fetchExams, addExam, deleteExam } = useStore();
@@ -22,185 +23,153 @@ const Exams = () => {
     addExam(formData);
     setShowAdd(false);
     setFormData({ name: '', date: '', type: 'Final', subjectId: '' });
+    toast.success('Deadline added!');
   };
 
   const upcomingExams = [...exams].sort((a, b) => new Date(a.date) - new Date(b.date));
 
   return (
-    <div className="flex-1 bg-bg min-h-screen pb-24 animate-in" style={s.page}>
-      <header style={s.header}>
-        <div>
-          <h1 style={s.title}>Assessments</h1>
-          <p style={s.subtitle}>Track your exams, midterms, and assignment deadlines.</p>
-        </div>
-        <button onClick={() => setShowAdd(true)} style={s.addBtn}>
-          <Plus size={18} /> Add Deadline
-        </button>
-      </header>
+    <div className="flex-1 bg-[#faf9f7] min-h-screen pb-24 animate-in">
+      <div className="max-w-[800px] mx-auto px-4 lg:px-7 py-6 lg:py-10 flex flex-col gap-8">
+        
+        {/* ── HEADER ── */}
+        <header className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+          <div className="flex items-center gap-3">
+             <div className="lg:hidden w-8 h-8 bg-primary rounded-lg flex items-center justify-center shadow-lg shadow-primary/20">
+               <GraduationCap size={16} color="#fff" />
+             </div>
+             <div>
+               <h1 className="text-2xl lg:text-3xl font-bold text-[#0f0e0d] tracking-tight">Assessments</h1>
+               <p className="text-xs lg:text-sm text-[#8c8a87] font-medium mt-1">Track your exams, midterms, and project deadlines.</p>
+             </div>
+          </div>
+          <button 
+            onClick={() => setShowAdd(true)} 
+            className="flex items-center gap-2.5 bg-primary text-white border-none rounded-xl px-5 py-3 text-xs font-bold shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-98 transition-all w-fit"
+          >
+            <Plus size={16} /> Add Deadline
+          </button>
+        </header>
 
-      {/* ── ADD MODAL ── */}
+        {/* ── ALERTS ── */}
+        {upcomingExams.some(e => {
+            const days = Math.ceil((new Date(e.date) - new Date()) / (1000 * 60 * 60 * 24));
+            return days >= 0 && days < 3;
+        }) && (
+          <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="bg-red-50 border border-red-100 rounded-2xl p-4 flex items-center gap-4 shadow-sm">
+             <div className="w-10 h-10 rounded-xl bg-red-100 flex items-center justify-center shrink-0">
+               <AlertCircle size={20} className="text-red-600" />
+             </div>
+             <p className="text-xs lg:text-sm font-bold text-red-800">High Priority: Several assessments are due within the next 48-72 hours.</p>
+          </motion.div>
+        )}
+
+        {/* ── LIST ── */}
+        <div className="flex flex-col gap-4">
+          {upcomingExams.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-20 text-center opacity-40">
+              <Calendar size={40} className="text-[#8c8a87] mb-4" />
+              <p className="text-sm font-bold text-[#0f0e0d]">All Clear</p>
+              <p className="text-[11px] font-medium text-[#8c8a87] mt-1 max-w-[200px]">No upcoming deadlines recorded for this semester.</p>
+            </div>
+          ) : (
+            upcomingExams.map(exam => {
+              const sub = subjects.find(s => s._id === exam.subject);
+              const daysLeft = Math.ceil((new Date(exam.date) - new Date()) / (1000 * 60 * 60 * 24));
+              const isUrgent = daysLeft >= 0 && daysLeft < 3;
+              const isPassed = daysLeft < 0;
+
+              return (
+                <motion.div 
+                  key={exam._id}
+                  initial={{ opacity: 0, y: 10 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  className="bg-white border border-[#e3e0da] rounded-2xl flex relative overflow-hidden group shadow-sm hover:shadow-xl transition-all"
+                >
+                  <div className="w-1.5 shrink-0" style={{ background: sub?.color || '#e3e0da' }} />
+                  <div className="flex-1 p-5 md:p-6 flex items-center justify-between gap-6">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex flex-wrap items-center gap-3 mb-2">
+                        <span className="text-[9px] font-black uppercase tracking-widest text-[#8c8a87] bg-[#faf9f7] px-2 py-0.5 rounded-md border border-[#e3e0da]/50">{exam.type}</span>
+                        <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-md ${
+                          isPassed ? 'bg-neutral-100 text-neutral-500' : 
+                          isUrgent ? 'bg-red-50 text-red-600 border border-red-100' : 'bg-green-50 text-green-600 border border-green-100'
+                        }`}>
+                          {isPassed ? 'Passed' : daysLeft === 0 ? 'Due Today' : `${daysLeft} days left`}
+                        </span>
+                      </div>
+                      <h3 className="text-base lg:text-lg font-extrabold text-[#0f0e0d] leading-tight mb-2 truncate">{exam.name}</h3>
+                      <div className="flex items-center gap-4 text-[11px] font-bold text-[#8c8a87]">
+                         <div className="flex items-center gap-1.5"><BookOpen size={12} className="shrink-0" /> {sub?.name || 'Unmapped'}</div>
+                         <div className="w-1 h-1 rounded-full bg-[#e3e0da]" />
+                         <div className="flex items-center gap-1.5"><Clock size={12} className="shrink-0" /> {new Date(exam.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</div>
+                      </div>
+                    </div>
+                    <button onClick={() => { deleteExam(exam._id); toast.success('Deadline removed'); }} className="p-2.5 rounded-xl text-[#c8c5bf] hover:text-red-600 hover:bg-red-50 transition-all">
+                      <Trash2 size={18} />
+                    </button>
+                  </div>
+                </motion.div>
+              );
+            })
+          )}
+        </div>
+      </div>
+
+      {/* ── MODAL ── */}
       <AnimatePresence>
         {showAdd && (
-          <div style={s.modalOverlay} onClick={() => setShowAdd(false)}>
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              style={s.modal}
-              onClick={e => e.stopPropagation()}
+          <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowAdd(false)} />
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0, y: 10 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 10 }}
+              className="bg-white rounded-[32px] w-full max-w-[440px] shadow-2xl overflow-hidden relative z-10 border border-[#e3e0da]"
             >
-              <h2 style={s.modalTitle}>New Deadline</h2>
-              <form onSubmit={handleSubmit} style={s.form}>
-                <div style={s.inputField}>
-                  <label style={s.label}>Assessment Name</label>
-                  <input 
-                    required style={s.input} value={formData.name}
-                    onChange={e => setFormData({...formData, name: e.target.value})}
-                    placeholder="e.g. Midterm 1, Final Project..."
-                  />
-                </div>
-                <div style={s.row}>
-                  <div style={{ ...s.inputField, flex: 1 }}>
-                    <label style={s.label}>Type</label>
-                    <select 
-                      style={s.select} value={formData.type}
-                      onChange={e => setFormData({...formData, type: e.target.value})}
-                    >
-                      <option>Midterm</option>
-                      <option>Final</option>
-                      <option>Quiz</option>
-                      <option>Assignment</option>
+               <div className="p-6 border-b border-[#e3e0da] bg-[#faf9f7] flex items-center justify-between">
+                  <div>
+                    <h2 className="text-xl font-extrabold text-[#0f0e0d] tracking-tight">New Deadline</h2>
+                    <p className="text-xs text-[#8c8a87] font-bold mt-1">Track an upcoming academic requirement.</p>
+                  </div>
+                  <button onClick={() => setShowAdd(false)} className="w-9 h-9 rounded-full bg-white border border-[#e3e0da] flex items-center justify-center text-[#8c8a87] hover:text-[#0f0e0d] transition-all"><X size={18} /></button>
+               </div>
+               
+               <form onSubmit={handleSubmit} className="p-6 space-y-5">
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-black text-[#8c8a87] uppercase ml-1">Assessment Name</label>
+                    <input required value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} placeholder="e.g. Midterm 1" className="w-full bg-[#faf9f7] border border-[#e3e0da] rounded-xl py-3 px-4 text-sm font-bold text-[#0f0e0d] outline-none focus:border-primary/50 transition-all" />
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                     <div className="space-y-1.5">
+                        <label className="text-[10px] font-black text-[#8c8a87] uppercase ml-1">Type</label>
+                        <select value={formData.type} onChange={e => setFormData({...formData, type: e.target.value})} className="w-full bg-[#faf9f7] border border-[#e3e0da] rounded-xl py-3 px-4 text-sm font-bold text-[#0f0e0d] outline-none appearance-none cursor-pointer">
+                           {['Midterm', 'Final', 'Quiz', 'Assignment'].map(t => <option key={t}>{t}</option>)}
+                        </select>
+                     </div>
+                     <div className="space-y-1.5">
+                        <label className="text-[10px] font-black text-[#8c8a87] uppercase ml-1">Date</label>
+                        <input required type="date" value={formData.date} onChange={e => setFormData({...formData, date: e.target.value})} className="w-full bg-[#faf9f7] border border-[#e3e0da] rounded-xl py-3 px-4 text-sm font-bold text-[#0f0e0d] outline-none" />
+                     </div>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-black text-[#8c8a87] uppercase ml-1">Subject</label>
+                    <select required value={formData.subjectId} onChange={e => setFormData({...formData, subjectId: e.target.value})} className="w-full bg-[#faf9f7] border border-[#e3e0da] rounded-xl py-3 px-4 text-sm font-bold text-[#0f0e0d] outline-none appearance-none cursor-pointer">
+                       <option value="">Select subject...</option>
+                       {subjects.map(sub => <option key={sub._id} value={sub._id}>{sub.name}</option>)}
                     </select>
                   </div>
-                  <div style={{ ...s.inputField, flex: 1 }}>
-                    <label style={s.label}>Date</label>
-                    <input 
-                      required type="date" style={s.input} value={formData.date}
-                      onChange={e => setFormData({...formData, date: e.target.value})}
-                    />
-                  </div>
-                </div>
-                <div style={s.inputField}>
-                  <label style={s.label}>Subject</label>
-                  <select 
-                    required style={s.select} value={formData.subjectId}
-                    onChange={e => setFormData({...formData, subjectId: e.target.value})}
-                  >
-                    <option value="">Select subject...</option>
-                    {subjects.map(sub => (
-                      <option key={sub._id} value={sub._id}>{sub.name}</option>
-                    ))}
-                  </select>
-                </div>
-                <div style={s.modalActions}>
-                  <button type="button" onClick={() => setShowAdd(false)} style={s.cancelBtn}>Cancel</button>
-                  <button type="submit" style={s.saveBtn}>Save Deadline</button>
-                </div>
-              </form>
+
+                  <button type="submit" className="w-full bg-primary text-white py-4 rounded-2xl text-sm font-extrabold shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-98 transition-all mt-4">Save Assessment</button>
+               </form>
             </motion.div>
           </div>
         )}
       </AnimatePresence>
-
-      {/* ── EXAM LIST ── */}
-      <div style={s.list}>
-        {upcomingExams.length === 0 ? (
-          <div style={s.emptyState}>
-            <Calendar size={40} style={{ color: '#c8c5bf', marginBottom: 12 }} />
-            <p style={{ color: '#8c8a87', fontSize: 13 }}>No upcoming deadlines. You're all clear!</p>
-          </div>
-        ) : (
-          upcomingExams.map(exam => {
-            const sub = subjects.find(s => s._id === exam.subject);
-            const daysLeft = Math.ceil((new Date(exam.date) - new Date()) / (1000 * 60 * 60 * 24));
-            
-            return (
-              <motion.div 
-                key={exam._id}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                style={s.card}
-              >
-                <div style={{ ...s.colorStripe, background: sub?.color || '#eee' }} />
-                <div style={s.cardBody}>
-                  <div style={{ flex: 1 }}>
-                    <div style={s.cardTop}>
-                      <span style={s.cardType}>{exam.type}</span>
-                      <span style={{ 
-                        ...s.dayTag, 
-                        color: daysLeft < 3 ? '#A32D2D' : daysLeft < 7 ? '#BA7517' : '#0F6E56',
-                        background: daysLeft < 3 ? '#FCEBEB' : daysLeft < 7 ? '#FFF3E0' : '#E1F5EE'
-                      }}>
-                        {daysLeft === 0 ? 'Today' : daysLeft < 0 ? 'Passed' : `${daysLeft} days left`}
-                      </span>
-                    </div>
-                    <h3 style={s.cardName}>{exam.name}</h3>
-                    <div style={s.cardInfo}>
-                      <BookOpen size={12} /> {sub?.name || 'Unknown'}
-                      <div style={s.dot} />
-                      <Clock size={12} /> {new Date(exam.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
-                    </div>
-                  </div>
-                  <button onClick={() => deleteExam(exam._id)} style={s.deleteBtn}>
-                    <Trash2 size={16} />
-                  </button>
-                </div>
-              </motion.div>
-            );
-          })
-        )}
-      </div>
-
-      {/* ── PRIORITY ALERTS ── */}
-      {upcomingExams.some(e => Math.ceil((new Date(e.date) - new Date()) / (1000 * 60 * 60 * 24)) < 3) && (
-        <div style={s.alertSection}>
-          <div style={s.alertBox}>
-            <AlertCircle size={18} color="#A32D2D" />
-            <span style={{ fontSize: 13, color: '#A32D2D', fontWeight: 600 }}>
-              High Priority: You have assessments due in less than 3 days!
-            </span>
-          </div>
-        </div>
-      )}
     </div>
   );
-};
-
-const s = {
-  page: { padding: '24px 16px', maxWidth: 800, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 24 },
-  header: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', paddingTop: 8 },
-  title: { fontSize: 26, fontWeight: 800, color: '#0f0e0d', margin: 0, letterSpacing: -0.5 },
-  subtitle: { fontSize: 13, color: '#8c8a87', marginTop: 4 },
-  addBtn: { background: '#185FA5', color: '#fff', border: 'none', borderRadius: 10, padding: '10px 18px', fontSize: 13, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' },
-
-  modalOverlay: { position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.1)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 },
-  modal: { background: '#fff', width: '90%', maxWidth: 450, borderRadius: 20, padding: 24, boxShadow: '0 20px 50px rgba(0,0,0,0.1)' },
-  modalTitle: { fontSize: 18, fontWeight: 800, marginBottom: 20, color: '#0f0e0d' },
-  form: { display: 'flex', flexDirection: 'column', gap: 16 },
-  inputField: { display: 'flex', flexDirection: 'column', gap: 6 },
-  label: { fontSize: 10, fontWeight: 700, textTransform: 'uppercase', color: '#b0ada8', letterSpacing: '0.08em' },
-  input: { background: '#faf9f7', border: '0.5px solid #e3e0da', borderRadius: 10, padding: '10px 14px', fontSize: 14, outline: 'none' },
-  select: { background: '#faf9f7', border: '0.5px solid #e3e0da', borderRadius: 10, padding: '10px 14px', fontSize: 14, outline: 'none', appearance: 'none' },
-  row: { display: 'flex', gap: 12 },
-  modalActions: { display: 'flex', justifyContent: 'flex-end', gap: 12, marginTop: 8 },
-  cancelBtn: { background: 'transparent', border: 'none', color: '#8c8a87', fontSize: 13, fontWeight: 600, cursor: 'pointer' },
-  saveBtn: { background: '#185FA5', color: '#fff', border: 'none', borderRadius: 8, padding: '10px 20px', fontSize: 13, fontWeight: 600, cursor: 'pointer' },
-
-  list: { display: 'flex', flexDirection: 'column', gap: 12 },
-  card: { background: '#fff', border: '0.5px solid #e3e0da', borderRadius: 12, overflow: 'hidden', display: 'flex' },
-  colorStripe: { width: 6, flexShrink: 0 },
-  cardBody: { flex: 1, padding: '14px 18px', display: 'flex', alignItems: 'center', gap: 16 },
-  cardTop: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 },
-  cardType: { fontSize: 10, fontWeight: 700, textTransform: 'uppercase', color: '#b0ada8', letterSpacing: '0.06em' },
-  dayTag: { fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 6 },
-  cardName: { fontSize: 16, fontWeight: 700, color: '#4a4845', margin: '0 0 6px' },
-  cardInfo: { display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: '#b0ada8' },
-  dot: { width: 3, height: 3, borderRadius: '50%', background: '#e3e0da' },
-  deleteBtn: { color: '#c8c5bf', transition: 'color 0.2s', '&:hover': { color: '#A32D2D' }, background: 'transparent', border: 'none', cursor: 'pointer' },
-
-  emptyState: { padding: '60px 0', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' },
-  alertSection: { marginTop: 8 },
-  alertBox: { background: '#FCEBEB', border: '0.5px solid #F2AEAE', borderRadius: 12, padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 12 }
 };
 
 export default Exams;

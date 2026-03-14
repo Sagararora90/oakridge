@@ -2,11 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   User, Moon, Sun, Download, Calendar,
-  Trash2, Plus, Sparkles, Zap, ShieldCheck, FileText
+  Trash2, Plus, Sparkles, Zap, ShieldCheck, FileText, ChevronRight, LogOut, GraduationCap
 } from 'lucide-react';
 import useStore from '../store/useStore';
-
 import { useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
 
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
 
@@ -34,32 +34,34 @@ const Settings = () => {
     await addHoliday(holidayDate, holidayLabel || 'Holiday');
     setHolidayDate('');
     setHolidayLabel('');
+    toast.success('Holiday added');
   };
 
   const handleAddExtra = async () => {
     if (!extraDate) return;
     await addExtraClass(extraDate, followsDay);
     setExtraDate('');
+    toast.success('Override added');
   };
 
   const exportToPDF = async () => {
     const { jsPDF } = await import('jspdf');
     const doc = new jsPDF();
     doc.setFontSize(24);
-    doc.setTextColor(0, 122, 255);
-    doc.text('SmartAttend Report', 14, 20);
+    doc.setTextColor(24, 95, 165); // Oakridge primary
+    doc.text('Oakridge Attendance Report', 14, 20);
     doc.setFontSize(10);
-    doc.setTextColor(142, 142, 147);
+    doc.setTextColor(140, 138, 135);
     doc.text(`Generated: ${new Date().toLocaleDateString('en-IN', { dateStyle: 'full' })}`, 14, 28);
     doc.text(`Student: ${user?.name || 'Scholar'}`, 14, 34);
-    doc.setDrawColor(242, 242, 247);
+    doc.setDrawColor(227, 224, 218);
     doc.line(14, 40, 196, 40);
     let y = 50;
     doc.setFontSize(11);
-    doc.setTextColor(28, 28, 30);
+    doc.setTextColor(15, 14, 13);
     doc.setFont(undefined, 'bold');
     const headers   = ['Subject', 'Attended', 'Total', 'Pct', 'Target'];
-    const colWidths = [60, 30, 30, 30, 30];
+    const colWidths = [70, 30, 30, 30, 30];
     let x = 14;
     headers.forEach((h, i) => { doc.text(h, x, y); x += colWidths[i]; });
     y += 10;
@@ -68,191 +70,163 @@ const Settings = () => {
       const pct = s.total > 0 ? (s.attended / s.total) * 100 : 0;
       x = 14;
       [s.name, String(s.attended), String(s.total), `${pct.toFixed(0)}%`, `${s.requiredAttendance}%`]
-        .forEach((cell, i) => { doc.text(cell, x, y); x += colWidths[i]; });
+        .forEach((cell, i) => { doc.text(String(cell), x, y); x += colWidths[i]; });
       y += 8;
     });
-    doc.save(`SmartAttend_${new Date().toISOString().split('T')[0]}.pdf`);
+    doc.save(`Oakridge_Report_${new Date().toISOString().split('T')[0]}.pdf`);
+    toast.success('PDF Downloaded');
   };
 
-  const isDark = theme === 'dark';
-
   return (
-    <div className="flex-1 bg-bg min-h-screen pb-24 animate-in">
-      <div style={pg.page}>
-
+    <div className="flex-1 bg-[#faf9f7] min-h-screen pb-24 animate-in">
+      <div className="max-w-[1100px] mx-auto px-4 lg:px-7 py-6 lg:py-10 flex flex-col gap-8">
+        
         {/* ── HEADER ── */}
-        <div style={{ paddingTop: 8 }}>
-          <h1 style={pg.title}>Settings</h1>
-          <p style={pg.subtitle}>Manage your account, theme, and academic calendar.</p>
-        </div>
+        <header className="flex items-center gap-3">
+           <div className="lg:hidden w-8 h-8 bg-primary rounded-lg flex items-center justify-center shadow-lg shadow-primary/20">
+             <GraduationCap size={16} color="#fff" />
+           </div>
+           <div>
+             <h1 className="text-2xl lg:text-3xl font-bold text-[#0f0e0d] tracking-tight">Settings</h1>
+             <p className="text-xs lg:text-sm text-[#8c8a87] font-medium mt-1">Personalize your experience and academic parameters.</p>
+           </div>
+        </header>
 
-        <div style={pg.grid}>
-
-          {/* ── PROFILE ── */}
-          <Section icon={<ShieldCheck size={18} style={{ color: 'var(--primary,#007aff)' }} />} iconBg="rgba(0,122,255,0.08)" title="Profile" subtitle="Your account details">
-            <InfoRow label="Name"  value={user?.name  || '—'} />
-            <InfoRow label="Email" value={user?.email || '—'} />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+          
+          {/* ── PROFILE & ACCOUNT ── */}
+          <Section icon={<ShieldCheck size={18} className="text-primary" />} title="Profile & Account" subtitle="Identity and security settings">
+             <div className="space-y-3">
+                <InfoCard label="Full Name" value={user?.name || 'Guest Student'} />
+                <InfoCard label="Email Address" value={user?.email || 'Not connected'} />
+             </div>
           </Section>
 
-          {/* ── THEME ── */}
-          <Section icon={<Sparkles size={18} style={{ color: '#0F6E56' }} />} iconBg="rgba(15,110,86,0.08)" title="Appearance" subtitle="Light or dark mode">
-            <div style={s.themeRow}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <div style={{ ...s.themeIcon, background: isDark ? '#0f0e0d' : '#fff', border: '0.5px solid #e3e0da' }}>
-                  {isDark
-                    ? <Moon  size={16} style={{ color: '#fff' }} />
-                    : <Sun   size={16} style={{ color: '#BA7517' }} />
-                  }
+          {/* ── APPEARANCE ── */}
+          <Section icon={<Sparkles size={18} className="text-orange-500" />} title="Appearance" subtitle="Visual theme and interface">
+             <div className="bg-[#faf9f7] border border-[#e3e0da] rounded-2xl p-4 flex items-center justify-between group hover:border-primary/30 transition-all">
+                <div className="flex items-center gap-3">
+                   <div className="w-10 h-10 rounded-xl bg-white border border-[#e3e0da] flex items-center justify-center shadow-sm">
+                      {theme === 'dark' ? <Moon size={18} className="text-slate-800" /> : <Sun size={18} className="text-orange-500" />}
+                   </div>
+                   <div>
+                      <p className="text-sm font-bold text-[#0f0e0d]">{theme === 'dark' ? 'Dark mode' : 'Light mode'}</p>
+                      <p className="text-[10px] font-bold text-[#8c8a87] uppercase tracking-wider">Current interface</p>
+                   </div>
+                </div>
+                <button onClick={toggleTheme} className={`w-12 h-6 rounded-full p-1 transition-colors relative ${theme === 'dark' ? 'bg-primary' : 'bg-[#e3e0da]'}`}>
+                   <motion.div animate={{ x: theme === 'dark' ? 24 : 0 }} className="w-4 h-4 bg-white rounded-full shadow-sm" />
+                </button>
+             </div>
+          </Section>
+
+          {/* ── ACADEMIC CALENDAR ── */}
+          <div className="md:col-span-2 bg-white border border-[#e3e0da] rounded-[32px] p-6 lg:p-8 shadow-sm flex flex-col gap-8">
+             <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-orange-50 rounded-2xl flex items-center justify-center border border-orange-100">
+                   <Calendar size={20} className="text-orange-600" />
                 </div>
                 <div>
-                  <p style={s.themeLabel}>{isDark ? 'Dark mode' : 'Light mode'}</p>
-                  <p style={s.themeSub}>Current interface theme</p>
+                   <h2 className="text-xl font-extrabold text-[#0f0e0d] leading-none mb-1.5">Academic Calendar</h2>
+                   <p className="text-xs font-bold text-[#8c8a87] uppercase tracking-wider">Holidays and Schedule adjustments</p>
                 </div>
-              </div>
-              {/* Toggle */}
-              <button
-                onClick={toggleTheme}
-                style={{
-                  ...s.toggle,
-                  background: isDark ? 'var(--primary,#007aff)' : '#e3e0da',
-                }}
-              >
-                <div style={{
-                  ...s.toggleKnob,
-                  transform: isDark ? 'translateX(22px)' : 'translateX(0)',
-                }} />
-              </button>
-            </div>
-          </Section>
+             </div>
 
-          {/* ── CALENDAR — full width ── */}
-          <div style={{ ...s.card, gridColumn: '1 / -1' }}>
-            <div style={s.cardHeader}>
-              <div style={{ ...s.iconWrap, background: 'rgba(186,117,23,0.08)' }}>
-                <Calendar size={18} style={{ color: '#BA7517' }} />
-              </div>
-              <div>
-                <h2 style={s.cardTitle}>Academic Calendar</h2>
-                <p style={s.cardSub}>Holidays and schedule overrides</p>
-              </div>
-            </div>
-
-            <div style={s.calGrid}>
-              {/* Left: forms */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-
-                {/* Holiday form */}
-                <div style={s.subSection}>
-                  <p style={s.subSectionLabel}>Add holiday</p>
-                  <div style={s.formRow}>
-                    <Field label="Date">
-                      <input type="date" value={holidayDate} onChange={e => setHolidayDate(e.target.value)} style={s.input} className="focus:border-warning/40" />
-                    </Field>
-                    <Field label="Label">
-                      <input type="text" value={holidayLabel} onChange={e => setHolidayLabel(e.target.value)} placeholder="e.g. Diwali" style={s.input} className="focus:border-warning/40" />
-                    </Field>
-                  </div>
-                  <button onClick={handleAddHoliday} style={{ ...s.addBtn, background: 'rgba(186,117,23,0.08)', color: '#BA7517', border: '0.5px solid rgba(186,117,23,0.2)' }} className="hover:opacity-80 active:scale-95 transition-all">
-                    <Plus size={13} /> Add holiday
-                  </button>
-                </div>
-
-                {/* Override form */}
-                <div style={s.subSection}>
-                  <p style={s.subSectionLabel}>Schedule override</p>
-                  <p style={s.subSectionHint}>Make a date follow a different day's timetable.</p>
-                  <div style={s.formRow}>
-                    <Field label="Date">
-                      <input type="date" value={extraDate} onChange={e => setExtraDate(e.target.value)} style={s.input} className="focus:border-primary/40" />
-                    </Field>
-                    <Field label="Follows day">
-                      <select value={followsDay} onChange={e => setFollowsDay(e.target.value)} style={s.input}>
-                        {DAYS.map(d => <option key={d} value={d}>{d}</option>)}
-                      </select>
-                    </Field>
-                  </div>
-                  <button onClick={handleAddExtra} style={{ ...s.addBtn, background: 'rgba(0,122,255,0.08)', color: 'var(--primary,#007aff)', border: '0.5px solid rgba(0,122,255,0.2)' }} className="hover:opacity-80 active:scale-95 transition-all">
-                    <Plus size={13} /> Add override
-                  </button>
-                </div>
-              </div>
-
-              {/* Right: list */}
-              <div style={s.listPanel}>
-                {holidays.length === 0 && extraClasses.length === 0 ? (
-                  <div style={s.emptyList}>
-                    <Calendar size={20} style={{ color: '#c8c5bf', marginBottom: 8 }} />
-                    <p style={{ fontSize: 12, color: '#b0ada8' }}>No holidays or overrides yet</p>
-                  </div>
-                ) : (
-                  <>
-                    {holidays.length > 0 && (
-                      <div>
-                        <p style={s.listGroupLabel}>Holidays</p>
-                        <AnimatePresence mode="popLayout">
-                          {holidays.map(h => (
-                            <CalendarItem
-                              key={h._id}
-                              title={h.label}
-                              date={h.date}
-                              accentColor="#BA7517"
-                              onDelete={() => deleteHoliday(h._id)}
-                            />
-                          ))}
-                        </AnimatePresence>
+             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                <div className="space-y-6">
+                   {/* Holiday Form */}
+                   <div className="bg-[#faf9f7] border border-[#e3e0da] p-5 rounded-2xl space-y-4 shadow-sm hover:shadow-xl transition-all">
+                      <span className="text-[10px] font-black text-[#8c8a87] uppercase tracking-widest block px-1">Register Holiday</span>
+                      <div className="grid grid-cols-2 gap-3">
+                         <input type="date" value={holidayDate} onChange={e => setHolidayDate(e.target.value)} className="w-full bg-white border border-[#e3e0da] rounded-xl py-2.5 px-3 text-xs font-bold text-[#0f0e0d] outline-none focus:border-orange-400" />
+                         <input type="text" value={holidayLabel} onChange={e => setHolidayLabel(e.target.value)} placeholder="e.g. Diwali" className="w-full bg-white border border-[#e3e0da] rounded-xl py-2.5 px-3 text-xs font-bold text-[#0f0e0d] outline-none focus:border-orange-400" />
                       </div>
-                    )}
-                    {extraClasses.length > 0 && (
-                      <div style={{ marginTop: holidays.length > 0 ? 16 : 0 }}>
-                        <p style={s.listGroupLabel}>Overrides</p>
-                        <AnimatePresence mode="popLayout">
-                          {extraClasses.map(ec => (
-                            <CalendarItem
-                              key={ec._id}
-                              title={`Follows ${ec.followsDay}`}
-                              date={ec.date}
-                              accentColor="var(--primary,#007aff)"
-                              onDelete={() => deleteExtraClass(ec._id)}
-                            />
-                          ))}
-                        </AnimatePresence>
+                      <button onClick={handleAddHoliday} className="w-full flex items-center justify-center gap-2 py-3 bg-orange-50 text-orange-700 rounded-xl text-[11px] font-black uppercase tracking-wider hover:bg-orange-600 hover:text-white transition-all">
+                         <Plus size={14} /> Add Holiday
+                      </button>
+                   </div>
+
+                   {/* Override Form */}
+                   <div className="bg-[#faf9f7] border border-[#e3e0da] p-5 rounded-2xl space-y-4 shadow-sm hover:shadow-xl transition-all">
+                      <div className="px-1">
+                        <span className="text-[10px] font-black text-[#8c8a87] uppercase tracking-widest block">Schedule Override</span>
+                        <p className="text-[9px] font-medium text-[#8c8a87] mt-1 italic">Force a date to follow a specific day's timetable.</p>
                       </div>
-                    )}
-                  </>
-                )}
-              </div>
-            </div>
+                      <div className="grid grid-cols-2 gap-3">
+                         <input type="date" value={extraDate} onChange={e => setExtraDate(e.target.value)} className="w-full bg-white border border-[#e3e0da] rounded-xl py-2.5 px-3 text-xs font-bold text-[#0f0e0d] outline-none focus:border-primary/50" />
+                         <select value={followsDay} onChange={e => setFollowsDay(e.target.value)} className="w-full bg-white border border-[#e3e0da] rounded-xl py-2.5 px-3 text-xs font-bold text-[#0f0e0d] outline-none appearance-none">
+                            {DAYS.map(d => <option key={d}>{d}</option>)}
+                         </select>
+                      </div>
+                      <button onClick={handleAddExtra} className="w-full flex items-center justify-center gap-2 py-3 bg-primary/5 text-primary rounded-xl text-[11px] font-black uppercase tracking-wider hover:bg-primary hover:text-white transition-all">
+                         <Plus size={14} /> Add Override
+                      </button>
+                   </div>
+                </div>
+
+                <div className="bg-white border border-[#e3e0da] rounded-2xl overflow-hidden min-h-[220px] max-h-[400px] overflow-y-auto no-scrollbar shadow-inner">
+                   <div className="p-4 bg-[#faf9f7] border-b border-[#e3e0da] flex items-center justify-between sticky top-0 z-10">
+                      <span className="text-[10px] font-black text-[#0f0e0d] uppercase tracking-widest">Saved Calendar Items</span>
+                      <Calendar size={14} className="text-[#8c8a87]" />
+                   </div>
+                   
+                   {holidays.length === 0 && extraClasses.length === 0 ? (
+                     <div className="py-20 text-center opacity-30">
+                        <Calendar size={32} className="mx-auto text-[#8c8a87] mb-3" />
+                        <p className="text-[11px] font-bold text-[#0f0e0d]">Empty Calendar</p>
+                     </div>
+                   ) : (
+                     <div className="divide-y divide-[#e3e0da]/50">
+                        {holidays.map(h => (
+                          <div key={h._id} className="p-4 flex items-center justify-between group hover:bg-[#faf9f7] transition-all">
+                             <div className="flex items-center gap-4">
+                                <div className="w-1.5 h-8 rounded-full bg-orange-400" />
+                                <div>
+                                   <p className="text-sm font-extrabold text-[#0f0e0d]">{h.label}</p>
+                                   <p className="text-[10px] font-bold text-[#8c8a87] uppercase tracking-wider">{new Date(h.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</p>
+                                </div>
+                             </div>
+                             <button onClick={() => { deleteHoliday(h._id); toast.success('Removed'); }} className="p-2 text-[#c8c5bf] hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"><Trash2 size={16} /></button>
+                          </div>
+                        ))}
+                        {extraClasses.map(ec => (
+                          <div key={ec._id} className="p-4 flex items-center justify-between group hover:bg-[#faf9f7] transition-all">
+                             <div className="flex items-center gap-4">
+                                <div className="w-1.5 h-8 rounded-full bg-primary" />
+                                <div>
+                                   <p className="text-sm font-extrabold text-[#0f0e0d]">Follows {ec.followsDay}</p>
+                                   <p className="text-[10px] font-bold text-[#8c8a87] uppercase tracking-wider">{new Date(ec.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</p>
+                                </div>
+                             </div>
+                             <button onClick={() => { deleteExtraClass(ec._id); toast.success('Removed'); }} className="p-2 text-[#c8c5bf] hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"><Trash2 size={16} /></button>
+                          </div>
+                        ))}
+                     </div>
+                   )}
+                </div>
+             </div>
           </div>
 
-          {/* ── EXPORT ── */}
-          <div style={{ ...s.card, gridColumn: '1 / -1', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 20 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-              <div style={{ ...s.iconWrap, background: 'rgba(0,122,255,0.08)', width: 48, height: 48 }}>
-                <FileText size={20} style={{ color: 'var(--primary,#007aff)' }} />
-              </div>
-              <div>
-                <h2 style={s.cardTitle}>Export report</h2>
-                <p style={s.cardSub}>Download a PDF of all your attendance data</p>
-              </div>
-            </div>
-            <button
-              onClick={exportToPDF}
-              style={s.exportBtn}
-              className="hover:opacity-90 active:scale-95 transition-all"
-            >
-              <Download size={14} />
-              Download PDF
-            </button>
+          {/* ── REPORTS & EXPORT ── */}
+          <div className="md:col-span-2 bg-white border border-[#e3e0da] rounded-[32px] p-6 lg:p-8 shadow-sm flex flex-col md:flex-row items-center justify-between gap-6 hover:shadow-xl transition-all border-b-[4px] border-b-primary">
+             <div className="flex items-center gap-4">
+                <div className="w-14 h-14 bg-primary/5 rounded-2xl flex items-center justify-center border border-primary/10">
+                   <FileText size={24} className="text-primary" />
+                </div>
+                <div>
+                   <h2 className="text-xl font-extrabold text-[#0f0e0d] leading-none mb-1.5">Consolidated Report</h2>
+                   <p className="text-xs font-bold text-[#8c8a87] uppercase tracking-wider">Export all session data to PDF for academic record.</p>
+                </div>
+             </div>
+             <button onClick={exportToPDF} className="flex items-center gap-3 px-8 py-4 bg-primary text-white rounded-2xl text-sm font-black uppercase tracking-wider shadow-lg shadow-primary/20 hover:scale-[1.05] active:scale-95 transition-all text-center">
+                <Download size={18} /> Download PDF Report
+             </button>
           </div>
 
-          {/* ── LOGOUT (Mobile specific) ── */}
-          <div className="lg:hidden mt-4">
-             <button
-               onClick={() => { logout(); navigate('/login'); }}
-               style={{ ...s.card, color: '#A32D2D', fontWeight: 700, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 10 }}
-               className="hover:bg-danger/5 transition-all active:scale-95"
-             >
-               <Zap size={16} /> Logout Account
+          {/* ── LOGOUT ── */}
+          <div className="md:col-span-2 pt-4">
+             <button onClick={() => { logout(); navigate('/login'); }} className="w-full flex items-center justify-center gap-3 py-5 bg-white border border-red-100 rounded-[24px] text-red-600 text-sm font-black uppercase tracking-widest hover:bg-red-50 transition-all shadow-sm">
+                <LogOut size={20} /> Logout from Secure Session
              </button>
           </div>
 
@@ -262,266 +236,26 @@ const Settings = () => {
   );
 };
 
-// ── Small shared components ──
-
-const Section = ({ icon, iconBg, title, subtitle, children }) => (
-  <div style={s.card}>
-    <div style={s.cardHeader}>
-      <div style={{ ...s.iconWrap, background: iconBg }}>{icon}</div>
-      <div>
-        <h2 style={s.cardTitle}>{title}</h2>
-        <p style={s.cardSub}>{subtitle}</p>
-      </div>
-    </div>
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-      {children}
-    </div>
+const Section = ({ icon, title, subtitle, children }) => (
+  <div className="bg-white border border-[#e3e0da] rounded-[32px] p-6 lg:p-8 shadow-sm flex flex-col gap-6 hover:shadow-xl transition-all">
+     <div className="flex items-center gap-4">
+        <div className="w-10 h-10 bg-[#faf9f7] rounded-xl flex items-center justify-center border border-[#e3e0da]">
+           {icon}
+        </div>
+        <div>
+           <h2 className="text-base font-extrabold text-[#0f0e0d] leading-none mb-1">{title}</h2>
+           <p className="text-[10px] font-bold text-[#8c8a87] uppercase tracking-widest">{subtitle}</p>
+        </div>
+     </div>
+     {children}
   </div>
 );
 
-const InfoRow = ({ label, value }) => (
-  <div style={s.infoRow}>
-    <span style={s.infoLabel}>{label}</span>
-    <span style={s.infoValue} className="truncate">{value}</span>
+const InfoCard = ({ label, value }) => (
+  <div className="bg-[#faf9f7] border border-[#e3e0da] rounded-2xl p-4 flex flex-col gap-1">
+     <span className="text-[9px] font-black text-[#8c8a87] uppercase tracking-widest">{label}</span>
+     <span className="text-sm font-bold text-[#0f0e0d] truncate">{value}</span>
   </div>
 );
-
-const Field = ({ label, children }) => (
-  <div style={{ display: 'flex', flexDirection: 'column', gap: 5, flex: 1 }}>
-    <label style={s.fieldLabel}>{label}</label>
-    {children}
-  </div>
-);
-
-const CalendarItem = ({ title, date, accentColor, onDelete }) => (
-  <motion.div
-    layout
-    initial={{ opacity: 0, y: 4 }}
-    animate={{ opacity: 1, y: 0 }}
-    exit={{ opacity: 0, y: -4 }}
-    style={s.calItem}
-  >
-    <div style={{ ...s.calStripe, background: accentColor }} />
-    <div style={{ flex: 1, minWidth: 0 }}>
-      <p style={s.calTitle}>{title}</p>
-      <p style={s.calDate}>{new Date(date).toLocaleDateString('en-IN', { dateStyle: 'medium' })}</p>
-    </div>
-    <button
-      onClick={onDelete}
-      style={s.deleteBtn}
-      className="hover:bg-danger/10 hover:text-danger transition-all"
-    >
-      <Trash2 size={13} />
-    </button>
-  </motion.div>
-);
-
-// ── Styles ──
-const pg = {
-  page: {
-    padding:       '24px 16px',
-    maxWidth:      1100,
-    margin:        '0 auto',
-    display:       'flex',
-    flexDirection: 'column',
-    gap:           24,
-  },
-  title:    { fontSize: 26, fontWeight: 800, color: '#0f0e0d', margin: 0, letterSpacing: -0.5 },
-  subtitle: { fontSize: 13, color: '#8c8a87', marginTop: 4 },
-  grid: {
-    display:             'grid',
-    gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
-    gap:                 16,
-  },
-};
-
-const s = {
-  card: {
-    background:   '#fff',
-    border:       '0.5px solid #e3e0da',
-    borderRadius: 14,
-    padding:      '20px',
-    display:      'flex',
-    flexDirection:'column',
-    gap:          16,
-  },
-  cardHeader: { display: 'flex', alignItems: 'flex-start', gap: 12 },
-  iconWrap: {
-    width:          38,
-    height:         38,
-    borderRadius:   9,
-    display:        'flex',
-    alignItems:     'center',
-    justifyContent: 'center',
-    flexShrink:     0,
-  },
-  cardTitle: { fontSize: 14, fontWeight: 700, color: '#0f0e0d', margin: 0 },
-  cardSub:   { fontSize: 11, color: '#b0ada8', marginTop: 2 },
-
-  infoRow: {
-    background:   '#faf9f7',
-    border:       '0.5px solid #e3e0da',
-    borderRadius: 8,
-    padding:      '10px 14px',
-    display:      'flex',
-    flexDirection:'column',
-    gap:          3,
-  },
-  infoLabel: { fontSize: 9, color: '#b0ada8', letterSpacing: '0.08em', textTransform: 'uppercase' },
-  infoValue: { fontSize: 13, fontWeight: 600, color: '#0f0e0d' },
-
-  themeRow: {
-    display:        'flex',
-    alignItems:     'center',
-    justifyContent: 'space-between',
-    background:     '#faf9f7',
-    border:         '0.5px solid #e3e0da',
-    borderRadius:   10,
-    padding:        '12px 14px',
-  },
-  themeIcon: {
-    width:          34,
-    height:         34,
-    borderRadius:   8,
-    display:        'flex',
-    alignItems:     'center',
-    justifyContent: 'center',
-  },
-  themeLabel: { fontSize: 13, fontWeight: 600, color: '#0f0e0d', margin: 0 },
-  themeSub:   { fontSize: 10, color: '#b0ada8', marginTop: 2 },
-  toggle: {
-    width:        44,
-    height:       24,
-    borderRadius: 99,
-    border:       'none',
-    cursor:       'pointer',
-    padding:      2,
-    flexShrink:   0,
-    transition:   'background 0.25s',
-    position:     'relative',
-    display:      'flex',
-    alignItems:   'center',
-  },
-  toggleKnob: {
-    width:         20,
-    height:        20,
-    background:    '#fff',
-    borderRadius:  '50%',
-    boxShadow:     '0 1px 3px rgba(0,0,0,0.2)',
-    transition:    'transform 0.25s',
-    position:      'absolute',
-    left:          2,
-  },
-
-  calGrid: {
-    display:             'grid',
-    gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))',
-    gap:                 20,
-  },
-  subSection: {
-    background:   '#faf9f7',
-    border:       '0.5px solid #e3e0da',
-    borderRadius: 10,
-    padding:      '14px',
-    display:      'flex',
-    flexDirection:'column',
-    gap:          10,
-  },
-  subSectionLabel: { fontSize: 12, fontWeight: 700, color: '#0f0e0d' },
-  subSectionHint:  { fontSize: 11, color: '#b0ada8', marginTop: -4 },
-  formRow:   { display: 'flex', gap: 10, flexWrap: 'wrap' },
-  fieldLabel:{ fontSize: 9, color: '#b0ada8', letterSpacing: '0.08em', textTransform: 'uppercase' },
-  input: {
-    width:        '100%',
-    background:   '#fff',
-    border:       '0.5px solid #e3e0da',
-    borderRadius: 7,
-    padding:      '8px 10px',
-    fontSize:     12,
-    fontWeight:   600,
-    color:        '#0f0e0d',
-    outline:      'none',
-    boxSizing:    'border-box',
-    transition:   'border-color 0.15s',
-    appearance:   'none',
-  },
-  addBtn: {
-    display:      'flex',
-    alignItems:   'center',
-    gap:          6,
-    padding:      '8px 14px',
-    borderRadius: 8,
-    border:       '0.5px solid',
-    fontSize:     12,
-    fontWeight:   700,
-    cursor:       'pointer',
-    width:        'fit-content',
-  },
-
-  listPanel: {
-    borderLeft:   '0.5px solid #f2f0ec',
-    paddingLeft:  20,
-    maxHeight:    380,
-    overflowY:    'auto',
-  },
-  listGroupLabel: {
-    fontSize:      9,
-    color:         '#b0ada8',
-    letterSpacing: '0.1em',
-    textTransform: 'uppercase',
-    marginBottom:  8,
-  },
-  emptyList: {
-    display:        'flex',
-    flexDirection:  'column',
-    alignItems:     'center',
-    justifyContent: 'center',
-    height:         160,
-    textAlign:      'center',
-  },
-  calItem: {
-    display:      'flex',
-    alignItems:   'center',
-    gap:          10,
-    background:   '#faf9f7',
-    border:       '0.5px solid #e3e0da',
-    borderRadius: 8,
-    padding:      '10px 12px',
-    marginBottom: 6,
-    position:     'relative',
-    overflow:     'hidden',
-  },
-  calStripe:  { width: 3, height: '100%', position: 'absolute', left: 0, top: 0, bottom: 0, borderRadius: '3px 0 0 3px' },
-  calTitle:   { fontSize: 12, fontWeight: 600, color: '#0f0e0d', margin: 0, paddingLeft: 6 },
-  calDate:    { fontSize: 10, color: '#b0ada8', marginTop: 2, paddingLeft: 6 },
-  deleteBtn: {
-    width:          28,
-    height:         28,
-    borderRadius:   7,
-    border:         'none',
-    background:     'transparent',
-    display:        'flex',
-    alignItems:     'center',
-    justifyContent: 'center',
-    cursor:         'pointer',
-    color:          '#b0ada8',
-    flexShrink:     0,
-  },
-
-  exportBtn: {
-    display:      'flex',
-    alignItems:   'center',
-    gap:          8,
-    padding:      '11px 20px',
-    borderRadius: 10,
-    border:       'none',
-    background:   'var(--primary,#007aff)',
-    color:        '#fff',
-    fontSize:     13,
-    fontWeight:   700,
-    cursor:       'pointer',
-    whiteSpace:   'nowrap',
-  },
-};
 
 export default Settings;

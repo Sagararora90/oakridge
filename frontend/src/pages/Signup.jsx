@@ -21,31 +21,41 @@ const Signup = () => {
     setFormData(f => ({ ...f, [field]: e.target.value }));
 
   return (
-    <div style={pg.root}>
-      <div style={pg.split}>
+    <div className="min-h-screen bg-[#faf9f7] flex items-stretch overflow-hidden">
+      <div className="flex w-full">
 
-        {/* ── LEFT brand panel ── */}
-        <div style={pg.brand}>
-          <div style={pg.brandInner}>
-            <div style={pg.brandLogo}>
+        {/* ── LEFT brand panel (hidden on mall/medium screens) ── */}
+        <div className="hidden lg:flex flex-[0_0_42%] bg-gradient-to-br from-[#0F6E56] to-primary items-center justify-center p-12 lg:p-10 relative overflow-hidden">
+           {/* Background decoration */}
+           <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -mr-32 -mt-32 blur-3xl pointer-events-none" />
+           <div className="absolute bottom-0 left-0 w-64 h-64 bg-black/5 rounded-full -ml-32 -mb-32 blur-3xl pointer-events-none" />
+
+          <div className="max-w-xs relative z-10">
+            <motion.div 
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              className="w-14 h-14 bg-white/15 rounded-[14px] flex items-center justify-center mb-5 border border-white/20 shadow-xl shadow-black/5"
+            >
               <GraduationCap size={28} color="#fff" />
-            </div>
-            <h1 style={pg.brandName}>Oakridge</h1>
-            <p style={pg.brandTagline}>
+            </motion.div>
+            <h1 className="text-3xl font-extrabold text-white mb-2.5 tracking-tight">Oakridge</h1>
+            <p className="text-[15px] text-white/75 leading-relaxed mb-10">
               Join thousands of students who track smarter and stress less about attendance.
             </p>
 
             {/* Steps */}
-            <div style={pg.steps}>
+            <div className="flex flex-col gap-4">
               {[
                 { n: '1', text: 'Create your account'       },
                 { n: '2', text: 'Add your subjects'         },
                 { n: '3', text: 'Upload or build timetable' },
                 { n: '4', text: 'Mark and track attendance' },
               ].map((step, i) => (
-                <div key={i} style={pg.step}>
-                  <div style={pg.stepNum}>{step.n}</div>
-                  <span style={pg.stepText}>{step.text}</span>
+                <div key={i} className="flex items-center gap-4 group">
+                  <div className="w-8 h-8 rounded-full bg-white/10 border border-white/20 flex items-center justify-center text-xs font-bold text-white group-hover:bg-white/20 transition-all">
+                    {step.n}
+                  </div>
+                  <span className="text-[14px] text-white/80 font-medium">{step.text}</span>
                 </div>
               ))}
             </div>
@@ -53,25 +63,25 @@ const Signup = () => {
         </div>
 
         {/* ── RIGHT form ── */}
-        <div style={pg.formSide}>
+        <div className="flex-1 flex items-center justify-center p-6 sm:p-8 lg:p-12 bg-white lg:bg-[#faf9f7]">
           <motion.div
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.35 }}
-            style={pg.formCard}
+            className="w-full max-w-[380px]"
           >
             {/* Mobile logo */}
-            <div style={pg.mobileLogo}>
-              <div style={pg.mobileLogoIcon}>
+            <div className="lg:hidden flex items-center gap-2.5 mb-8">
+              <div className="w-9 h-9 bg-primary rounded-[9px] flex items-center justify-center shadow-lg shadow-primary/20">
                 <GraduationCap size={20} color="#fff" />
               </div>
-              <span style={pg.mobileLogoText}>Oakridge</span>
+              <span className="text-lg font-extrabold text-[#0f0e0d] tracking-tight">Oakridge</span>
             </div>
 
             {/* Heading */}
-            <div style={{ marginBottom: 28 }}>
-              <h2 style={pg.formTitle}>Create an account</h2>
-              <p style={pg.formSub}>It's free and takes less than a minute.</p>
+            <div className="mb-8">
+              <h2 className="text-2xl font-extrabold text-[#0f0e0d] tracking-tight">Create an account</h2>
+              <p className="text-sm text-[#8c8a87] mt-1.5 font-medium">It's free and takes less than a minute.</p>
             </div>
 
             {/* Error */}
@@ -79,72 +89,70 @@ const Signup = () => {
               <motion.div
                 initial={{ opacity: 0, y: -4 }}
                 animate={{ opacity: 1, y: 0 }}
-                style={pg.errorBox}
+                className="bg-danger/10 border border-danger/20 text-danger rounded-lg p-3 text-[13px] mb-4 text-center font-semibold"
               >
                 {error}
               </motion.div>
             )}
 
             {/* Form */}
-            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <form onSubmit={handleSubmit} className="flex flex-col gap-4">
 
-              <FormField label="Full name">
-                <div style={pg.inputWrap}>
-                  <User size={14} style={pg.inputIcon} />
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[11px] font-bold text-[#8c8a87] uppercase tracking-wider ml-1">Full name</label>
+                <div className="relative flex items-center group">
+                  <User size={14} className="absolute left-3.5 text-[#b0ada8] group-focus-within:text-primary transition-colors" />
                   <input
                     type="text"
                     required
                     value={formData.name}
                     onChange={set('name')}
                     placeholder="Your name"
-                    style={pg.input}
-                    className="focus:border-primary/40"
+                    className="w-full bg-white lg:bg-white border border-[#e3e0da] focus:border-primary/50 focus:ring-4 focus:ring-primary/5 rounded-[10px] py-2.5 pl-10 pr-4 text-sm font-medium text-[#0f0e0d] outline-none transition-all placeholder:text-[#c8c5bf]"
                   />
                 </div>
-              </FormField>
+              </div>
 
-              <FormField label="Email address">
-                <div style={pg.inputWrap}>
-                  <Mail size={14} style={pg.inputIcon} />
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[11px] font-bold text-[#8c8a87] uppercase tracking-wider ml-1">Email address</label>
+                <div className="relative flex items-center group">
+                  <Mail size={14} className="absolute left-3.5 text-[#b0ada8] group-focus-within:text-primary transition-colors" />
                   <input
                     type="email"
                     required
                     value={formData.email}
                     onChange={set('email')}
                     placeholder="you@example.com"
-                    style={pg.input}
-                    className="focus:border-primary/40"
+                    className="w-full bg-white lg:bg-white border border-[#e3e0da] focus:border-primary/50 focus:ring-4 focus:ring-primary/5 rounded-[10px] py-2.5 pl-10 pr-4 text-sm font-medium text-[#0f0e0d] outline-none transition-all placeholder:text-[#c8c5bf]"
                   />
                 </div>
-              </FormField>
+              </div>
 
-              <FormField label="Password">
-                <div style={pg.inputWrap}>
-                  <Lock size={14} style={pg.inputIcon} />
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[11px] font-bold text-[#8c8a87] uppercase tracking-wider ml-1">Password</label>
+                <div className="relative flex items-center group">
+                  <Lock size={14} className="absolute left-3.5 text-[#b0ada8] group-focus-within:text-primary transition-colors" />
                   <input
                     type="password"
                     required
                     value={formData.password}
                     onChange={set('password')}
                     placeholder="Min. 8 characters"
-                    style={pg.input}
-                    className="focus:border-primary/40"
+                    className="w-full bg-white lg:bg-white border border-[#e3e0da] focus:border-primary/50 focus:ring-4 focus:ring-primary/5 rounded-[10px] py-2.5 pl-10 pr-4 text-sm font-medium text-[#0f0e0d] outline-none transition-all placeholder:text-[#c8c5bf]"
                   />
                 </div>
-              </FormField>
+              </div>
 
               <button
                 type="submit"
                 disabled={loading}
-                style={{
-                  ...pg.submitBtn,
-                  opacity: loading ? 0.7 : 1,
-                  cursor:  loading ? 'not-allowed' : 'pointer',
-                }}
-                className="active:scale-98 transition-all"
+                className="mt-2 flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-primary text-white text-sm font-bold shadow-lg shadow-primary/25 hover:shadow-primary/35 hover:-translate-y-0.5 active:translate-y-0 active:scale-98 transition-all disabled:opacity-70 disabled:pointer-events-none"
               >
                 {loading ? (
-                  'Creating account…'
+                  <span className="flex items-center gap-2">
+                    <Loader2 size={16} className="animate-spin" />
+                    Creating account…
+                  </span>
                 ) : (
                   <>
                     <UserPlus size={15} />
@@ -154,9 +162,11 @@ const Signup = () => {
               </button>
             </form>
 
-            <p style={pg.footerText}>
+            <p className="mt-8 text-center text-[13px] text-[#8c8a87] font-medium">
               Already have an account?{' '}
-              <Link to="/login" style={pg.footerLink}>Sign in</Link>
+              <Link to="/login" className="text-primary font-bold hover:underline underline-offset-4 decoration-2 transition-all">
+                Sign in
+              </Link>
             </p>
           </motion.div>
         </div>
@@ -165,144 +175,20 @@ const Signup = () => {
   );
 };
 
-const FormField = ({ label, children }) => (
-  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-    <label style={pg.fieldLabel}>{label}</label>
-    {children}
-  </div>
+const Loader2 = ({ size, className }) => (
+  <svg 
+    width={size} 
+    height={size} 
+    className={className} 
+    viewBox="0 0 24 24" 
+    fill="none" 
+    stroke="currentColor" 
+    strokeWidth="2" 
+    strokeLinecap="round" 
+    strokeLinejoin="round"
+  >
+    <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+  </svg>
 );
-
-const pg = {
-  root: {
-    minHeight:  '100vh',
-    background: '#faf9f7',
-    display:    'flex',
-    alignItems: 'stretch',
-  },
-  split: {
-    display: 'flex',
-    width:   '100%',
-  },
-
-  // ── Left brand panel ──
-  brand: {
-    flex:           '0 0 42%',
-    background:     'linear-gradient(160deg, #0F6E56 0%, #007aff 100%)',
-    display:        'flex',
-    alignItems:     'center',
-    justifyContent: 'center',
-    padding:        '48px 40px',
-  },
-  brandInner: { maxWidth: 320 },
-  brandLogo: {
-    width:          56,
-    height:         56,
-    background:     'rgba(255,255,255,0.15)',
-    borderRadius:   14,
-    display:        'flex',
-    alignItems:     'center',
-    justifyContent: 'center',
-    marginBottom:   20,
-    border:         '1px solid rgba(255,255,255,0.2)',
-  },
-  brandName:    { fontSize: 28, fontWeight: 800, color: '#fff', margin: '0 0 10px', letterSpacing: -0.5 },
-  brandTagline: { fontSize: 15, color: 'rgba(255,255,255,0.75)', lineHeight: 1.6, margin: '0 0 36px' },
-
-  steps: { display: 'flex', flexDirection: 'column', gap: 14 },
-  step:  { display: 'flex', alignItems: 'center', gap: 12 },
-  stepNum: {
-    width:          28,
-    height:         28,
-    borderRadius:   '50%',
-    background:     'rgba(255,255,255,0.15)',
-    border:         '1px solid rgba(255,255,255,0.25)',
-    display:        'flex',
-    alignItems:     'center',
-    justifyContent: 'center',
-    fontSize:       12,
-    fontWeight:     700,
-    color:          '#fff',
-    flexShrink:     0,
-  },
-  stepText: { fontSize: 14, color: 'rgba(255,255,255,0.8)' },
-
-  // ── Right form ──
-  formSide: {
-    flex:           1,
-    display:        'flex',
-    alignItems:     'center',
-    justifyContent: 'center',
-    padding:        '32px 24px',
-    minHeight:      '100vh',
-  },
-  formCard: { width: '100%', maxWidth: 400 },
-
-  mobileLogo: {
-    display:     'flex',
-    alignItems:  'center',
-    gap:         10,
-    marginBottom:28,
-  },
-  mobileLogoIcon: {
-    width:          36,
-    height:         36,
-    background:     'var(--primary, #007aff)',
-    borderRadius:   9,
-    display:        'flex',
-    alignItems:     'center',
-    justifyContent: 'center',
-  },
-  mobileLogoText: { fontSize: 17, fontWeight: 800, color: '#0f0e0d' },
-
-  formTitle: { fontSize: 24, fontWeight: 800, color: '#0f0e0d', margin: 0, letterSpacing: -0.5 },
-  formSub:   { fontSize: 14, color: '#8c8a87', marginTop: 6 },
-
-  errorBox: {
-    background:   '#FCEBEB',
-    border:       '0.5px solid #F7C1C1',
-    color:        '#A32D2D',
-    borderRadius: 8,
-    padding:      '10px 14px',
-    fontSize:     13,
-    marginBottom: 16,
-    textAlign:    'center',
-  },
-
-  fieldLabel: { fontSize: 11, color: '#8c8a87', letterSpacing: '0.04em' },
-  inputWrap:  { position: 'relative', display: 'flex', alignItems: 'center' },
-  inputIcon:  { position: 'absolute', left: 12, stroke: '#b0ada8', pointerEvents: 'none', flexShrink: 0 },
-  input: {
-    width:        '100%',
-    background:   '#fff',
-    border:       '0.5px solid #e3e0da',
-    borderRadius: 9,
-    padding:      '11px 12px 11px 36px',
-    fontSize:     14,
-    color:        '#0f0e0d',
-    outline:      'none',
-    fontWeight:   500,
-    transition:   'border-color 0.15s',
-    boxSizing:    'border-box',
-  },
-
-  submitBtn: {
-    display:        'flex',
-    alignItems:     'center',
-    justifyContent: 'center',
-    gap:            8,
-    width:          '100%',
-    padding:        '12px',
-    borderRadius:   10,
-    border:         'none',
-    background:     'var(--primary, #007aff)',
-    color:          '#fff',
-    fontSize:       14,
-    fontWeight:     700,
-    marginTop:      4,
-  },
-
-  footerText: { marginTop: 24, fontSize: 13, color: '#8c8a87', textAlign: 'center' },
-  footerLink: { color: 'var(--primary, #007aff)', fontWeight: 600, textDecoration: 'none' },
-};
 
 export default Signup;
