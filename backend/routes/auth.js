@@ -7,6 +7,11 @@ const User = require('../models/User');
 // @desc    Register user
 router.post('/signup', async (req, res) => {
   const { name, email, password } = req.body;
+  
+  if (!name || !email || !password) {
+    return res.status(400).json({ message: 'Please provide all fields' });
+  }
+
   try {
     let user = await User.findOne({ email });
     if (user) return res.status(400).json({ message: 'User already exists' });
@@ -15,13 +20,26 @@ router.post('/signup', async (req, res) => {
     await user.save();
 
     const payload = { user: { id: user.id } };
-    jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '7d' }, (err, token) => {
-      if (err) throw err;
-      res.json({ token, user: { id: user.id, name: user.name, email: user.email } });
+
+    // Promisify jwt.sign for better error handling in async flow
+    const token = await new Promise((resolve, reject) => {
+      jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '7d' }, (err, token) => {
+        if (err) reject(err);
+        else resolve(token);
+      });
     });
+
+    res.json({ 
+      token, 
+      user: { id: user.id, name: user.name, email: user.email } 
+    });
+
   } catch (err) {
-    console.error(err.message);
-    res.status(500).send('Server error');
+    console.error('[Signup Error]:', err);
+    res.status(500).json({ 
+      message: 'Server error during signup',
+      error: process.env.NODE_ENV === 'development' ? err.message : undefined
+    });
   }
 });
 
@@ -37,13 +55,18 @@ router.post('/login', async (req, res) => {
     if (!isMatch) return res.status(400).json({ message: 'Invalid Credentials' });
 
     const payload = { user: { id: user.id } };
-    jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '7d' }, (err, token) => {
-      if (err) throw err;
-      res.json({ token, user: { id: user.id, name: user.name, email: user.email } });
+    
+    const token = await new Promise((resolve, reject) => {
+      jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '7d' }, (err, token) => {
+        if (err) reject(err);
+        else resolve(token);
+      });
     });
+
+    res.json({ token, user: { id: user.id, name: user.name, email: user.email } });
   } catch (err) {
-    console.error(err.message);
-    res.status(500).send('Server error');
+    console.error('[Login Error]:', err);
+    res.status(500).json({ message: 'Server error' });
   }
 });
 
