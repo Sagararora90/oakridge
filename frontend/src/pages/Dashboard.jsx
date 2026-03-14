@@ -46,6 +46,7 @@ const Dashboard = () => {
   const [showNotifications, setShowNotifications] = useState(false);
   const [showMobileSearch, setShowMobileSearch] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [openSlotMenu, setOpenSlotMenu] = useState(null); // track which slot's menu is open
   const unreadCount = notifications.filter(n => !n.read).length;
   const [extraForm, setExtraForm] = useState({ subjectId: '', status: 'Present', credit: 1, date: new Date().toISOString().split('T')[0] });
 
@@ -334,13 +335,42 @@ const Dashboard = () => {
                               disabled={isUpdating}
                               className="w-9 h-9 rounded-xl bg-green-500/10 text-green-600 border border-green-500/20 flex items-center justify-center hover:bg-green-500 hover:text-white transition-all shadow-sm"
                             ><Check size={18} strokeWidth={3} /></button>
-                            <div className="relative group/menu">
-                              <button className="w-8 h-8 rounded-lg border border-[#e3e0da] flex items-center justify-center text-[#8c8a87] hover:bg-[#faf9f7] transition-all"><ChevronDown size={14} /></button>
-                              <div className="absolute right-0 top-full mt-2 bg-white border border-[#e3e0da] rounded-xl shadow-2xl py-1.5 z-50 opacity-0 invisible group-hover/menu:opacity-100 group-hover/menu:visible transition-all w-28 origin-top-right">
-                                {['Absent', 'Medical', 'OD', 'Cancelled'].map((st) => (
-                                  <button key={st} onClick={() => markAttendance(subject._id, st, slot.credit || 1)} className="w-full text-left px-4 py-2 text-xs font-bold hover:bg-[#faf9f7]">{st}</button>
-                                ))}
-                              </div>
+                            <div className="relative">
+                              <button 
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setOpenSlotMenu(openSlotMenu === i ? null : i);
+                                }}
+                                className={`w-8 h-8 rounded-lg border flex items-center justify-center transition-all ${openSlotMenu === i ? 'bg-primary/10 border-primary/30 text-primary' : 'border-[#e3e0da] text-[#8c8a87] hover:bg-[#faf9f7]'}`}
+                              >
+                                <ChevronDown size={14} className={`transition-transform duration-200 ${openSlotMenu === i ? 'rotate-180' : ''}`} />
+                              </button>
+                              <AnimatePresence>
+                                {openSlotMenu === i && (
+                                  <>
+                                    <div className="fixed inset-0 z-40" onClick={() => setOpenSlotMenu(null)} />
+                                    <motion.div 
+                                      initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                                      exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                                      className="absolute right-0 top-full mt-2 bg-white border border-[#e3e0da] rounded-xl shadow-2xl py-1.5 z-50 w-28 origin-top-right overflow-hidden"
+                                    >
+                                      {['Absent', 'Medical', 'OD', 'Cancelled'].map((st) => (
+                                        <button 
+                                          key={st} 
+                                          onClick={() => {
+                                            markAttendance(subject._id, st, slot.credit || 1);
+                                            setOpenSlotMenu(null);
+                                          }} 
+                                          className="w-full text-left px-4 py-2 text-xs font-bold hover:bg-[#faf9f7] text-[#0f0e0d]"
+                                        >
+                                          {st}
+                                        </button>
+                                      ))}
+                                    </motion.div>
+                                  </>
+                                )}
+                              </AnimatePresence>
                             </div>
                           </div>
                         ) : null}

@@ -1,5 +1,5 @@
-import React from 'react';
-import { motion } from 'framer-motion';
+import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   CheckCircle2, Edit3, RotateCcw, Zap, CalendarDays, ChevronDown, Check, X
 } from 'lucide-react';
@@ -8,6 +8,7 @@ import useStore from '../store/useStore';
 const SubjectCard = ({ subject, onMark, onEdit, onUndo, onOpenRegister, projection }) => {
   const getRecoveryDate = useStore(state => state.getRecoveryDate);
   const recoveryDate    = getRecoveryDate(subject._id);
+  const [isMoreOpen, setIsMoreOpen] = useState(false);
 
   const required   = subject.requiredAttendance || 75;
   const percentage = subject.total > 0
@@ -120,20 +121,59 @@ const SubjectCard = ({ subject, onMark, onEdit, onUndo, onOpenRegister, projecti
               <X size={14} strokeWidth={3} /> Absent
            </button>
            
-           <div className="relative group/more">
-              <button disabled={isUpdating} className="w-12 h-full rounded-xl border border-[#e3e0da] text-[#8c8a87] flex items-center justify-center hover:bg-[#faf9f7] transition-all">
-                 <ChevronDown size={16} />
+           <div className="relative">
+              <button 
+                disabled={isUpdating} 
+                onClick={() => setIsMoreOpen(!isMoreOpen)}
+                className={`w-12 h-full rounded-xl border flex items-center justify-center transition-all ${isMoreOpen ? 'bg-primary/10 border-primary/30 text-primary shadow-sm' : 'border-[#e3e0da] text-[#8c8a87] hover:bg-[#faf9f7]'}`}
+              >
+                 <ChevronDown size={16} className={`transition-transform duration-200 ${isMoreOpen ? 'rotate-180' : ''}`} />
               </button>
-              <div className="absolute right-0 bottom-full mb-2 bg-white border border-[#e3e0da] rounded-xl shadow-2xl py-1.5 z-50 opacity-0 invisible group-hover/more:opacity-100 group-hover/more:visible transition-all w-36 overflow-hidden origin-bottom-right">
-                 {['Medical', 'OD', 'Cancelled'].map(st => (
-                   <button key={st} onClick={() => onMark(subject._id, st)} className="w-full text-left px-4 py-2 text-[11px] font-bold text-[#0f0e0d] hover:bg-[#faf9f7] border-b border-[#faf9f7] last:border-0">{st}</button>
-                 ))}
-                 {onUndo && (
-                   <button onClick={() => onUndo(subject._id)} className="w-full text-left px-4 py-2 text-[11px] font-bold text-primary hover:bg-primary/5 flex items-center gap-2">
-                     <RotateCcw size={11} /> Undo Last
-                   </button>
-                 )}
-              </div>
+              
+              <AnimatePresence>
+                {isMoreOpen && (
+                  <>
+                    <div className="fixed inset-0 z-40" onClick={() => setIsMoreOpen(false)} />
+                    <motion.div 
+                      initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                      className="absolute right-0 bottom-full mb-3 bg-white border border-[#e3e0da] rounded-2xl shadow-2xl z-50 w-44 overflow-hidden origin-bottom-right"
+                    >
+                       <div className="p-2 border-b border-[#e3e0da]/50 bg-[#faf9f7] flex items-center justify-between px-4">
+                          <span className="text-[10px] font-extrabold text-[#8c8a87] uppercase tracking-wider">Quick Actions</span>
+                          <button onClick={() => setIsMoreOpen(false)} className="text-[#8c8a87] hover:text-[#0f0e0d] transition-all"><X size={12} /></button>
+                       </div>
+                       <div className="py-1">
+                          {['Medical', 'OD', 'Cancelled'].map(st => (
+                            <button 
+                              key={st} 
+                              onClick={() => {
+                                onMark(subject._id, st);
+                                setIsMoreOpen(false);
+                              }} 
+                              className="w-full text-left px-4 py-2.5 text-[11px] font-bold text-[#0f0e0d] hover:bg-[#faf9f7] flex items-center justify-between group/row"
+                            >
+                              {st}
+                              <ChevronDown size={10} className="-rotate-90 opacity-0 group-hover/row:opacity-40 transition-all" />
+                            </button>
+                          ))}
+                          {onUndo && (
+                            <button 
+                              onClick={() => {
+                                onUndo(subject._id);
+                                setIsMoreOpen(false);
+                              }} 
+                              className="w-full text-left px-4 py-2.5 text-[11px] font-bold text-primary hover:bg-primary/5 flex items-center gap-2 border-t border-[#e3e0da]/40 mt-1"
+                            >
+                              <RotateCcw size={11} /> Undo Last Action
+                            </button>
+                          )}
+                       </div>
+                    </motion.div>
+                  </>
+                )}
+              </AnimatePresence>
            </div>
         </div>
 
