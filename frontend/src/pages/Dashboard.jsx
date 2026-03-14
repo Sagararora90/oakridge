@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Link } from 'react-router-dom';
 import {
   BookOpen, CheckCircle2, XCircle, TrendingUp,
   Calendar, Bell, Search, GraduationCap,
