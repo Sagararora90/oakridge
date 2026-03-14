@@ -8,23 +8,30 @@ const app = express();
 // Middleware
 // Middleware
 const allowedOrigins = process.env.ALLOWED_ORIGINS 
-  ? process.env.ALLOWED_ORIGINS.split(',') 
-  : ['http://localhost:5173'];
+  ? process.env.ALLOWED_ORIGINS.split(',').map(o => o.trim().replace(/\/$/, "")) 
+  : ['http://localhost:5173', 'http://localhost:5174'];
 
 app.use(cors({
   origin: (origin, callback) => {
     // allow requests with no origin (like mobile apps or curl requests)
     if (!origin) return callback(null, true);
-    if (allowedOrigins.includes(origin) || origin.includes('vercel.app') || origin.includes('localhost')) {
+    
+    const sanitizedOrigin = origin.replace(/\/$/, "");
+    const isAllowed = allowedOrigins.includes(sanitizedOrigin) || 
+                      sanitizedOrigin.includes('vercel.app') || 
+                      sanitizedOrigin.includes('localhost');
+
+    if (isAllowed) {
       callback(null, true);
     } else {
-      console.warn(`Blocked by CORS: ${origin}`);
-      callback(new Error('Not allowed by CORS'));
+      console.warn(`[CORS Blocked] Origin: ${origin}`);
+      callback(null, false); // Don't throw error, just don't allow
     }
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'x-auth-token']
+  allowedHeaders: ['Content-Type', 'Authorization', 'x-auth-token', 'Accept'],
+  optionsSuccessStatus: 200 // Some legacy browsers choke on 204
 }));
 app.use(express.json());
 
