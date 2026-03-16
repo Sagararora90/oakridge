@@ -19,7 +19,7 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#faf9f7] flex items-stretch overflow-hidden">
+    <div className="min-h-screen bg-[var(--color-bg)] flex items-stretch overflow-hidden">
       {/* ── SPLIT: left brand panel + right form ── */}
       <div className="flex w-full">
 
@@ -59,7 +59,7 @@ const Login = () => {
         </div>
 
         {/* RIGHT — form side */}
-        <div className="flex-1 flex items-center justify-center p-6 sm:p-8 lg:p-12 bg-white lg:bg-[#faf9f7]">
+        <div className="flex-1 flex items-center justify-center p-6 sm:p-8 lg:p-12 bg-white lg:bg-[var(--color-bg)]">
           <motion.div
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
@@ -71,13 +71,13 @@ const Login = () => {
               <div className="w-9 h-9 bg-primary rounded-[9px] flex items-center justify-center shadow-lg shadow-primary/20">
                 <GraduationCap size={20} color="#fff" />
               </div>
-              <span className="text-lg font-extrabold text-[#0f0e0d] tracking-tight">Oakridge</span>
+              <span className="text-lg font-extrabold text-[var(--color-text)] tracking-tight">Oakridge</span>
             </div>
 
             {/* Heading */}
             <div className="mb-8">
-              <h2 className="text-2xl font-extrabold text-[#0f0e0d] tracking-tight">Welcome back</h2>
-              <p className="text-sm text-[#8c8a87] mt-1.5 font-medium">Sign in to your account to continue.</p>
+              <h2 className="text-2xl font-extrabold text-[var(--color-text)] tracking-tight">Welcome back</h2>
+              <p className="text-sm text-[var(--color-subtext)] mt-1.5 font-medium">Sign in to your account to continue.</p>
             </div>
 
             {/* Error */}
@@ -94,7 +94,7 @@ const Login = () => {
             {/* Form */}
             <form onSubmit={handleSubmit} className="flex flex-col gap-4">
               <div className="flex flex-col gap-1.5">
-                <label className="text-[11px] font-bold text-[#8c8a87] uppercase tracking-wider ml-1">Email address</label>
+                <label className="text-[11px] font-bold text-[var(--color-subtext)] uppercase tracking-wider ml-1">Email address</label>
                 <div className="relative flex items-center group">
                   <Mail size={14} className="absolute left-3.5 text-[#b0ada8] group-focus-within:text-primary transition-colors" />
                   <input
@@ -103,13 +103,13 @@ const Login = () => {
                     value={email}
                     onChange={e => setEmail(e.target.value)}
                     placeholder="you@example.com"
-                    className="w-full bg-white lg:bg-white border border-[#e3e0da] focus:border-primary/50 focus:ring-4 focus:ring-primary/5 rounded-[10px] py-2.5 pl-10 pr-4 text-sm font-medium text-[#0f0e0d] outline-none transition-all placeholder:text-[#c8c5bf]"
+                    className="w-full bg-white lg:bg-card-bg border border-[var(--color-border)] focus:border-primary/50 focus:ring-4 focus:ring-primary/5 rounded-[10px] py-2.5 pl-10 pr-4 text-sm font-medium text-[var(--color-text)] outline-none transition-all placeholder:text-[#c8c5bf]"
                   />
                 </div>
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <label className="text-[11px] font-bold text-[#8c8a87] uppercase tracking-wider ml-1">Password</label>
+                <label className="text-[11px] font-bold text-[var(--color-subtext)] uppercase tracking-wider ml-1">Password</label>
                 <div className="relative flex items-center group">
                   <Lock size={14} className="absolute left-3.5 text-[#b0ada8] group-focus-within:text-primary transition-colors" />
                   <input
@@ -118,7 +118,7 @@ const Login = () => {
                     value={password}
                     onChange={e => setPassword(e.target.value)}
                     placeholder="••••••••"
-                    className="w-full bg-white lg:bg-white border border-[#e3e0da] focus:border-primary/50 focus:ring-4 focus:ring-primary/5 rounded-[10px] py-2.5 pl-10 pr-4 text-sm font-medium text-[#0f0e0d] outline-none transition-all placeholder:text-[#c8c5bf]"
+                    className="w-full bg-white lg:bg-card-bg border border-[var(--color-border)] focus:border-primary/50 focus:ring-4 focus:ring-primary/5 rounded-[10px] py-2.5 pl-10 pr-4 text-sm font-medium text-[var(--color-text)] outline-none transition-all placeholder:text-[#c8c5bf]"
                   />
                 </div>
               </div>
@@ -143,7 +143,7 @@ const Login = () => {
             </form>
 
             {/* Footer */}
-            <p className="mt-8 text-center text-[13px] text-[#8c8a87] font-medium">
+            <p className="mt-8 text-center text-[13px] text-[var(--color-subtext)] font-medium">
               Don't have an account?{' '}
               <Link to="/signup" className="text-primary font-bold hover:underline underline-offset-4 decoration-2 transition-all">
                 Create one

@@ -16,13 +16,17 @@ const Settings = () => {
     user, subjects, theme, toggleTheme,
     holidays, fetchHolidays, addHoliday, deleteHoliday,
     extraClasses, fetchExtraClasses, addExtraClass, deleteExtraClass,
-    logout
+    logout, updateUserSettings
   } = useStore();
 
   const [holidayDate,  setHolidayDate]  = useState('');
   const [holidayLabel, setHolidayLabel] = useState('');
   const [extraDate,    setExtraDate]    = useState('');
   const [followsDay,   setFollowsDay]   = useState('Monday');
+
+  const [emailEnabled, setEmailEnabled] = useState(user?.notificationSettings?.emailEnabled || false);
+  const [notifEmail, setNotifEmail]     = useState(user?.notificationSettings?.notificationEmail || user?.email || '');
+  const [savingNotif, setSavingNotif]   = useState(false);
 
   useEffect(() => {
     fetchHolidays();
@@ -78,7 +82,7 @@ const Settings = () => {
   };
 
   return (
-    <div className="flex-1 bg-[#faf9f7] min-h-screen pb-24 animate-in">
+    <div className="flex-1 bg-bg min-h-screen pb-24 animate-in">
       <div className="max-w-[1100px] mx-auto px-4 lg:px-7 py-6 lg:py-10 flex flex-col gap-8">
         
         {/* ── HEADER ── */}
@@ -87,8 +91,8 @@ const Settings = () => {
              <GraduationCap size={16} color="#fff" />
            </div>
            <div>
-             <h1 className="text-2xl lg:text-3xl font-bold text-[#0f0e0d] tracking-tight">Settings</h1>
-             <p className="text-xs lg:text-sm text-[#8c8a87] font-medium mt-1">Personalize your experience and academic parameters.</p>
+             <h1 className="text-2xl lg:text-3xl font-bold text-text tracking-tight">Settings</h1>
+             <p className="text-xs lg:text-sm text-subtext font-medium mt-1">Personalize your experience and academic parameters.</p>
            </div>
         </header>
 
@@ -102,104 +106,185 @@ const Settings = () => {
              </div>
           </Section>
 
-          {/* ── APPEARANCE ── */}
-          <Section icon={<Sparkles size={18} className="text-orange-500" />} title="Appearance" subtitle="Visual theme and interface">
-             <div className="bg-[#faf9f7] border border-[#e3e0da] rounded-2xl p-4 flex items-center justify-between group hover:border-primary/30 transition-all">
-                <div className="flex items-center gap-3">
-                   <div className="w-10 h-10 rounded-xl bg-white border border-[#e3e0da] flex items-center justify-center shadow-sm">
-                      {theme === 'dark' ? <Moon size={18} className="text-slate-800" /> : <Sun size={18} className="text-orange-500" />}
-                   </div>
-                   <div>
-                      <p className="text-sm font-bold text-[#0f0e0d]">{theme === 'dark' ? 'Dark mode' : 'Light mode'}</p>
-                      <p className="text-[10px] font-bold text-[#8c8a87] uppercase tracking-wider">Current interface</p>
-                   </div>
-                </div>
-                <button onClick={toggleTheme} className={`w-12 h-6 rounded-full p-1 transition-colors relative ${theme === 'dark' ? 'bg-primary' : 'bg-[#e3e0da]'}`}>
-                   <motion.div animate={{ x: theme === 'dark' ? 24 : 0 }} className="w-4 h-4 bg-white rounded-full shadow-sm" />
+          {/* ── SCHEDULE ── */}
+          <Section 
+             icon={<Calendar size={18} className="text-orange-500" />} 
+             title="Schedule Management" 
+             subtitle="Timetable & Slots"
+          >
+             <div className="flex flex-col gap-4">
+                <p className="text-[10px] font-bold text-subtext leading-relaxed">
+                   Adjust your weekly classes or timing slots.
+                </p>
+                <button 
+                  onClick={() => navigate('/timetable')}
+                  className="w-full flex items-center justify-center gap-2 py-3 bg-orange-50 text-orange-700 rounded-xl text-[10px] font-black uppercase tracking-wider hover:bg-orange-600 hover:text-white transition-all dark:bg-orange-950 dark:text-orange-300"
+                >
+                  Edit Timetable
                 </button>
+             </div>
+          </Section>
+          
+          {/* ── NOTIFICATIONS ── */}
+          <Section icon={<Sparkles size={18} className="text-primary" />} title="Smart Notifications" subtitle="Alerts and Reminders">
+             <div className="space-y-4">
+               {/* Theme Toggle for Mobile (also visible on Desktop) */}
+               <div className="md:hidden bg-bg border border-border rounded-2xl p-4 flex items-center justify-between group hover:border-primary/30 transition-all">
+                  <div className="flex items-center gap-3">
+                     <div className="w-10 h-10 rounded-xl bg-card-bg border border-border flex items-center justify-center shadow-sm">
+                        {theme === 'light' ? <Moon size={18} className="text-primary" /> : <Sun size={18} className="text-primary" />}
+                     </div>
+                     <div>
+                        <p className="text-sm font-bold text-text">Display Theme</p>
+                        <p className="text-[10px] font-bold text-subtext uppercase tracking-wider">{theme === 'light' ? 'Light Mode' : 'Dark Mode'}</p>
+                     </div>
+                  </div>
+                  <button 
+                    onClick={toggleTheme} 
+                    className={`w-12 h-6 rounded-full p-1 transition-colors relative ${theme === 'dark' ? 'bg-primary' : 'bg-border'}`}
+                  >
+                     <motion.div animate={{ x: theme === 'dark' ? 24 : 0 }} className="w-4 h-4 bg-white rounded-full shadow-sm" />
+                  </button>
+               </div>
+
+               <div className="bg-bg border border-border rounded-2xl p-4 flex items-center justify-between group hover:border-primary/30 transition-all">
+                  <div className="flex items-center gap-3">
+                     <div className="w-10 h-10 rounded-xl bg-card-bg border border-border flex items-center justify-center shadow-sm">
+                        <Zap size={18} className={emailEnabled ? 'text-primary' : 'text-subtext'} />
+                     </div>
+                     <div>
+                        <p className="text-sm font-bold text-text">Email Alerts</p>
+                        <p className="text-[10px] font-bold text-subtext uppercase tracking-wider">Upcoming class reminders</p>
+                     </div>
+                  </div>
+                  <button 
+                    onClick={() => setEmailEnabled(!emailEnabled)} 
+                    className={`w-12 h-6 rounded-full p-1 transition-colors relative ${emailEnabled ? 'bg-primary' : 'bg-border'}`}
+                  >
+                     <motion.div animate={{ x: emailEnabled ? 24 : 0 }} className="w-4 h-4 bg-white rounded-full shadow-sm" />
+                  </button>
+               </div>
+
+               <AnimatePresence>
+                 {emailEnabled && (
+                   <motion.div 
+                     initial={{ height: 0, opacity: 0 }}
+                     animate={{ height: 'auto', opacity: 1 }}
+                     exit={{ height: 0, opacity: 0 }}
+                     className="overflow-hidden"
+                   >
+                     <div className="bg-bg border border-border rounded-2xl p-4 space-y-3">
+                        <span className="text-[9px] font-black text-subtext uppercase tracking-widest block px-1">Notification Email</span>
+                        <input 
+                          type="email" 
+                          value={notifEmail} 
+                          onChange={e => setNotifEmail(e.target.value)}
+                          placeholder="your@email.com"
+                          className="w-full bg-card-bg border border-border rounded-xl py-2.5 px-3 text-xs font-bold text-text outline-none focus:border-primary/50"
+                        />
+                        <button 
+                          onClick={async () => {
+                            setSavingNotif(true);
+                            await updateUserSettings({
+                              notificationSettings: {
+                                emailEnabled: true,
+                                notificationEmail: notifEmail
+                              }
+                            });
+                            setSavingNotif(false);
+                          }}
+                          disabled={savingNotif}
+                          className="w-full py-2.5 bg-primary/10 text-primary rounded-xl text-[10px] font-black uppercase tracking-wider hover:bg-primary hover:text-white transition-all disabled:opacity-50"
+                        >
+                          {savingNotif ? 'Saving...' : 'Save Preferences'}
+                        </button>
+                     </div>
+                   </motion.div>
+                 )}
+               </AnimatePresence>
              </div>
           </Section>
 
           {/* ── ACADEMIC CALENDAR ── */}
-          <div className="md:col-span-2 bg-white border border-[#e3e0da] rounded-[32px] p-6 lg:p-8 shadow-sm flex flex-col gap-8">
+          <div className="md:col-span-2 bg-card-bg border border-border rounded-[32px] p-6 lg:p-8 shadow-sm flex flex-col gap-8">
              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-orange-50 rounded-2xl flex items-center justify-center border border-orange-100">
+                <div className="w-12 h-12 bg-orange-50 dark:bg-orange-950/20 rounded-2xl flex items-center justify-center border border-orange-100 dark:border-orange-900/40">
                    <Calendar size={20} className="text-orange-600" />
                 </div>
                 <div>
-                   <h2 className="text-xl font-extrabold text-[#0f0e0d] leading-none mb-1.5">Academic Calendar</h2>
-                   <p className="text-xs font-bold text-[#8c8a87] uppercase tracking-wider">Holidays and Schedule adjustments</p>
+                   <h2 className="text-xl font-extrabold text-text leading-none mb-1.5">Academic Calendar</h2>
+                   <p className="text-xs font-bold text-subtext uppercase tracking-wider">Holidays and Schedule adjustments</p>
                 </div>
              </div>
 
              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
                 <div className="space-y-6">
                    {/* Holiday Form */}
-                   <div className="bg-[#faf9f7] border border-[#e3e0da] p-5 rounded-2xl space-y-4 shadow-sm hover:shadow-xl transition-all">
-                      <span className="text-[10px] font-black text-[#8c8a87] uppercase tracking-widest block px-1">Register Holiday</span>
+                   <div className="bg-bg border border-border p-5 rounded-2xl space-y-4 shadow-sm hover:shadow-xl transition-all">
+                      <span className="text-[10px] font-black text-subtext uppercase tracking-widest block px-1">Register Holiday</span>
                       <div className="grid grid-cols-2 gap-3">
-                         <input type="date" value={holidayDate} onChange={e => setHolidayDate(e.target.value)} className="w-full bg-white border border-[#e3e0da] rounded-xl py-2.5 px-3 text-xs font-bold text-[#0f0e0d] outline-none focus:border-orange-400" />
-                         <input type="text" value={holidayLabel} onChange={e => setHolidayLabel(e.target.value)} placeholder="e.g. Diwali" className="w-full bg-white border border-[#e3e0da] rounded-xl py-2.5 px-3 text-xs font-bold text-[#0f0e0d] outline-none focus:border-orange-400" />
+                         <input type="date" value={holidayDate} onChange={e => setHolidayDate(e.target.value)} className="w-full bg-card-bg border border-border rounded-xl py-2.5 px-3 text-xs font-bold text-text outline-none focus:border-orange-400" />
+                         <input type="text" value={holidayLabel} onChange={e => setHolidayLabel(e.target.value)} placeholder="e.g. Diwali" className="w-full bg-card-bg border border-border rounded-xl py-2.5 px-3 text-xs font-bold text-text outline-none focus:border-orange-400" />
                       </div>
-                      <button onClick={handleAddHoliday} className="w-full flex items-center justify-center gap-2 py-3 bg-orange-50 text-orange-700 rounded-xl text-[11px] font-black uppercase tracking-wider hover:bg-orange-600 hover:text-white transition-all">
+                      <button onClick={handleAddHoliday} className="w-full flex items-center justify-center gap-2 py-3 bg-orange-50 text-orange-700 rounded-xl text-[11px] font-black uppercase tracking-wider hover:bg-orange-600 hover:text-white transition-all dark:bg-orange-950 dark:text-orange-300">
                          <Plus size={14} /> Add Holiday
                       </button>
                    </div>
 
                    {/* Override Form */}
-                   <div className="bg-[#faf9f7] border border-[#e3e0da] p-5 rounded-2xl space-y-4 shadow-sm hover:shadow-xl transition-all">
+                   <div className="bg-bg border border-border p-5 rounded-2xl space-y-4 shadow-sm hover:shadow-xl transition-all">
                       <div className="px-1">
-                        <span className="text-[10px] font-black text-[#8c8a87] uppercase tracking-widest block">Schedule Override</span>
-                        <p className="text-[9px] font-medium text-[#8c8a87] mt-1 italic">Force a date to follow a specific day's timetable.</p>
+                        <span className="text-[10px] font-black text-subtext uppercase tracking-widest block">Schedule Override</span>
+                        <p className="text-[9px] font-medium text-subtext mt-1 italic">Force a date to follow a specific day's timetable.</p>
                       </div>
                       <div className="grid grid-cols-2 gap-3">
-                         <input type="date" value={extraDate} onChange={e => setExtraDate(e.target.value)} className="w-full bg-white border border-[#e3e0da] rounded-xl py-2.5 px-3 text-xs font-bold text-[#0f0e0d] outline-none focus:border-primary/50" />
-                         <select value={followsDay} onChange={e => setFollowsDay(e.target.value)} className="w-full bg-white border border-[#e3e0da] rounded-xl py-2.5 px-3 text-xs font-bold text-[#0f0e0d] outline-none appearance-none">
+                         <input type="date" value={extraDate} onChange={e => setExtraDate(e.target.value)} className="w-full bg-card-bg border border-border rounded-xl py-2.5 px-3 text-xs font-bold text-text outline-none focus:border-primary/50" />
+                         <select value={followsDay} onChange={e => setFollowsDay(e.target.value)} className="w-full bg-card-bg border border-border rounded-xl py-2.5 px-3 text-xs font-bold text-text outline-none appearance-none">
                             {DAYS.map(d => <option key={d}>{d}</option>)}
                          </select>
                       </div>
-                      <button onClick={handleAddExtra} className="w-full flex items-center justify-center gap-2 py-3 bg-primary/5 text-primary rounded-xl text-[11px] font-black uppercase tracking-wider hover:bg-primary hover:text-white transition-all">
+                      <button onClick={handleAddExtra} className="w-full flex items-center justify-center gap-2 py-3 bg-primary/5 text-primary rounded-xl text-[11px] font-black uppercase tracking-wider hover:bg-primary hover:text-white transition-all dark:bg-primary/10">
                          <Plus size={14} /> Add Override
                       </button>
                    </div>
                 </div>
 
-                <div className="bg-white border border-[#e3e0da] rounded-2xl overflow-hidden min-h-[220px] max-h-[400px] overflow-y-auto no-scrollbar shadow-inner">
-                   <div className="p-4 bg-[#faf9f7] border-b border-[#e3e0da] flex items-center justify-between sticky top-0 z-10">
-                      <span className="text-[10px] font-black text-[#0f0e0d] uppercase tracking-widest">Saved Calendar Items</span>
-                      <Calendar size={14} className="text-[#8c8a87]" />
+                <div className="bg-card-bg border border-border rounded-2xl overflow-hidden min-h-[220px] max-h-[400px] overflow-y-auto no-scrollbar shadow-inner">
+                   <div className="p-4 bg-bg border-b border-border flex items-center justify-between sticky top-0 z-10">
+                      <span className="text-[10px] font-black text-text uppercase tracking-widest">Saved Calendar Items</span>
+                      <Calendar size={14} className="text-subtext" />
                    </div>
                    
                    {holidays.length === 0 && extraClasses.length === 0 ? (
                      <div className="py-20 text-center opacity-30">
-                        <Calendar size={32} className="mx-auto text-[#8c8a87] mb-3" />
-                        <p className="text-[11px] font-bold text-[#0f0e0d]">Empty Calendar</p>
+                        <Calendar size={32} className="mx-auto text-subtext mb-3" />
+                        <p className="text-[11px] font-bold text-text">Empty Calendar</p>
                      </div>
                    ) : (
-                     <div className="divide-y divide-[#e3e0da]/50">
+                     <div className="divide-y divide-border/50">
                         {holidays.map(h => (
-                          <div key={h._id} className="p-4 flex items-center justify-between group hover:bg-[#faf9f7] transition-all">
-                             <div className="flex items-center gap-4">
-                                <div className="w-1.5 h-8 rounded-full bg-orange-400" />
-                                <div>
-                                   <p className="text-sm font-extrabold text-[#0f0e0d]">{h.label}</p>
-                                   <p className="text-[10px] font-bold text-[#8c8a87] uppercase tracking-wider">{new Date(h.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</p>
-                                </div>
-                             </div>
-                             <button onClick={() => { deleteHoliday(h._id); toast.success('Removed'); }} className="p-2 text-[#c8c5bf] hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"><Trash2 size={16} /></button>
-                          </div>
+                           <div key={h._id} className="p-4 flex items-center justify-between group hover:bg-bg transition-all">
+                              <div className="flex items-center gap-4">
+                                 <div className="w-1.5 h-8 rounded-full bg-orange-400" />
+                                 <div>
+                                    <p className="text-sm font-extrabold text-text">{h.label}</p>
+                                    <p className="text-[10px] font-bold text-subtext uppercase tracking-wider">{new Date(h.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</p>
+                                 </div>
+                              </div>
+                              <button onClick={() => { deleteHoliday(h._id); toast.success('Removed'); }} className="p-2 text-subtext hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"><Trash2 size={16} /></button>
+                           </div>
                         ))}
                         {extraClasses.map(ec => (
-                          <div key={ec._id} className="p-4 flex items-center justify-between group hover:bg-[#faf9f7] transition-all">
-                             <div className="flex items-center gap-4">
-                                <div className="w-1.5 h-8 rounded-full bg-primary" />
-                                <div>
-                                   <p className="text-sm font-extrabold text-[#0f0e0d]">Follows {ec.followsDay}</p>
-                                   <p className="text-[10px] font-bold text-[#8c8a87] uppercase tracking-wider">{new Date(ec.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</p>
-                                </div>
-                             </div>
-                             <button onClick={() => { deleteExtraClass(ec._id); toast.success('Removed'); }} className="p-2 text-[#c8c5bf] hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"><Trash2 size={16} /></button>
-                          </div>
+                           <div key={ec._id} className="p-4 flex items-center justify-between group hover:bg-bg transition-all">
+                              <div className="flex items-center gap-4">
+                                 <div className="w-1.5 h-8 rounded-full bg-primary" />
+                                 <div>
+                                    <p className="text-sm font-extrabold text-text">Follows {ec.followsDay}</p>
+                                    <p className="text-[10px] font-bold text-subtext uppercase tracking-wider">{new Date(ec.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</p>
+                                 </div>
+                              </div>
+                              <button onClick={() => { deleteExtraClass(ec._id); toast.success('Removed'); }} className="p-2 text-subtext hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"><Trash2 size={16} /></button>
+                           </div>
                         ))}
                      </div>
                    )}
@@ -208,14 +293,14 @@ const Settings = () => {
           </div>
 
           {/* ── REPORTS & EXPORT ── */}
-          <div className="md:col-span-2 bg-white border border-[#e3e0da] rounded-[32px] p-6 lg:p-8 shadow-sm flex flex-col md:flex-row items-center justify-between gap-6 hover:shadow-xl transition-all border-b-[4px] border-b-primary">
+          <div className="md:col-span-2 bg-card-bg border border-border rounded-[32px] p-6 lg:p-8 shadow-sm flex flex-col md:flex-row items-center justify-between gap-6 hover:shadow-xl transition-all border-b-[4px] border-b-primary">
              <div className="flex items-center gap-4">
                 <div className="w-14 h-14 bg-primary/5 rounded-2xl flex items-center justify-center border border-primary/10">
                    <FileText size={24} className="text-primary" />
                 </div>
                 <div>
-                   <h2 className="text-xl font-extrabold text-[#0f0e0d] leading-none mb-1.5">Consolidated Report</h2>
-                   <p className="text-xs font-bold text-[#8c8a87] uppercase tracking-wider">Export all session data to PDF for academic record.</p>
+                   <h2 className="text-xl font-extrabold text-text leading-none mb-1.5">Consolidated Report</h2>
+                   <p className="text-xs font-bold text-subtext uppercase tracking-wider">Export all session data to PDF for academic record.</p>
                 </div>
              </div>
              <button onClick={exportToPDF} className="flex items-center gap-3 px-8 py-4 bg-primary text-white rounded-2xl text-sm font-black uppercase tracking-wider shadow-lg shadow-primary/20 hover:scale-[1.05] active:scale-95 transition-all text-center">
@@ -225,11 +310,10 @@ const Settings = () => {
 
           {/* ── LOGOUT ── */}
           <div className="md:col-span-2 pt-4">
-             <button onClick={() => { logout(); navigate('/login'); }} className="w-full flex items-center justify-center gap-3 py-5 bg-white border border-red-100 rounded-[24px] text-red-600 text-sm font-black uppercase tracking-widest hover:bg-red-50 transition-all shadow-sm">
+             <button onClick={() => { logout(); navigate('/login'); }} className="w-full flex items-center justify-center gap-3 py-5 bg-card-bg border border-red-100 rounded-[24px] text-red-600 text-sm font-black uppercase tracking-widest hover:bg-red-50 transition-all shadow-sm">
                 <LogOut size={20} /> Logout from Secure Session
              </button>
           </div>
-
         </div>
       </div>
     </div>
@@ -237,14 +321,14 @@ const Settings = () => {
 };
 
 const Section = ({ icon, title, subtitle, children }) => (
-  <div className="bg-white border border-[#e3e0da] rounded-[32px] p-6 lg:p-8 shadow-sm flex flex-col gap-6 hover:shadow-xl transition-all">
+  <div className="bg-card-bg border border-border rounded-[32px] p-6 lg:p-8 shadow-sm flex flex-col gap-6 hover:shadow-xl transition-all">
      <div className="flex items-center gap-4">
-        <div className="w-10 h-10 bg-[#faf9f7] rounded-xl flex items-center justify-center border border-[#e3e0da]">
+        <div className="w-10 h-10 bg-bg rounded-xl flex items-center justify-center border border-border">
            {icon}
         </div>
         <div>
-           <h2 className="text-base font-extrabold text-[#0f0e0d] leading-none mb-1">{title}</h2>
-           <p className="text-[10px] font-bold text-[#8c8a87] uppercase tracking-widest">{subtitle}</p>
+           <h2 className="text-base font-extrabold text-text leading-none mb-1">{title}</h2>
+           <p className="text-[10px] font-bold text-subtext uppercase tracking-widest">{subtitle}</p>
         </div>
      </div>
      {children}
@@ -252,9 +336,9 @@ const Section = ({ icon, title, subtitle, children }) => (
 );
 
 const InfoCard = ({ label, value }) => (
-  <div className="bg-[#faf9f7] border border-[#e3e0da] rounded-2xl p-4 flex flex-col gap-1">
-     <span className="text-[9px] font-black text-[#8c8a87] uppercase tracking-widest">{label}</span>
-     <span className="text-sm font-bold text-[#0f0e0d] truncate">{value}</span>
+  <div className="bg-bg border border-border rounded-2xl p-4 flex flex-col gap-1">
+     <span className="text-[9px] font-black text-subtext uppercase tracking-widest">{label}</span>
+     <span className="text-sm font-bold text-text truncate">{value}</span>
   </div>
 );
 

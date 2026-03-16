@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import {
   BookOpen, CheckCircle2, XCircle, TrendingUp,
   Calendar, Bell, Search, GraduationCap,
-  Check, X, RotateCcw, ChevronDown, Plus, Loader2
+  Check, X, RotateCcw, ChevronDown, Plus, Loader2, Menu
 } from 'lucide-react';
 import useStore from '../store/useStore';
 import { BarChart, Bar, Cell, ResponsiveContainer, Tooltip } from 'recharts';
@@ -29,7 +29,8 @@ const Dashboard = () => {
     autoFillMissed,
     notifications,
     fetchNotifications,
-    markNotificationsRead
+    markNotificationsRead,
+    setSidebarOpen
   } = useStore();
 
   useEffect(() => {
@@ -97,7 +98,7 @@ const Dashboard = () => {
   const slotColors = ['#185FA5', '#0F6E56', '#BA7517', '#3C3489', '#A32D2D'];
 
   return (
-    <div className="flex-1 bg-[#faf9f7] min-h-screen pb-24 animate-in">
+    <div className="flex-1 bg-bg min-h-screen pb-24 animate-in">
       {/* ── CATCH UP ALERT ── */}
       {(() => {
         const lastMarked = user?.lastAttendanceDate ? new Date(user.lastAttendanceDate) : null;
@@ -139,31 +140,34 @@ const Dashboard = () => {
       })()}
 
       {/* ── TOP BAR ── */}
-      <div className="sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-[#e3e0da] px-4 py-3 lg:px-7 lg:py-5 flex flex-col gap-3 transition-all">
+      <div className="sticky top-0 z-30 bg-bg/80 backdrop-blur-md border-b border-[var(--color-border)] px-4 py-3 lg:px-7 lg:py-5 flex flex-col gap-3 transition-all">
         <div className="flex items-center justify-between gap-3 w-full">
           <div className="flex items-center gap-2.5 shrink-0">
-            <div className="lg:hidden w-8 h-8 bg-primary rounded-lg flex items-center justify-center shadow-lg shadow-primary/20">
-              <GraduationCap size={16} color="#fff" />
-            </div>
-            <h1 className="text-base lg:text-xl font-bold text-[#0f0e0d] tracking-tight">Dashboard</h1>
+            <button 
+              onClick={() => setSidebarOpen(true)}
+              className="lg:hidden w-8 h-8 bg-primary rounded-lg flex items-center justify-center shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all"
+            >
+              <Menu size={16} color="#fff" />
+            </button>
+            <h1 className="text-base lg:text-xl font-bold text-[var(--color-text)] tracking-tight">Dashboard</h1>
           </div>
 
           <div className="hidden lg:flex items-center relative flex-1 max-w-sm ml-4 group">
-            <Search size={14} className="absolute left-3.5 text-[#8c8a87] group-focus-within:text-primary transition-colors" />
+            <Search size={14} className="absolute left-3.5 text-[var(--color-subtext)] group-focus-within:text-primary transition-colors" />
             <input
               type="text"
               placeholder="Search subjects..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-[#faf9f7] border border-[#e3e0da] rounded-xl py-2 pl-10 pr-4 text-sm font-medium text-[#0f0e0d] outline-none focus:ring-4 focus:ring-primary/5 focus:border-primary/40 transition-all"
+              className="w-full bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl py-2 pl-10 pr-4 text-sm font-medium text-[var(--color-text)] outline-none focus:ring-4 focus:ring-primary/5 focus:border-primary/40 transition-all"
             />
           </div>
 
           <div className="flex items-center gap-2">
             <button 
               onClick={() => setShowMobileSearch(!showMobileSearch)}
-              className={`lg:hidden w-9 h-9 rounded-xl border border-[#e3e0da] flex items-center justify-center transition-all ${
-                showMobileSearch ? 'bg-primary/10 border-primary/30 text-primary' : 'hover:bg-white text-[#8c8a87]'
+              className={`lg:hidden w-9 h-9 rounded-xl border border-[var(--color-border)] flex items-center justify-center transition-all ${
+                showMobileSearch ? 'bg-primary/10 border-primary/30 text-primary' : 'hover:bg-white text-[var(--color-subtext)]'
               }`}
             >
               <Search size={15} />
@@ -172,8 +176,8 @@ const Dashboard = () => {
             <div className="relative">
               <button 
                 onClick={() => setShowNotifications(!showNotifications)}
-                className={`w-9 h-9 lg:w-10 lg:h-10 rounded-xl border border-[#e3e0da] flex items-center justify-center transition-all hover:bg-white relative ${
-                  showNotifications ? 'bg-white border-primary/30 text-primary shadow-sm' : 'text-[#8c8a87]'
+                className={`w-9 h-9 lg:w-10 lg:h-10 rounded-xl border border-[var(--color-border)] flex items-center justify-center transition-all hover:bg-white relative ${
+                  showNotifications ? 'bg-card-bg border-primary/30 text-primary shadow-sm' : 'text-[var(--color-subtext)]'
                 }`}
               >
                 <Bell size={15} />
@@ -190,22 +194,22 @@ const Dashboard = () => {
                       initial={{ opacity: 0, y: 10, scale: 0.95 }}
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                      className="absolute right-0 mt-3 w-80 max-h-[440px] bg-white border border-[#e3e0da] rounded-2xl shadow-2xl z-50 overflow-hidden flex flex-col"
+                      className="absolute right-0 mt-3 w-80 max-h-[440px] bg-card-bg border border-[var(--color-border)] rounded-2xl shadow-2xl z-50 overflow-hidden flex flex-col"
                     >
-                      <div className="p-4 border-b border-[#e3e0da]/50 bg-[#faf9f7] flex items-center justify-between">
-                        <h3 className="text-xs font-extrabold text-[#0f0e0d] uppercase tracking-wider">Notifications</h3>
+                      <div className="p-4 border-b border-[var(--color-border)]/50 bg-[var(--color-bg)] flex items-center justify-between">
+                        <h3 className="text-xs font-extrabold text-[var(--color-text)] uppercase tracking-wider">Notifications</h3>
                         {unreadCount > 0 && (
                           <button onClick={markNotificationsRead} className="text-[10px] font-bold text-primary hover:underline transition-all">Mark all as read</button>
                         )}
                       </div>
                       <div className="overflow-y-auto p-3 space-y-2.5">
                         {notifications.length === 0 ? (
-                          <div className="py-10 text-center text-[11px] text-[#8c8a87] font-medium">No new notifications.</div>
+                          <div className="py-10 text-center text-[11px] text-[var(--color-subtext)] font-medium">No new notifications.</div>
                         ) : (
                           notifications.map((n) => (
                             <div key={n._id} className={`p-3 rounded-[14px] border transition-all ${n.read ? 'bg-bg/30 border-transparent opacity-60' : 'bg-primary/5 border-primary/10'}`}>
-                              <p className="text-[12px] font-bold text-[#0f0e0d] mb-0.5">{n.title}</p>
-                              <p className="text-[11px] text-[#8c8a87] leading-relaxed font-medium">{n.message}</p>
+                              <p className="text-[12px] font-bold text-[var(--color-text)] mb-0.5">{n.title}</p>
+                              <p className="text-[11px] text-[var(--color-subtext)] leading-relaxed font-medium">{n.message}</p>
                             </div>
                           ))
                         )}
@@ -219,7 +223,7 @@ const Dashboard = () => {
             <img
               src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.name || 'S'}&backgroundColor=007aff`}
               alt="Profile"
-              className="w-8 h-8 lg:w-10 lg:h-10 rounded-full border border-[#e3e0da] bg-white shadow-sm cursor-pointer hover:border-primary/50 transition-all"
+              className="w-8 h-8 lg:w-10 lg:h-10 rounded-full border border-[var(--color-border)] bg-white shadow-sm cursor-pointer hover:border-primary/50 transition-all"
             />
           </div>
         </div>
@@ -233,14 +237,14 @@ const Dashboard = () => {
               className="lg:hidden"
             >
               <div className="relative">
-                <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#8c8a87]" />
+                <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--color-subtext)]" />
                 <input
                   autoFocus
                   type="text"
                   placeholder="Filter subjects..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full bg-white border border-[#e3e0da] rounded-xl py-2.5 pl-10 pr-4 text-sm font-medium outline-none focus:ring-4 focus:ring-primary/5 transition-all"
+                  className="w-full bg-card-bg border border-[var(--color-border)] rounded-xl py-2.5 pl-10 pr-4 text-sm font-medium outline-none focus:ring-4 focus:ring-primary/5 transition-all"
                 />
               </div>
             </motion.div>
@@ -263,12 +267,12 @@ const Dashboard = () => {
               <motion.div
                 key={i}
                 whileHover={{ y: -4 }}
-                className="bg-white border border-[#e3e0da] border-t-[3px] rounded-2xl p-4 lg:p-6 shadow-sm hover:shadow-md transition-all flex flex-col justify-center"
+                className="bg-card-bg border border-[var(--color-border)] border-t-[3px] rounded-2xl p-4 lg:p-6 shadow-sm hover:shadow-md transition-all flex flex-col justify-center"
                 style={{ borderTopColor: stat.color }}
               >
                 <div style={{ color: stat.color }} className="mb-3">{stat.icon}</div>
-                <div className="text-2xl lg:text-3xl font-bold text-[#0f0e0d] tracking-tighter mb-1">{stat.value}</div>
-                <div className="text-[10px] lg:text-[11px] font-extrabold text-[#8c8a87] uppercase tracking-wider">{stat.label}</div>
+                <div className="text-2xl lg:text-3xl font-bold text-[var(--color-text)] tracking-tighter mb-1">{stat.value}</div>
+                <div className="text-[10px] lg:text-[11px] font-extrabold text-[var(--color-subtext)] uppercase tracking-wider">{stat.label}</div>
               </motion.div>
             ))
           )}
@@ -278,14 +282,14 @@ const Dashboard = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
           {/* Today's schedule */}
           <div className="flex flex-col">
-            <div className="text-[11px] font-extrabold text-[#8c8a87] uppercase tracking-widest mb-4 flex items-center gap-2 px-1">
+            <div className="text-[11px] font-extrabold text-[var(--color-subtext)] uppercase tracking-widest mb-4 flex items-center gap-2 px-1">
               <span className="w-2 h-2 rounded-full bg-primary animate-pulse shadow-glow" />
               Today — {todayLabel}
             </div>
             
             <button 
                 onClick={() => setIsExtraModalOpen(true)}
-                className="mb-4 w-full py-3 border border-dashed border-[#e3e0da] rounded-2xl text-xs font-bold text-[#8c8a87] hover:border-primary/50 hover:text-primary transition-all flex items-center justify-center gap-2 bg-white/40"
+                className="mb-4 w-full py-3 border border-dashed border-[var(--color-border)] rounded-2xl text-xs font-bold text-[var(--color-subtext)] hover:border-primary/50 hover:text-primary transition-all flex items-center justify-center gap-2 bg-white/40"
             >
                 <Plus size={15} /> Log Extra Session
             </button>
@@ -293,9 +297,9 @@ const Dashboard = () => {
             {subjects.length === 0 ? (
                Array(3).fill(0).map((_, i) => <SlotSkeleton key={i} />)
             ) : todaySlots.length === 0 ? (
-              <div className="bg-white/50 border border-dashed border-[#e3e0da] rounded-2xl py-12 flex flex-col items-center justify-center text-center">
-                <Calendar size={28} className="text-[#8c8a87]/30 mb-3" />
-                <span className="text-sm font-medium text-[#8c8a87]">No classes today</span>
+              <div className="bg-white/50 border border-dashed border-[var(--color-border)] rounded-2xl py-12 flex flex-col items-center justify-center text-center">
+                <Calendar size={28} className="text-[var(--color-subtext)]/30 mb-3" />
+                <span className="text-sm font-medium text-[var(--color-subtext)]">No classes today</span>
               </div>
             ) : (
               <div className="space-y-3">
@@ -311,22 +315,22 @@ const Dashboard = () => {
                     <motion.div
                       key={i}
                       whileHover={{ x: 4 }}
-                      className={`group bg-white border border-[#e3e0da] border-l-[4px] rounded-xl p-3.5 lg:p-4 flex items-center gap-4 transition-all ${isUpdating ? 'opacity-60 grayscale-[0.5]' : 'hover:scale-[1.01] hover:shadow-md shadow-sm'}`}
+                      className={`group bg-card-bg border border-[var(--color-border)] border-l-[4px] rounded-xl p-3.5 lg:p-4 flex items-center gap-4 transition-all ${isUpdating ? 'opacity-60 grayscale-[0.5]' : 'hover:scale-[1.01] hover:shadow-md shadow-sm'}`}
                       style={{ borderLeftColor: color }}
                     >
-                      <div className="min-w-[50px]"><span className="text-[10px] font-bold text-[#8c8a87] uppercase">{slot.time}</span></div>
-                      <div className="flex-1 min-w-0"><span className="text-sm lg:text-[15px] font-bold text-[#0f0e0d] truncate block">{subject?.name || 'Unmapped Subject'}</span></div>
+                      <div className="min-w-[50px]"><span className="text-[10px] font-bold text-[var(--color-subtext)] uppercase">{slot.time}</span></div>
+                      <div className="flex-1 min-w-0"><span className="text-sm lg:text-[15px] font-bold text-[var(--color-text)] truncate block">{subject?.name || 'Unmapped Subject'}</span></div>
                       
                       <div className="flex items-center gap-2 ml-auto">
                         {subject && todayLog ? (
                           <div className="flex items-center gap-2">
                              <div className={`px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wide ${
                               todayLog.status === 'Absent' ? 'bg-danger/10 text-danger' : 
-                              todayLog.status === 'Present' ? 'bg-green-500/10 text-green-600' : 'bg-[#faf9f7] text-[#8c8a87]'
+                              todayLog.status === 'Present' ? 'bg-green-500/10 text-green-600' : 'bg-[var(--color-bg)] text-[var(--color-subtext)]'
                             }`}>
                               {todayLog.status} {todayLog.status === 'Present' ? '✓' : todayLog.status === 'Absent' ? '✗' : ''}
                             </div>
-                            <button onClick={() => undoAttendance(subject._id)} disabled={isUpdating} className="w-8 h-8 rounded-lg border border-[#e3e0da] flex items-center justify-center text-[#8c8a87] hover:bg-[#faf9f7] transition-all"><RotateCcw size={12} /></button>
+                            <button onClick={() => undoAttendance(subject._id)} disabled={isUpdating} className="w-8 h-8 rounded-lg border border-[var(--color-border)] flex items-center justify-center text-[var(--color-subtext)] hover:bg-[var(--color-bg)] transition-all"><RotateCcw size={12} /></button>
                           </div>
                         ) : subject ? (
                           <div className="flex items-center gap-1.5">
@@ -341,7 +345,7 @@ const Dashboard = () => {
                                   e.stopPropagation();
                                   setOpenSlotMenu(openSlotMenu === i ? null : i);
                                 }}
-                                className={`w-8 h-8 rounded-lg border flex items-center justify-center transition-all ${openSlotMenu === i ? 'bg-primary/10 border-primary/30 text-primary' : 'border-[#e3e0da] text-[#8c8a87] hover:bg-[#faf9f7]'}`}
+                                className={`w-8 h-8 rounded-lg border flex items-center justify-center transition-all ${openSlotMenu === i ? 'bg-primary/10 border-primary/30 text-primary' : 'border-[var(--color-border)] text-[var(--color-subtext)] hover:bg-[var(--color-bg)]'}`}
                               >
                                 <ChevronDown size={14} className={`transition-transform duration-200 ${openSlotMenu === i ? 'rotate-180' : ''}`} />
                               </button>
@@ -353,7 +357,7 @@ const Dashboard = () => {
                                       initial={{ opacity: 0, y: 10, scale: 0.95 }}
                                       animate={{ opacity: 1, y: 0, scale: 1 }}
                                       exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                                      className="absolute right-0 top-full mt-2 bg-white border border-[#e3e0da] rounded-xl shadow-2xl py-1.5 z-50 w-28 origin-top-right overflow-hidden"
+                                      className="absolute right-0 top-full mt-2 bg-card-bg border border-[var(--color-border)] rounded-xl shadow-2xl py-1.5 z-50 w-28 origin-top-right overflow-hidden"
                                     >
                                       {['Absent', 'Medical', 'OD', 'Cancelled'].map((st) => (
                                         <button 
@@ -362,7 +366,7 @@ const Dashboard = () => {
                                             markAttendance(subject._id, st, slot.credit || 1);
                                             setOpenSlotMenu(null);
                                           }} 
-                                          className="w-full text-left px-4 py-2 text-xs font-bold hover:bg-[#faf9f7] text-[#0f0e0d]"
+                                          className="w-full text-left px-4 py-2 text-xs font-bold hover:bg-[var(--color-bg)] text-[var(--color-text)]"
                                         >
                                           {st}
                                         </button>
@@ -384,11 +388,11 @@ const Dashboard = () => {
 
           {/* Bar Chart */}
           <div className="flex flex-col h-full">
-            <div className="text-[11px] font-extrabold text-[#8c8a87] uppercase tracking-widest mb-4 px-1">Engagement Mix</div>
-            <div className="bg-white border border-[#e3e0da] rounded-2xl p-5 lg:p-7 shadow-sm h-full flex flex-col justify-between">
+            <div className="text-[11px] font-extrabold text-[var(--color-subtext)] uppercase tracking-widest mb-4 px-1">Engagement Mix</div>
+            <div className="bg-card-bg border border-[var(--color-border)] rounded-2xl p-5 lg:p-7 shadow-sm h-full flex flex-col justify-between">
               <ResponsiveContainer width="100%" height={160}>
                 <BarChart data={barData} barSize={26}>
-                  <Tooltip cursor={false} contentStyle={{ background: '#fff', border: '1px solid #e3e0da', borderRadius: '12px', fontSize: '11px' }} />
+                  <Tooltip cursor={false} contentStyle={{ background: '#fff', border: '1px solid var(--color-border)', borderRadius: '12px', fontSize: '11px' }} />
                   <Bar dataKey="value" radius={[6, 6, 0, 0]}>
                     {barData.map((entry, i) => <Cell key={i} fill={entry.color} fillOpacity={0.85} />)}
                   </Bar>
@@ -400,9 +404,9 @@ const Dashboard = () => {
                   <div key={i} className="flex items-center justify-between gap-4">
                     <div className="flex items-center gap-2.5 min-w-0">
                       <div className="w-2 h-2 rounded-full shrink-0" style={{ background: d.color }} />
-                      <span className="text-[11px] font-bold text-[#0f0e0d] truncate">{d.full}</span>
+                      <span className="text-[11px] font-bold text-[var(--color-text)] truncate">{d.full}</span>
                     </div>
-                    <span className="text-[11px] font-extrabold text-[#8c8a87]">{d.value} sessions</span>
+                    <span className="text-[11px] font-extrabold text-[var(--color-subtext)]">{d.value} sessions</span>
                   </div>
                 ))}
               </div>
@@ -411,15 +415,15 @@ const Dashboard = () => {
         </div>
 
         {/* ── ACTIVITY & HEATMAP ── */}
-        <div className="bg-white border border-[#e3e0da] rounded-2xl p-5 lg:p-7 shadow-sm overflow-hidden">
-          <div className="text-[11px] font-extrabold text-[#8c8a87] uppercase tracking-widest mb-6">Global Attendance Flow</div>
+        <div className="bg-card-bg border border-[var(--color-border)] rounded-2xl p-5 lg:p-7 shadow-sm overflow-hidden">
+          <div className="text-[11px] font-extrabold text-[var(--color-subtext)] uppercase tracking-widest mb-6">Global Attendance Flow</div>
           <AttendanceHeatmap subjects={subjects} />
         </div>
 
         {/* ── TRANSCRIPT / COURSES ── */}
-        <div className="bg-white border border-[#e3e0da] rounded-2xl shadow-sm overflow-hidden">
-          <div className="px-6 py-4 border-b border-[#e3e0da] bg-[#faf9f7] flex items-center justify-between">
-            <h2 className="text-[11px] font-extrabold text-[#0f0e0d] uppercase tracking-widest">Active Courses</h2>
+        <div className="bg-card-bg border border-[var(--color-border)] rounded-2xl shadow-sm overflow-hidden">
+          <div className="px-6 py-4 border-b border-[var(--color-border)] bg-[var(--color-bg)] flex items-center justify-between">
+            <h2 className="text-[11px] font-extrabold text-[var(--color-text)] uppercase tracking-widest">Active Courses</h2>
             <Link to="/subjects" className="text-[11px] font-bold text-primary hover:underline transition-all">View All</Link>
           </div>
 
@@ -427,30 +431,30 @@ const Dashboard = () => {
              {/* Desktop Table */}
             <table className="hidden md:table w-full border-collapse">
               <thead>
-                <tr className="bg-[#faf9f7]/50">
+                <tr className="bg-[var(--color-bg)]/50">
                   {['Subject', 'Progress', 'Score', 'Status', 'Insights'].map(h => (
-                    <th key={h} className="px-6 py-3.5 text-left text-[10px] font-extrabold text-[#8c8a87] uppercase tracking-wider border-b border-[#e3e0da]">{h}</th>
+                    <th key={h} className="px-6 py-3.5 text-left text-[10px] font-extrabold text-[var(--color-subtext)] uppercase tracking-wider border-b border-[var(--color-border)]">{h}</th>
                   ))}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#e3e0da]/50">
+              <tbody className="divide-y divide-[var(--color-border)]/50">
                 {subjects.map(sub => {
                   const pct = sub.total > 0 ? (sub.attended / sub.total * 100).toFixed(1) : 0;
                   const isLow = pct < (sub.requiredAttendance || 75);
                   return (
-                    <tr key={sub._id} className="group hover:bg-[#faf9f7] transition-all cursor-pointer" onClick={() => window.location.href = `/subjects?view=${sub._id}`}>
+                    <tr key={sub._id} className="group hover:bg-[var(--color-bg)] transition-all cursor-pointer" onClick={() => window.location.href = `/subjects?view=${sub._id}`}>
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
                           <div className="w-2.5 h-2.5 rounded-full" style={{ background: sub.color || '#888' }} />
-                          <span className="text-sm font-bold text-[#0f0e0d]">{sub.name}</span>
+                          <span className="text-sm font-bold text-[var(--color-text)]">{sub.name}</span>
                         </div>
                       </td>
-                      <td className="px-6 py-4 text-xs font-semibold text-[#8c8a87]">{sub.attended} / {sub.total} sessions</td>
+                      <td className="px-6 py-4 text-xs font-semibold text-[var(--color-subtext)]">{sub.attended} / {sub.total} sessions</td>
                       <td className={`px-6 py-4 text-sm font-extrabold ${isLow ? 'text-danger' : 'text-green-600'}`}>{pct}%</td>
                       <td className="px-6 py-4">
                         <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase ${isLow ? 'bg-danger/10 text-danger' : 'bg-green-500/10 text-green-600'}`}>{isLow ? 'Warning' : 'On Track'}</span>
                       </td>
-                      <td className="px-6 py-4 text-[11px] font-bold text-[#8c8a87]">
+                      <td className="px-6 py-4 text-[11px] font-bold text-[var(--color-subtext)]">
                          {sub._safeBunks > 0 ? <span className="text-warning">{sub._safeBunks} safe skips</span> : sub._neededClasses > 0 ? <span className="text-danger">Need {sub._neededClasses} more</span> : 'Steady'}
                       </td>
                     </tr>
@@ -460,7 +464,7 @@ const Dashboard = () => {
             </table>
 
             {/* Mobile List */}
-            <div className="md:hidden divide-y divide-[#e3e0da]/50">
+            <div className="md:hidden divide-y divide-[var(--color-border)]/50">
                 {subjects.map(sub => {
                   const pct = sub.total > 0 ? (sub.attended / sub.total * 100).toFixed(1) : 0;
                   const isLow = pct < (sub.requiredAttendance || 75);
@@ -469,8 +473,8 @@ const Dashboard = () => {
                         <div className="flex items-center gap-3 min-w-0">
                            <div className="w-2 h-2 rounded-full shrink-0" style={{ background: sub.color || '#888' }} />
                            <div className="min-w-0">
-                              <p className="text-sm font-bold text-[#0f0e0d] truncate">{sub.name}</p>
-                              <p className="text-[10px] text-[#8c8a87] font-bold">
+                              <p className="text-sm font-bold text-[var(--color-text)] truncate">{sub.name}</p>
+                              <p className="text-[10px] text-[var(--color-subtext)] font-bold">
                                  {sub._safeBunks > 0 ? `${sub._safeBunks} skips` : sub._neededClasses > 0 ? `Need ${sub._neededClasses}` : 'On track'}
                               </p>
                            </div>
@@ -494,35 +498,35 @@ const Dashboard = () => {
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setIsExtraModalOpen(false)} />
             <motion.div 
               initial={{ scale: 0.9, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.9, opacity: 0, y: 20 }}
-              className="bg-white rounded-3xl w-full max-w-[420px] shadow-2xl overflow-hidden relative z-10"
+              className="bg-card-bg rounded-3xl w-full max-w-[420px] shadow-2xl overflow-hidden relative z-10 mx-auto"
             >
-              <div className="p-6 border-b border-[#e3e0da] flex items-center justify-between bg-[#faf9f7]">
-                <div><h2 className="text-lg font-extrabold text-[#0f0e0d] tracking-tight">Log Extra Session</h2><p className="text-xs text-[#8c8a87] font-medium leading-none mt-1">Add a session manually outside timetable</p></div>
-                <button onClick={() => setIsExtraModalOpen(false)} className="w-8 h-8 rounded-full hover:bg-white flex items-center justify-center text-[#8c8a87] transition-all"><X size={18} /></button>
+              <div className="p-5 lg:p-6 border-b border-[var(--color-border)] flex items-center justify-between bg-[var(--color-bg)]">
+                <div><h2 className="text-base lg:text-lg font-extrabold text-[var(--color-text)] tracking-tight">Log Extra Session</h2><p className="text-[10px] lg:text-xs text-[var(--color-subtext)] font-medium leading-none mt-1">Add a session manually outside timetable</p></div>
+                <button onClick={() => setIsExtraModalOpen(false)} className="w-8 h-8 rounded-full hover:bg-white flex items-center justify-center text-[var(--color-subtext)] transition-all"><X size={18} /></button>
               </div>
-              <div className="p-6 space-y-4">
+              <div className="p-5 lg:p-6 space-y-4">
                   <div className="flex flex-col gap-1.5">
-                    <label className="text-[11px] font-bold text-[#8c8a87] uppercase ml-1">Subject</label>
-                    <select value={extraForm.subjectId} onChange={(e) => setExtraForm({...extraForm, subjectId: e.target.value})} className="w-full bg-[#faf9f7] border border-[#e3e0da] rounded-xl py-2.5 px-3 text-sm font-bold text-[#0f0e0d]">
+                    <label className="text-[11px] font-bold text-[var(--color-subtext)] uppercase ml-1">Subject</label>
+                    <select value={extraForm.subjectId} onChange={(e) => setExtraForm({...extraForm, subjectId: e.target.value})} className="w-full bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl py-2.5 px-3 text-sm font-bold text-[var(--color-text)]">
                       <option value="">Select a subject</option>
                       {subjects.map(s => <option key={s._id} value={s._id}>{s.name}</option>)}
                     </select>
                   </div>
                   <div className="flex gap-4">
                     <div className="flex flex-col gap-1.5 flex-1">
-                      <label className="text-[11px] font-bold text-[#8c8a87] uppercase ml-1">Status</label>
-                      <select value={extraForm.status} onChange={(e) => setExtraForm({...extraForm, status: e.target.value})} className="w-full bg-[#faf9f7] border border-[#e3e0da] rounded-xl py-2.5 px-3 text-sm font-bold text-[#0f0e0d]">
+                      <label className="text-[11px] font-bold text-[var(--color-subtext)] uppercase ml-1">Status</label>
+                      <select value={extraForm.status} onChange={(e) => setExtraForm({...extraForm, status: e.target.value})} className="w-full bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl py-2.5 px-3 text-sm font-bold text-[var(--color-text)]">
                         {['Present', 'Absent', 'OD', 'Medical'].map(st => <option key={st} value={st}>{st}</option>)}
                       </select>
                     </div>
                     <div className="flex flex-col gap-1.5 w-24">
-                      <label className="text-[11px] font-bold text-[#8c8a87] uppercase ml-1">Credit</label>
-                      <input type="number" min="1" value={extraForm.credit} onChange={(e) => setExtraForm({...extraForm, credit: parseInt(e.target.value) || 1})} className="w-full bg-[#faf9f7] border border-[#e3e0da] rounded-xl py-2.5 px-3 text-sm font-bold text-[#0f0e0d]" />
+                      <label className="text-[11px] font-bold text-[var(--color-subtext)] uppercase ml-1">Credit</label>
+                      <input type="number" min="1" value={extraForm.credit} onChange={(e) => setExtraForm({...extraForm, credit: parseInt(e.target.value) || 1})} className="w-full bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl py-2.5 px-3 text-sm font-bold text-[var(--color-text)]" />
                     </div>
                   </div>
                   <div className="flex flex-col gap-1.5">
-                    <label className="text-[11px] font-bold text-[#8c8a87] uppercase ml-1">Date</label>
-                    <input type="date" value={extraForm.date} onChange={(e) => setExtraForm({...extraForm, date: e.target.value})} className="w-full bg-[#faf9f7] border border-[#e3e0da] rounded-xl py-2.5 px-3 text-sm font-bold text-[#0f0e0d]" />
+                    <label className="text-[11px] font-bold text-[var(--color-subtext)] uppercase ml-1">Date</label>
+                    <input type="date" value={extraForm.date} onChange={(e) => setExtraForm({...extraForm, date: e.target.value})} className="w-full bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl py-2.5 px-3 text-sm font-bold text-[var(--color-text)]" />
                   </div>
                   <button 
                     onClick={async () => {

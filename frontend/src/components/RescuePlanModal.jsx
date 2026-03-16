@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { X, Calendar, AlertTriangle, ShieldCheck, ArrowRight } from 'lucide-react';
+import { X, Calendar, AlertTriangle, ShieldCheck, ArrowRight, XCircle, CheckCircle2 } from 'lucide-react';
 import useStore from '../store/useStore';
 
 const RescuePlanModal = ({ subject, onClose }) => {
@@ -12,153 +12,124 @@ const RescuePlanModal = ({ subject, onClose }) => {
   }, [subject, getRecoveryPlan]);
 
   return (
-    <div style={modal.backdrop} onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+    <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
+      <motion.div 
+        initial={{ opacity: 0 }} 
+        animate={{ opacity: 1 }} 
+        exit={{ opacity: 0 }} 
+        className="absolute inset-0 bg-black/40 backdrop-blur-sm" 
+        onClick={onClose} 
+      />
       <motion.div
         initial={{ scale: 0.96, opacity: 0, y: 10 }}
         animate={{ scale: 1, opacity: 1, y: 0 }}
         exit={{ scale: 0.96, opacity: 0, y: 10 }}
         transition={{ type: 'spring', damping: 26, stiffness: 300 }}
-        style={modal.wrap}
+        className="bg-card-bg rounded-[32px] w-full max-w-[420px] max-h-[85vh] shadow-[0_32px_80px_rgba(0,0,0,0.15)] overflow-hidden flex flex-col relative z-10 border border-border mx-auto"
       >
-        <div style={modal.header}>
+        <div className="p-5 lg:p-6 border-b border-border bg-bg flex items-center justify-between shrink-0">
           <div>
-            <h2 style={modal.title}>Rescue Plan</h2>
-            <p style={modal.subtitle}>For <b>{subject?.name}</b></p>
+            <h2 className="text-base lg:text-xl font-extrabold text-text tracking-tight">{subject?.name || 'Subject'}</h2>
+            <p className="text-[10px] lg:text-xs text-subtext font-bold mt-1 uppercase tracking-wider">Smart Recovery Roadmap</p>
           </div>
-          <button onClick={onClose} style={modal.closeBtn} className="hover:bg-bg transition-all">
-            <X size={15} />
-          </button>
+          <button onClick={onClose} className="w-8 h-8 rounded-full bg-card-bg border border-border flex items-center justify-center text-subtext hover:text-text transition-all"><X size={16} /></button>
         </div>
 
-        <div style={modal.body}>
-          {!plan && <p>Loading...</p>}
+        <div className="p-5 lg:p-6 overflow-y-auto flex-1 no-scrollbar">
+          {!plan && <p className="text-subtext text-center py-10 font-bold">Recalculating...</p>}
 
           {plan?.status === 'error' && (
-            <div style={alert.wrapWarning}>
-               <AlertTriangle size={18} style={{ color: '#BA7517' }} />
-               <p style={alert.textWarning}>{plan.message}</p>
+            <div className="flex items-center gap-3 p-4 bg-orange-50 dark:bg-orange-950/20 rounded-2xl border border-orange-100 dark:border-orange-900/30">
+               <AlertTriangle size={18} className="text-orange-600" />
+               <p className="text-xs font-bold text-orange-700 dark:text-orange-400 m-0">{plan.message}</p>
             </div>
           )}
 
           {plan?.status === 'safe' && (
-             <div style={alert.wrapSuccess}>
-               <ShieldCheck size={24} style={{ color: '#0F6E56', marginBottom: 8 }} />
-               <p style={{ fontSize: 16, fontWeight: 700, color: '#0f0e0d', margin: 0 }}>You are Safe!</p>
-               <p style={{ ...alert.textSuccess, marginTop: 4 }}>You are already above your target attendance for this subject. Keep it up!</p>
+             <div className="p-6 bg-green-50 dark:bg-green-950/20 rounded-3xl border border-green-100 dark:border-green-900/30 text-center space-y-2">
+               <ShieldCheck size={32} className="text-green-600 mx-auto" />
+               <p className="text-lg font-black text-green-800 dark:text-green-400 m-0">You are Safe!</p>
+               <p className="text-xs font-bold text-green-700 dark:text-green-500/80 leading-relaxed">You are already above your target attendance for this subject. Keep it up!</p>
              </div>
           )}
 
           {plan?.status === 'impossible' && (
-             <div style={alert.wrapDanger}>
-               <X size={24} style={{ color: '#A32D2D', marginBottom: 8 }} />
-               <p style={{ fontSize: 16, fontWeight: 700, color: '#0f0e0d', margin: 0 }}>Mathematically Impossible</p>
-               <p style={{ ...alert.textDanger, marginTop: 4 }}>Even if you attend every single class from today until the end of the semester, you cannot reach the target attendance.</p>
+             <div className="p-6 bg-red-50 dark:bg-red-950/20 rounded-3xl border border-red-100 dark:border-red-900/30 text-center space-y-2">
+               <XCircle size={32} className="text-red-600 mx-auto" />
+               <p className="text-lg font-black text-red-800 dark:text-red-400 m-0">Mathematically Impossible</p>
+               <p className="text-xs font-bold text-red-700 dark:text-red-500/80 leading-relaxed">Even if you attend every single class from today until the end of the semester, you cannot reach the target attendance.</p>
              </div>
           )}
 
           {plan?.status === 'plan' && (
-             <>
-               <div style={planSummary.wrap}>
-                  <div style={planSummary.icon}>
-                    <Calendar size={18} style={{ color: '#185FA5' }} />
-                  </div>
-                  <div>
-                    <h3 style={planSummary.title}>Action Required</h3>
-                    <p style={planSummary.text}>
-                      You must attend the next <b>{plan.totalRequired}</b> classes to strictly hit your target.
-                    </p>
-                  </div>
-               </div>
+             <div className="space-y-6">
+                <div className="bg-bg p-5 rounded-2xl border border-border flex flex-col gap-4 shadow-sm">
+                   <div className="flex-1">
+                     <h3 className="text-xs font-black text-subtext uppercase tracking-widest mb-3">Goal Progress</h3>
+                     <div className="flex items-center gap-3">
+                        <div className="flex-1 h-3 bg-white dark:bg-card-bg rounded-full overflow-hidden border border-border/50">
+                           <motion.div 
+                             initial={{ width: 0 }}
+                             animate={{ width: `${(plan.currentPct / plan.targetPct) * 100}%` }}
+                             className="h-full bg-orange-500 rounded-full shadow-sm"
+                           />
+                        </div>
+                        <span className="text-xs font-black text-orange-600 dark:text-orange-400">{plan.currentPct}%</span>
+                     </div>
+                     <p className="text-xs font-bold text-text mt-4">
+                       Target <b>{plan.targetPct}%</b> by <b>{new Date(plan.targetDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</b>
+                     </p>
+                   </div>
+                </div>
 
-               <p style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#b0ada8', marginBottom: 12 }}>
-                 Mandatory Schedule
-               </p>
-
-               <div style={list.wrap}>
-                 {plan.dates.map((d, i) => (
-                    <div key={i} style={list.item}>
-                      <div style={list.dateBox}>
-                        <span style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', color: '#8c8a87' }}>
-                          {new Date(d.date).toLocaleDateString('en-GB', { month: 'short' })}
-                        </span>
-                        <span style={{ fontSize: 16, fontWeight: 800, color: '#0f0e0d', lineHeight: 1 }}>
-                          {new Date(d.date).toLocaleDateString('en-GB', { day: 'numeric' })}
-                        </span>
-                      </div>
-                      <div style={{ flex: 1 }}>
-                        <p style={{ fontSize: 13, fontWeight: 700, color: '#4a4845' }}>
-                          {new Date(d.date).toLocaleDateString('en-GB', { weekday: 'long' })}
-                        </p>
-                        <p style={{ fontSize: 11, color: '#8c8a87', marginTop: 2 }}>
-                          {d.classes} class{d.classes > 1 ? 'es' : ''} scheduled
-                        </p>
-                      </div>
-                      {i !== plan.dates.length - 1 && (
-                         <ArrowRight size={14} style={{ color: '#dcd9d4' }} />
-                      )}
-                      {i === plan.dates.length - 1 && (
-                         <div style={{ padding: '4px 8px', background: '#E1F5EE', color: '#0F6E56', borderRadius: 8, fontSize: 10, fontWeight: 800 }}>
-                           TARGET HIT
+                <div>
+                  <p className="text-[10px] font-black text-subtext uppercase tracking-widest mb-4 px-1">
+                    Recovery Roadmap
+                  </p>
+                  
+                  <div className="flex flex-col gap-3">
+                    {plan.dates.map((d, i) => (
+                       <div key={i} className="flex items-center gap-4 p-3 bg-card-bg border border-border rounded-2xl hover:border-primary/30 transition-all shadow-sm group">
+                         <div className="flex flex-col items-center justify-center w-12 h-12 bg-bg rounded-xl gap-0.5 border border-border group-hover:bg-primary/5 transition-colors">
+                           <span className="text-[8px] font-black uppercase text-subtext">
+                             {new Date(d.date).toLocaleDateString('en-GB', { month: 'short' })}
+                           </span>
+                           <span className="text-base font-black text-text leading-none">
+                             {new Date(d.date).toLocaleDateString('en-GB', { day: 'numeric' })}
+                           </span>
                          </div>
-                      )}
-                    </div>
-                 ))}
-               </div>
-             </>
-          )}
+                         
+                         <div className="flex-1 min-w-0">
+                           <div className="flex items-center justify-between">
+                             <p className="text-sm font-bold text-text truncate">Mandatory Session</p>
+                             <div className="flex items-center gap-1.5 bg-green-50 dark:bg-green-950/30 px-2 py-1 rounded-lg border border-green-100 dark:border-green-900/30">
+                               <CheckCircle2 size={12} className="text-green-600" />
+                               <span className="text-[10px] font-black text-green-700 dark:text-green-400">MUST ATTEND</span>
+                             </div>
+                           </div>
+                           <p className="text-[10px] font-bold text-subtext uppercase tracking-wider mt-1.5 flex items-center gap-1.5">
+                             <Calendar size={10} /> {new Date(d.date).toLocaleDateString('en-GB', { weekday: 'long' })}
+                           </p>
+                         </div>
+                       </div>
+                    ))}
+                  </div>
+                </div>
 
+                <div className="p-4 bg-primary/5 border border-primary/10 rounded-2xl flex items-start gap-3">
+                   <ArrowRight size={18} className="text-primary mt-0.5" />
+                   <div className="flex-1">
+                      <p className="text-xs font-bold text-text leading-relaxed">
+                        Following this roadmap will bring your attendance to exactly <span className="text-primary font-black">{plan.targetPct}%</span> by semester end.
+                      </p>
+                   </div>
+                </div>
+             </div>
+          )}
         </div>
       </motion.div>
     </div>
   );
-};
-
-const modal = {
-  backdrop: {
-    position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(4px)',
-    zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16,
-  },
-  wrap: {
-    background: 'var(--card-bg)', borderRadius: 16, border: '0.5px solid var(--border)',
-    boxShadow: '0 24px 60px rgba(0,0,0,0.12)', width: '100%', maxWidth: 420,
-    maxHeight: '85vh', display: 'flex', flexDirection: 'column'
-  },
-  header: {
-    display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12,
-    padding: '20px 20px 16px', borderBottom: '0.5px solid var(--border)', flexShrink: 0
-  },
-  title: { fontSize: 18, fontWeight: 800, color: 'var(--text)', margin: 0, letterSpacing: '-0.02em' },
-  subtitle: { fontSize: 13, color: 'var(--subtext)', marginTop: 4 },
-  closeBtn: {
-    width: 30, height: 30, borderRadius: 8, border: '0.5px solid var(--border)',
-    background: 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center',
-    cursor: 'pointer', color: 'var(--subtext)', flexShrink: 0,
-  },
-  body: { padding: '20px', overflowY: 'auto', flex: 1 },
-};
-
-const alert = {
-  wrapWarning: { display: 'flex', alignItems: 'center', gap: 10, padding: 16, background: '#FDF6E3', borderRadius: 12, border: '1px solid #F5E1A4' },
-  textWarning: { fontSize: 13, color: '#BA7517', margin: 0, fontWeight: 500 },
-  
-  wrapSuccess: { padding: 20, background: '#E1F5EE', borderRadius: 12, border: '1px solid #A2DAC3', textAlign: 'center' },
-  textSuccess: { fontSize: 13, color: '#0F6E56', margin: 0 },
-
-  wrapDanger: { padding: 20, background: '#FCEBEB', borderRadius: 12, border: '1px solid #EAC4C4', textAlign: 'center' },
-  textDanger: { fontSize: 13, color: '#A32D2D', margin: 0 },
-};
-
-const planSummary = {
-  wrap: { display: 'flex', alignItems: 'center', gap: 14, padding: '16px', background: 'var(--bg)', borderRadius: 12, marginBottom: 24 },
-  icon: { width: 40, height: 40, borderRadius: 10, background: 'var(--card-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' },
-  title: { fontSize: 14, fontWeight: 700, color: 'var(--text)', margin: 0 },
-  text: { fontSize: 12, color: 'var(--text)', opacity: 0.8, margin: '4px 0 0', lineHeight: 1.4 }
-};
-
-const list = {
-  wrap: { display: 'flex', flexDirection: 'column', gap: 8 },
-  item: { display: 'flex', alignItems: 'center', gap: 14, padding: '12px 14px', background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: 12 },
-  dateBox: { display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: 46, height: 46, background: 'var(--bg)', borderRadius: 10, gap: 2 }
 };
 
 export default RescuePlanModal;

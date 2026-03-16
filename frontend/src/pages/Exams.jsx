@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Calendar, Plus, Trash2, BookOpen, Clock, AlertCircle, GraduationCap, X, ChevronRight } from 'lucide-react';
+import { Calendar, Plus, Trash2, BookOpen, Clock, AlertCircle, GraduationCap, X, ChevronRight, Menu } from 'lucide-react';
 import useStore from '../store/useStore';
 import toast from 'react-hot-toast';
 
 const Exams = () => {
-  const { subjects, exams, fetchExams, addExam, deleteExam } = useStore();
+  const { subjects, exams, fetchExams, addExam, deleteExam, setSidebarOpen } = useStore();
   const [showAdd, setShowAdd] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
@@ -29,18 +29,21 @@ const Exams = () => {
   const upcomingExams = [...exams].sort((a, b) => new Date(a.date) - new Date(b.date));
 
   return (
-    <div className="flex-1 bg-[#faf9f7] min-h-screen pb-24 animate-in">
+    <div className="flex-1 bg-[var(--color-bg)] min-h-screen pb-24 animate-in">
       <div className="max-w-[800px] mx-auto px-4 lg:px-7 py-6 lg:py-10 flex flex-col gap-8">
         
         {/* ── HEADER ── */}
         <header className="flex flex-col md:flex-row md:items-end justify-between gap-6">
           <div className="flex items-center gap-3">
-             <div className="lg:hidden w-8 h-8 bg-primary rounded-lg flex items-center justify-center shadow-lg shadow-primary/20">
-               <GraduationCap size={16} color="#fff" />
-             </div>
+             <button 
+               onClick={() => setSidebarOpen(true)}
+               className="lg:hidden w-8 h-8 bg-primary rounded-lg flex items-center justify-center shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all"
+             >
+               <Menu size={16} color="#fff" />
+             </button>
              <div>
-               <h1 className="text-2xl lg:text-3xl font-bold text-[#0f0e0d] tracking-tight">Assessments</h1>
-               <p className="text-xs lg:text-sm text-[#8c8a87] font-medium mt-1">Track your exams, midterms, and project deadlines.</p>
+               <h1 className="text-2xl lg:text-3xl font-bold text-[var(--color-text)] tracking-tight">Assessments</h1>
+               <p className="text-xs lg:text-sm text-[var(--color-subtext)] font-medium mt-1">Track your exams, midterms, and project deadlines.</p>
              </div>
           </div>
           <button 
@@ -68,9 +71,9 @@ const Exams = () => {
         <div className="flex flex-col gap-4">
           {upcomingExams.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 text-center opacity-40">
-              <Calendar size={40} className="text-[#8c8a87] mb-4" />
-              <p className="text-sm font-bold text-[#0f0e0d]">All Clear</p>
-              <p className="text-[11px] font-medium text-[#8c8a87] mt-1 max-w-[200px]">No upcoming deadlines recorded for this semester.</p>
+              <Calendar size={40} className="text-[var(--color-subtext)] mb-4" />
+              <p className="text-sm font-bold text-[var(--color-text)]">All Clear</p>
+              <p className="text-[11px] font-medium text-[var(--color-subtext)] mt-1 max-w-[200px]">No upcoming deadlines recorded for this semester.</p>
             </div>
           ) : (
             upcomingExams.map(exam => {
@@ -84,13 +87,13 @@ const Exams = () => {
                   key={exam._id}
                   initial={{ opacity: 0, y: 10 }}
                   whileInView={{ opacity: 1, y: 0 }}
-                  className="bg-white border border-[#e3e0da] rounded-2xl flex relative overflow-hidden group shadow-sm hover:shadow-xl transition-all"
+                  className="bg-card-bg border border-[var(--color-border)] rounded-2xl flex relative overflow-hidden group shadow-sm hover:shadow-xl transition-all"
                 >
-                  <div className="w-1.5 shrink-0" style={{ background: sub?.color || '#e3e0da' }} />
+                  <div className="w-1.5 shrink-0" style={{ background: sub?.color || 'var(--color-border)' }} />
                   <div className="flex-1 p-5 md:p-6 flex items-center justify-between gap-6">
                     <div className="flex-1 min-w-0">
                       <div className="flex flex-wrap items-center gap-3 mb-2">
-                        <span className="text-[9px] font-black uppercase tracking-widest text-[#8c8a87] bg-[#faf9f7] px-2 py-0.5 rounded-md border border-[#e3e0da]/50">{exam.type}</span>
+                        <span className="text-[9px] font-black uppercase tracking-widest text-[var(--color-subtext)] bg-[var(--color-bg)] px-2 py-0.5 rounded-md border border-[var(--color-border)]/50">{exam.type}</span>
                         <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-md ${
                           isPassed ? 'bg-neutral-100 text-neutral-500' : 
                           isUrgent ? 'bg-red-50 text-red-600 border border-red-100' : 'bg-green-50 text-green-600 border border-green-100'
@@ -98,10 +101,10 @@ const Exams = () => {
                           {isPassed ? 'Passed' : daysLeft === 0 ? 'Due Today' : `${daysLeft} days left`}
                         </span>
                       </div>
-                      <h3 className="text-base lg:text-lg font-extrabold text-[#0f0e0d] leading-tight mb-2 truncate">{exam.name}</h3>
-                      <div className="flex items-center gap-4 text-[11px] font-bold text-[#8c8a87]">
+                      <h3 className="text-base lg:text-lg font-extrabold text-[var(--color-text)] leading-tight mb-2 truncate">{exam.name}</h3>
+                      <div className="flex items-center gap-4 text-[11px] font-bold text-[var(--color-subtext)]">
                          <div className="flex items-center gap-1.5"><BookOpen size={12} className="shrink-0" /> {sub?.name || 'Unmapped'}</div>
-                         <div className="w-1 h-1 rounded-full bg-[#e3e0da]" />
+                         <div className="w-1 h-1 rounded-full bg-[var(--color-border)]" />
                          <div className="flex items-center gap-1.5"><Clock size={12} className="shrink-0" /> {new Date(exam.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</div>
                       </div>
                     </div>
@@ -125,38 +128,38 @@ const Exams = () => {
               initial={{ scale: 0.95, opacity: 0, y: 10 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.95, opacity: 0, y: 10 }}
-              className="bg-white rounded-[32px] w-full max-w-[440px] shadow-2xl overflow-hidden relative z-10 border border-[#e3e0da]"
+              className="bg-card-bg rounded-[32px] w-full max-w-[440px] shadow-2xl overflow-hidden relative z-10 border border-[var(--color-border)]"
             >
-               <div className="p-6 border-b border-[#e3e0da] bg-[#faf9f7] flex items-center justify-between">
+               <div className="p-6 border-b border-[var(--color-border)] bg-[var(--color-bg)] flex items-center justify-between">
                   <div>
-                    <h2 className="text-xl font-extrabold text-[#0f0e0d] tracking-tight">New Deadline</h2>
-                    <p className="text-xs text-[#8c8a87] font-bold mt-1">Track an upcoming academic requirement.</p>
+                    <h2 className="text-xl font-extrabold text-[var(--color-text)] tracking-tight">New Deadline</h2>
+                    <p className="text-xs text-[var(--color-subtext)] font-bold mt-1">Track an upcoming academic requirement.</p>
                   </div>
-                  <button onClick={() => setShowAdd(false)} className="w-9 h-9 rounded-full bg-white border border-[#e3e0da] flex items-center justify-center text-[#8c8a87] hover:text-[#0f0e0d] transition-all"><X size={18} /></button>
+                  <button onClick={() => setShowAdd(false)} className="w-9 h-9 rounded-full bg-card-bg border border-[var(--color-border)] flex items-center justify-center text-[var(--color-subtext)] hover:text-[var(--color-text)] transition-all"><X size={18} /></button>
                </div>
                
                <form onSubmit={handleSubmit} className="p-6 space-y-5">
                   <div className="space-y-1.5">
-                    <label className="text-[10px] font-black text-[#8c8a87] uppercase ml-1">Assessment Name</label>
-                    <input required value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} placeholder="e.g. Midterm 1" className="w-full bg-[#faf9f7] border border-[#e3e0da] rounded-xl py-3 px-4 text-sm font-bold text-[#0f0e0d] outline-none focus:border-primary/50 transition-all" />
+                    <label className="text-[10px] font-black text-[var(--color-subtext)] uppercase ml-1">Assessment Name</label>
+                    <input required value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} placeholder="e.g. Midterm 1" className="w-full bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl py-3 px-4 text-sm font-bold text-[var(--color-text)] outline-none focus:border-primary/50 transition-all" />
                   </div>
                   
                   <div className="grid grid-cols-2 gap-4">
                      <div className="space-y-1.5">
-                        <label className="text-[10px] font-black text-[#8c8a87] uppercase ml-1">Type</label>
-                        <select value={formData.type} onChange={e => setFormData({...formData, type: e.target.value})} className="w-full bg-[#faf9f7] border border-[#e3e0da] rounded-xl py-3 px-4 text-sm font-bold text-[#0f0e0d] outline-none appearance-none cursor-pointer">
+                        <label className="text-[10px] font-black text-[var(--color-subtext)] uppercase ml-1">Type</label>
+                        <select value={formData.type} onChange={e => setFormData({...formData, type: e.target.value})} className="w-full bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl py-3 px-4 text-sm font-bold text-[var(--color-text)] outline-none appearance-none cursor-pointer">
                            {['Midterm', 'Final', 'Quiz', 'Assignment'].map(t => <option key={t}>{t}</option>)}
                         </select>
                      </div>
                      <div className="space-y-1.5">
-                        <label className="text-[10px] font-black text-[#8c8a87] uppercase ml-1">Date</label>
-                        <input required type="date" value={formData.date} onChange={e => setFormData({...formData, date: e.target.value})} className="w-full bg-[#faf9f7] border border-[#e3e0da] rounded-xl py-3 px-4 text-sm font-bold text-[#0f0e0d] outline-none" />
+                        <label className="text-[10px] font-black text-[var(--color-subtext)] uppercase ml-1">Date</label>
+                        <input required type="date" value={formData.date} onChange={e => setFormData({...formData, date: e.target.value})} className="w-full bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl py-3 px-4 text-sm font-bold text-[var(--color-text)] outline-none" />
                      </div>
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="text-[10px] font-black text-[#8c8a87] uppercase ml-1">Subject</label>
-                    <select required value={formData.subjectId} onChange={e => setFormData({...formData, subjectId: e.target.value})} className="w-full bg-[#faf9f7] border border-[#e3e0da] rounded-xl py-3 px-4 text-sm font-bold text-[#0f0e0d] outline-none appearance-none cursor-pointer">
+                    <label className="text-[10px] font-black text-[var(--color-subtext)] uppercase ml-1">Subject</label>
+                    <select required value={formData.subjectId} onChange={e => setFormData({...formData, subjectId: e.target.value})} className="w-full bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl py-3 px-4 text-sm font-bold text-[var(--color-text)] outline-none appearance-none cursor-pointer">
                        <option value="">Select subject...</option>
                        {subjects.map(sub => <option key={sub._id} value={sub._id}>{sub.name}</option>)}
                     </select>

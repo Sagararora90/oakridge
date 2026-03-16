@@ -20,17 +20,16 @@ const navItems = [
 
 const bottomBarItems = [
   { name: 'Home',      icon: LayoutDashboard, path: '/dashboard'  },
+  { name: 'Schedule',  icon: Calendar,        path: '/timetable'  },
+  { name: 'Ask AI',    icon: BrainCircuit,    path: '/ai-planner' },
+  { name: 'Analysis',  icon: BarChart3,       path: '/analytics'  },
   { name: 'Subjects',  icon: BookOpen,        path: '/subjects'   },
-  { name: 'AI',        icon: BrainCircuit,    path: '/ai-planner' },
-  { name: 'Exams',     icon: Target,          path: '/exams'      },
-  { name: 'Stats',     icon: BarChart3,       path: '/analytics'  },
   { name: 'Settings',  icon: Settings,        path: '/settings'   },
 ];
 
 const Sidebar = () => {
-  const { logout, user, theme, toggleTheme } = useStore();
+  const { logout, user, theme, toggleTheme, sidebarOpen, setSidebarOpen } = useStore();
   const navigate = useNavigate();
-  const [drawerOpen, setDrawerOpen] = useState(false);
 
   const handleLogout = () => {
     logout();
@@ -86,14 +85,14 @@ const Sidebar = () => {
           MOBILE SLIDE-IN DRAWER
       ══════════════════════════════ */}
       <AnimatePresence>
-        {drawerOpen && (
+        {sidebarOpen && (
           <>
             <motion.div
               key="backdrop"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              onClick={() => setDrawerOpen(false)}
+              onClick={() => setSidebarOpen(false)}
               className="lg:hidden fixed inset-0 z-50 bg-black/40 backdrop-blur-sm"
             />
             <motion.div
@@ -113,7 +112,7 @@ const Sidebar = () => {
                   <span className="text-lg font-bold text-text">Oakridge</span>
                 </div>
                 <button
-                  onClick={() => setDrawerOpen(false)}
+                  onClick={() => setSidebarOpen(false)}
                   className="w-8 h-8 flex items-center justify-center rounded-lg text-subtext hover:bg-bg transition-all"
                 >
                   <X className="w-4 h-4" />
@@ -121,13 +120,32 @@ const Sidebar = () => {
               </div>
 
               {/* Drawer nav */}
-              <div className="flex-1 overflow-y-auto px-4 py-6 space-y-8">
-                <NavGroup label="Main Menu"        items={navItems.slice(0, 4)} onNavigate={() => setDrawerOpen(false)} />
-                <NavGroup label="Social & Personal" items={navItems.slice(4)}   onNavigate={() => setDrawerOpen(false)} />
+              <div className="flex-1 overflow-y-auto px-4 py-6 space-y-8 no-scrollbar">
+                <NavGroup label="Main Menu"        items={navItems.slice(0, 4)} onNavigate={() => setSidebarOpen(false)} />
+                <NavGroup label="Social & Personal" items={navItems.slice(4)}   onNavigate={() => setSidebarOpen(false)} />
               </div>
 
               {/* Drawer footer */}
               <div className="px-4 pb-8 pt-4 border-t border-border">
+                <button
+                  onClick={toggleTheme}
+                  className="w-full flex items-center justify-between px-4 py-3 mb-4 bg-bg rounded-2xl border border-border/50 transition-all active:scale-95"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+                      {theme === 'light' ? <Moon size={16} /> : <Sun size={16} />}
+                    </div>
+                    <span className="text-sm font-bold text-text">
+                      {theme === 'light' ? 'Dark Mode' : 'Light Mode'}
+                    </span>
+                  </div>
+                  <div className={`w-10 h-5 rounded-full p-1 transition-colors relative ${theme === 'dark' ? 'bg-primary' : 'bg-subtext/20'}`}>
+                    <motion.div 
+                      animate={{ x: theme === 'dark' ? 20 : 0 }}
+                      className="w-3 h-3 bg-white rounded-full shadow-sm"
+                    />
+                  </div>
+                </button>
                 <UserCard user={user} />
                 <LogoutButton onClick={handleLogout} />
               </div>

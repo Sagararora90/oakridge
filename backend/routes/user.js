@@ -116,4 +116,29 @@ router.delete('/extra-classes/:id', auth, async (req, res) => {
   }
 });
 
+// @route   PUT api/user/settings
+// @desc    Update user settings (notifications, etc)
+router.put('/settings', auth, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    if (req.body.notificationSettings) {
+      user.notificationSettings = {
+        ...user.notificationSettings.toObject(),
+        ...req.body.notificationSettings
+      };
+    }
+
+    if (req.body.name) user.name = req.body.name;
+    if (req.body.email) user.email = req.body.email;
+
+    await user.save();
+    res.json(user);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server error');
+  }
+});
+
 module.exports = router;

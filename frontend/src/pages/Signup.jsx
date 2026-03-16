@@ -21,7 +21,7 @@ const Signup = () => {
     setFormData(f => ({ ...f, [field]: e.target.value }));
 
   return (
-    <div className="min-h-screen bg-[#faf9f7] flex items-stretch overflow-hidden">
+    <div className="min-h-screen bg-[var(--color-bg)] flex items-stretch overflow-hidden">
       <div className="flex w-full">
 
         {/* ── LEFT brand panel (hidden on mall/medium screens) ── */}
@@ -63,7 +63,7 @@ const Signup = () => {
         </div>
 
         {/* ── RIGHT form ── */}
-        <div className="flex-1 flex items-center justify-center p-6 sm:p-8 lg:p-12 bg-white lg:bg-[#faf9f7]">
+        <div className="flex-1 flex items-center justify-center p-6 sm:p-8 lg:p-12 bg-white lg:bg-[var(--color-bg)]">
           <motion.div
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
@@ -75,13 +75,13 @@ const Signup = () => {
               <div className="w-9 h-9 bg-primary rounded-[9px] flex items-center justify-center shadow-lg shadow-primary/20">
                 <GraduationCap size={20} color="#fff" />
               </div>
-              <span className="text-lg font-extrabold text-[#0f0e0d] tracking-tight">Oakridge</span>
+              <span className="text-lg font-extrabold text-[var(--color-text)] tracking-tight">Oakridge</span>
             </div>
 
             {/* Heading */}
             <div className="mb-8">
-              <h2 className="text-2xl font-extrabold text-[#0f0e0d] tracking-tight">Create an account</h2>
-              <p className="text-sm text-[#8c8a87] mt-1.5 font-medium">It's free and takes less than a minute.</p>
+              <h2 className="text-2xl font-extrabold text-[var(--color-text)] tracking-tight">Create an account</h2>
+              <p className="text-sm text-[var(--color-subtext)] mt-1.5 font-medium">It's free and takes less than a minute.</p>
             </div>
 
             {/* Error */}
@@ -99,7 +99,7 @@ const Signup = () => {
             <form onSubmit={handleSubmit} className="flex flex-col gap-4">
 
               <div className="flex flex-col gap-1.5">
-                <label className="text-[11px] font-bold text-[#8c8a87] uppercase tracking-wider ml-1">Full name</label>
+                <label className="text-[11px] font-bold text-[var(--color-subtext)] uppercase tracking-wider ml-1">Full name</label>
                 <div className="relative flex items-center group">
                   <User size={14} className="absolute left-3.5 text-[#b0ada8] group-focus-within:text-primary transition-colors" />
                   <input
@@ -108,13 +108,13 @@ const Signup = () => {
                     value={formData.name}
                     onChange={set('name')}
                     placeholder="Your name"
-                    className="w-full bg-white lg:bg-white border border-[#e3e0da] focus:border-primary/50 focus:ring-4 focus:ring-primary/5 rounded-[10px] py-2.5 pl-10 pr-4 text-sm font-medium text-[#0f0e0d] outline-none transition-all placeholder:text-[#c8c5bf]"
+                    className="w-full bg-white lg:bg-card-bg border border-[var(--color-border)] focus:border-primary/50 focus:ring-4 focus:ring-primary/5 rounded-[10px] py-2.5 pl-10 pr-4 text-sm font-medium text-[var(--color-text)] outline-none transition-all placeholder:text-[#c8c5bf]"
                   />
                 </div>
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <label className="text-[11px] font-bold text-[#8c8a87] uppercase tracking-wider ml-1">Email address</label>
+                <label className="text-[11px] font-bold text-[var(--color-subtext)] uppercase tracking-wider ml-1">Email address</label>
                 <div className="relative flex items-center group">
                   <Mail size={14} className="absolute left-3.5 text-[#b0ada8] group-focus-within:text-primary transition-colors" />
                   <input
@@ -123,13 +123,13 @@ const Signup = () => {
                     value={formData.email}
                     onChange={set('email')}
                     placeholder="you@example.com"
-                    className="w-full bg-white lg:bg-white border border-[#e3e0da] focus:border-primary/50 focus:ring-4 focus:ring-primary/5 rounded-[10px] py-2.5 pl-10 pr-4 text-sm font-medium text-[#0f0e0d] outline-none transition-all placeholder:text-[#c8c5bf]"
+                    className="w-full bg-white lg:bg-card-bg border border-[var(--color-border)] focus:border-primary/50 focus:ring-4 focus:ring-primary/5 rounded-[10px] py-2.5 pl-10 pr-4 text-sm font-medium text-[var(--color-text)] outline-none transition-all placeholder:text-[#c8c5bf]"
                   />
                 </div>
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <label className="text-[11px] font-bold text-[#8c8a87] uppercase tracking-wider ml-1">Password</label>
+                <label className="text-[11px] font-bold text-[var(--color-subtext)] uppercase tracking-wider ml-1">Password</label>
                 <div className="relative flex items-center group">
                   <Lock size={14} className="absolute left-3.5 text-[#b0ada8] group-focus-within:text-primary transition-colors" />
                   <input
@@ -138,7 +138,7 @@ const Signup = () => {
                     value={formData.password}
                     onChange={set('password')}
                     placeholder="Min. 8 characters"
-                    className="w-full bg-white lg:bg-white border border-[#e3e0da] focus:border-primary/50 focus:ring-4 focus:ring-primary/5 rounded-[10px] py-2.5 pl-10 pr-4 text-sm font-medium text-[#0f0e0d] outline-none transition-all placeholder:text-[#c8c5bf]"
+                    className="w-full bg-white lg:bg-card-bg border border-[var(--color-border)] focus:border-primary/50 focus:ring-4 focus:ring-primary/5 rounded-[10px] py-2.5 pl-10 pr-4 text-sm font-medium text-[var(--color-text)] outline-none transition-all placeholder:text-[#c8c5bf]"
                   />
                 </div>
               </div>
@@ -162,7 +162,7 @@ const Signup = () => {
               </button>
             </form>
 
-            <p className="mt-8 text-center text-[13px] text-[#8c8a87] font-medium">
+            <p className="mt-8 text-center text-[13px] text-[var(--color-subtext)] font-medium">
               Already have an account?{' '}
               <Link to="/login" className="text-primary font-bold hover:underline underline-offset-4 decoration-2 transition-all">
                 Sign in

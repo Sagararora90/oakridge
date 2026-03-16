@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import api from '../services/api';
+import toast from 'react-hot-toast';
 
 const useStore = create((set, get) => ({
   user: null,
@@ -11,6 +12,8 @@ const useStore = create((set, get) => ({
   aiBrief: '',
   theme: localStorage.getItem('theme') || 'light',
   notifications: [],
+  sidebarOpen: false,
+  setSidebarOpen: (open) => set({ sidebarOpen: open }),
   loading: false,
   error: null,
   updatingAttendance: {}, // subjectId -> boolean
@@ -161,6 +164,28 @@ const useStore = create((set, get) => ({
     }
   },
 
+  calculateBunkability: (subject) => {
+    if (!subject || subject.total === 0) return { score: 50, label: 'No Data', color: '#8c8a87' };
+    
+    const percentage = (subject.attended / subject.total) * 100;
+    
+    if (percentage < 75) {
+      return { score: 0, label: 'Critical', color: '#ef4444', sessions: 0 };
+    }
+
+    // How many can we bunk?
+    // (attended) / (total + x) >= 0.75
+    // attended >= 0.75 * (total + x)
+    // attended / 0.75 >= total + x
+    // x <= (attended / 0.75) - total
+    const maxBunks = Math.floor((subject.attended / 0.75) - subject.total);
+    
+    if (maxBunks === 0) return { score: 20, label: 'Risky', color: '#f97316', sessions: 0 };
+    if (maxBunks === 1) return { score: 50, label: 'Balanced', color: '#eab308', sessions: 1 };
+    if (maxBunks === 2) return { score: 75, label: 'Safe', color: '#22c55e', sessions: 2 };
+    return { score: 100, label: 'Bunkable', color: '#10b981', sessions: maxBunks };
+  },
+
   addExtraAttendance: async (extraData) => {
     set({ loading: true });
     try {
@@ -234,6 +259,16 @@ const useStore = create((set, get) => ({
       const res = await api.get('/user/gamification');
       set({ gamification: res.data });
     } catch (err) {}
+  },
+
+  updateUserSettings: async (settings) => {
+    try {
+      const res = await api.put('/user/settings', settings);
+      set({ user: res.data });
+      toast.success('Settings updated');
+    } catch (err) {
+      toast.error('Failed to update settings');
+    }
   },
 
   syncPortalAttendance: async (formData) => {
@@ -498,9 +533,11 @@ const useStore = create((set, get) => ({
            });
 
            if (classesOnThisDay > 0) {
+              const projectedPct = Math.round((currentAttended / currentTotal) * 100);
               mandatoryDates.push({
                  date: new Date(checkDate).toISOString(),
-                 classes: classesOnThisDay
+                 classes: classesOnThisDay,
+                 projectedPct
               });
            }
 
@@ -509,6 +546,8 @@ const useStore = create((set, get) => ({
                  status: 'plan', 
                  targetDate: checkDate.toISOString(), 
                  dates: mandatoryDates,
+                 currentPct: Math.round((subject.attended / (subject.total || 1)) * 100),
+                 targetPct: Math.round(target * 100),
                  totalRequired: mandatoryDates.reduce((a, d) => a + d.classes, 0)
               };
            }

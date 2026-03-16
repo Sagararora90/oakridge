@@ -56,6 +56,12 @@ const UserSchema = new mongoose.Schema({
     read: { type: Boolean, default: false },
     createdAt: { type: Date, default: Date.now }
   }],
+  notificationSettings: {
+    emailEnabled: { type: Boolean, default: false },
+    notificationEmail: { type: String, default: null },
+    reminderTime: { type: Number, default: 15 }, // Minutes before class start
+    sentNotifications: { type: [String], default: [] } // format: "YYYY-MM-DD_slotId"
+  },
   createdAt: { type: Date, default: Date.now }
 });
 

@@ -2,6 +2,8 @@ require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
+const User = require('./models/User');
+const { checkAndSendNotifications } = require('./services/notificationService');
 
 const app = express();
 
@@ -46,6 +48,11 @@ app.use((req, res, next) => {
   next();
 });
 
+// Set up periodic notification checks every 5 minutes
+setInterval(() => {
+  checkAndSendNotifications(User);
+}, 5 * 60 * 1000);
+
 // Routes
 app.get('/', (req, res) => res.send('Oakridge API is running...'));
 app.get('/api/test', (req, res) => res.json({ message: 'API is working' }));
@@ -57,6 +64,9 @@ app.use('/api/groups', require('./routes/groups'));
 app.use('/api/ai', require('./routes/ai'));
 app.use('/api/exams', require('./routes/exams'));
 app.use('/api/notifications', require('./routes/notifications'));
+// Assuming there might be a new holiday route based on the snippet, adding it here
+// app.use('/api/holidays', require('./routes/holidays')); 
+
 
 // Catch-all route for 404s
 app.use((req, res) => {

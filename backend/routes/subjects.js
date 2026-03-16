@@ -233,36 +233,37 @@ router.put('/:id/snapshot', auth, async (req, res) => {
 // @route   PUT api/subjects/:id/log
 // @desc    Add or edit a daily attendance log (Editable Timeline)
 router.put('/:id/log', auth, async (req, res) => {
-  const { date, status } = req.body; // status: 'Present', 'Absent', 'OD', 'Medical'
-  try {
-    const user = await User.findById(req.user.id);
-    const subject = user.subjects.id(req.params.id);
-    if (!subject) return res.status(404).json({ message: 'Subject not found' });
-
-    const targetDateStr = new Date(date).toISOString().split('T')[0];
-    const baseDateStr = subject.initialDate ? new Date(subject.initialDate).toISOString().split('T')[0] : null;
-
-    // Lock validation
-    if (baseDateStr && targetDateStr < baseDateStr) {
-      return res.status(403).json({ message: 'Cannot edit logs before the Snapshot date' });
-    }
-
-    // Find if a log already exists for this date
-    let existingLog = null;
-    for (let record of subject.attendanceRecords) {
-      if (record.date && new Date(record.date).toISOString().split('T')[0] === targetDateStr) {
-        existingLog = record;
-        break;
+    const { date, status, credit } = req.body; // status: 'Present', 'Absent', 'OD', 'Medical'
+    try {
+      const user = await User.findById(req.user.id);
+      const subject = user.subjects.id(req.params.id);
+      if (!subject) return res.status(404).json({ message: 'Subject not found' });
+  
+      const targetDateStr = new Date(date).toISOString().split('T')[0];
+      const baseDateStr = subject.initialDate ? new Date(subject.initialDate).toISOString().split('T')[0] : null;
+  
+      // Lock validation
+      if (baseDateStr && targetDateStr < baseDateStr) {
+        return res.status(403).json({ message: 'Cannot edit logs before the Snapshot date' });
       }
-    }
-
-    if (existingLog) {
-      existingLog.status = status;
-    } else {
-      subject.attendanceRecords.push({ date: new Date(date), status, credit: 1 });
-    }
-
-    recalculateAttendance(subject);
+  
+      // Find if a log already exists for this date
+      let existingLog = null;
+      for (let record of subject.attendanceRecords) {
+        if (record.date && new Date(record.date).toISOString().split('T')[0] === targetDateStr) {
+          existingLog = record;
+          break;
+        }
+      }
+  
+      if (existingLog) {
+        existingLog.status = status;
+        if (credit !== undefined) existingLog.credit = credit;
+      } else {
+        subject.attendanceRecords.push({ date: new Date(date), status, credit: credit || 1 });
+      }
+  
+      recalculateAttendance(subject);
     await user.save();
     res.json(subject);
   } catch (err) {

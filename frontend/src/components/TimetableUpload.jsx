@@ -97,8 +97,8 @@ const TimetableUpload = ({ onComplete }) => {
                     onDrop={handleDrop}
                     style={{
                       ...modal.dropZone,
-                      borderColor: dragOver ? 'var(--accent, #7c3aed)' : '#e3e0da',
-                      background:  dragOver ? 'rgba(124,58,237,0.04)' : '#faf9f7',
+                      borderColor: dragOver ? 'var(--accent, #7c3aed)' : 'var(--color-border)',
+                      background:  dragOver ? 'rgba(124,58,237,0.04)' : 'var(--color-bg)',
                     }}
                   >
                     <div style={modal.dropIcon}>
@@ -125,7 +125,7 @@ const TimetableUpload = ({ onComplete }) => {
                     <div style={modal.previewOverlay}>
                       <div style={modal.previewMeta}>
                         <Check size={14} style={{ color: '#0F6E56' }} />
-                        <span style={{ fontSize: 12, color: '#0f0e0d', fontWeight: 500 }}>
+                        <span style={{ fontSize: 12, color: 'var(--color-text)', fontWeight: 500 }}>
                           {file?.name}
                         </span>
                       </div>
@@ -185,7 +185,7 @@ const modal = {
   wrap: {
     background:   '#fff',
     borderRadius: 16,
-    border:       '0.5px solid #e3e0da',
+    border:       '0.5px solid var(--color-border)',
     boxShadow:    '0 24px 60px rgba(0,0,0,0.12)',
     width:        '100%',
     maxWidth:     480,
@@ -211,13 +211,13 @@ const modal = {
   title: {
     fontSize:    15,
     fontWeight:  700,
-    color:       '#0f0e0d',
+    color:       'var(--color-text)',
     margin:      0,
     lineHeight:  1.3,
   },
   subtitle: {
     fontSize:   12,
-    color:      '#8c8a87',
+    color:      'var(--color-subtext)',
     marginTop:  3,
     lineHeight: 1.5,
   },
@@ -225,13 +225,13 @@ const modal = {
     width:           30,
     height:          30,
     borderRadius:    8,
-    border:          '0.5px solid #e3e0da',
+    border:          '0.5px solid var(--color-border)',
     background:      'transparent',
     display:         'flex',
     alignItems:      'center',
     justifyContent:  'center',
     cursor:          'pointer',
-    color:           '#8c8a87',
+    color:           'var(--color-subtext)',
     flexShrink:      0,
   },
   body: {
@@ -272,7 +272,7 @@ const modal = {
   previewWrap: {
     borderRadius: 12,
     overflow:     'hidden',
-    border:       '0.5px solid #e3e0da',
+    border:       '0.5px solid var(--color-border)',
     position:     'relative',
   },
   previewImg: {
@@ -293,7 +293,7 @@ const modal = {
     display:        'flex',
     alignItems:     'center',
     justifyContent: 'space-between',
-    borderTop:      '0.5px solid #e3e0da',
+    borderTop:      '0.5px solid var(--color-border)',
   },
   previewMeta: {
     display:    'flex',

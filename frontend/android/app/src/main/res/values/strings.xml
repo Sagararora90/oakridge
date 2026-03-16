@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Oakridge Scholar</string>
+    <string name="title_activity_main">Oakridge Scholar</string>
+    <string name="package_name">com.oakridge.scholar</string>
+    <string name="custom_url_scheme">com.oakridge.scholar</string>
+</resources>

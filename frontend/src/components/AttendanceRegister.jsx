@@ -25,6 +25,7 @@ const AttendanceRegister = ({ subject, onClose }) => {
   const [isAddingLog, setIsAddingLog] = useState(false);
   const [newLogDate, setNewLogDate] = useState(new Date().toISOString().split('T')[0]);
   const [newLogStatus, setNewLogStatus] = useState('Present');
+  const [newLogCredit, setNewLogCredit] = useState(1);
 
   const handleSaveSnapshot = async (e) => {
     e.preventDefault();
@@ -41,9 +42,9 @@ const AttendanceRegister = ({ subject, onClose }) => {
     }
   };
 
-  const handleSaveLog = async (date, status) => {
+  const handleSaveLog = async (date, status, credit) => {
     try {
-      await editDailyLog(subject._id, { date, status });
+      await editDailyLog(subject._id, { date, status, credit: Number(credit || 1) });
       setEditingLogDate(null);
       setIsAddingLog(false);
       toast.success('Log updated');
@@ -67,46 +68,46 @@ const AttendanceRegister = ({ subject, onClose }) => {
         initial={{ scale: 0.95, opacity: 0, y: 10 }}
         animate={{ scale: 1, opacity: 1, y: 0 }}
         exit={{ scale: 0.95, opacity: 0, y: 10 }}
-        className="bg-white rounded-[32px] w-full max-w-[480px] max-h-[85vh] shadow-[0_32px_80px_rgba(0,0,0,0.15)] overflow-hidden flex flex-col relative z-10 border border-[#e3e0da]"
+        className="bg-card-bg rounded-[32px] w-full max-w-[480px] max-h-[85vh] shadow-[0_32px_80px_rgba(0,0,0,0.15)] overflow-hidden flex flex-col relative z-10 border border-[var(--color-border)] mx-auto"
       >
-        <div className="p-6 border-b border-[#e3e0da] bg-[#faf9f7] flex items-center justify-between shrink-0">
+        <div className="p-5 lg:p-6 border-b border-[var(--color-border)] bg-[var(--color-bg)] flex items-center justify-between shrink-0">
           <div>
-            <h2 className="text-xl font-extrabold text-[#0f0e0d] tracking-tight">{subject.name}</h2>
-            <p className="text-xs text-[#8c8a87] font-bold mt-1">
+            <h2 className="text-base lg:text-xl font-extrabold text-[var(--color-text)] tracking-tight">{subject.name}</h2>
+            <p className="text-[10px] lg:text-xs text-[var(--color-subtext)] font-bold mt-1">
               {subject.attended} / {subject.total} sessions <span className="text-primary ml-1.5">({subject.total > 0 ? ((subject.attended / subject.total) * 100).toFixed(1) : 0}%)</span>
             </p>
           </div>
-          <button onClick={onClose} className="w-9 h-9 rounded-full bg-white border border-[#e3e0da] flex items-center justify-center text-[#8c8a87] hover:text-[#0f0e0d] transition-all"><X size={18} /></button>
+          <button onClick={onClose} className="w-8 h-8 rounded-full bg-card-bg border border-[var(--color-border)] flex items-center justify-center text-[var(--color-subtext)] hover:text-[var(--color-text)] transition-all"><X size={16} /></button>
         </div>
 
         <div className="p-6 overflow-y-auto flex-1">
           {snapshotMode ? (
-            <motion.form initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} onSubmit={handleSaveSnapshot} className="bg-[#faf9f7] p-5 rounded-3xl border border-[#e3e0da] space-y-4">
+            <motion.form initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} onSubmit={handleSaveSnapshot} className="bg-[var(--color-bg)] p-4 lg:p-5 rounded-3xl border border-[var(--color-border)] space-y-4">
               <div className="flex items-center gap-2 mb-2">
-                <Lock size={14} className="text-[#8c8a87]" />
-                <span className="text-xs font-black uppercase tracking-wider text-[#0f0e0d]">Set Baseline Snapshot</span>
+                <Lock size={14} className="text-[var(--color-subtext)]" />
+                <span className="text-[10px] font-black uppercase tracking-wider text-[var(--color-text)]">Set Baseline Snapshot</span>
               </div>
-              <p className="text-[11px] text-[#8c8a87] font-medium leading-relaxed">Enter the current attendance shown in your university portal. This freezes prior logs to ensure data integrity.</p>
+              <p className="text-[10px] lg:text-[11px] text-[var(--color-subtext)] font-medium leading-relaxed">Enter the current attendance shown in your university portal.</p>
               
               <div className="space-y-4">
                 <div className="space-y-1.5">
-                  <label className="text-[10px] font-black text-[#8c8a87] uppercase ml-1">Snapshot Date</label>
-                  <input type="date" value={snapDate} onChange={e => setSnapDate(e.target.value)} required className="w-full bg-white border border-[#e3e0da] rounded-xl py-2.5 px-4 text-sm font-bold text-[#0f0e0d] focus:border-primary/50 outline-none" />
+                  <label className="text-[9px] lg:text-[10px] font-black text-[var(--color-subtext)] uppercase ml-1">Snapshot Date</label>
+                  <input type="date" value={snapDate} onChange={e => setSnapDate(e.target.value)} required className="w-full bg-card-bg border border-[var(--color-border)] rounded-xl py-2 px-3 text-sm font-bold text-[var(--color-text)] focus:border-primary/50 outline-none" />
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-3 lg:gap-4">
                   <div className="space-y-1.5">
-                    <label className="text-[10px] font-black text-[#8c8a87] uppercase ml-1">Attended</label>
-                    <input type="number" min="0" value={snapAttended} onChange={e => setSnapAttended(e.target.value)} required className="w-full bg-white border border-[#e3e0da] rounded-xl py-2.5 px-4 text-sm font-bold text-[#0f0e0d] focus:border-primary/50 outline-none" />
+                    <label className="text-[9px] lg:text-[10px] font-black text-[var(--color-subtext)] uppercase ml-1">Attended</label>
+                    <input type="number" min="0" value={snapAttended} onChange={e => setSnapAttended(e.target.value)} required className="w-full bg-card-bg border border-[var(--color-border)] rounded-xl py-2 px-3 text-sm font-bold text-[var(--color-text)] focus:border-primary/50 outline-none" />
                   </div>
                   <div className="space-y-1.5">
-                    <label className="text-[10px] font-black text-[#8c8a87] uppercase ml-1">Total</label>
-                    <input type="number" min="0" value={snapTotal} onChange={e => setSnapTotal(e.target.value)} required className="w-full bg-white border border-[#e3e0da] rounded-xl py-2.5 px-4 text-sm font-bold text-[#0f0e0d] focus:border-primary/50 outline-none" />
+                    <label className="text-[9px] lg:text-[10px] font-black text-[var(--color-subtext)] uppercase ml-1">Total</label>
+                    <input type="number" min="0" value={snapTotal} onChange={e => setSnapTotal(e.target.value)} required className="w-full bg-card-bg border border-[var(--color-border)] rounded-xl py-2 px-3 text-sm font-bold text-[var(--color-text)] focus:border-primary/50 outline-none" />
                   </div>
                 </div>
               </div>
-              <div className="pt-2 flex gap-3">
-                 {subject.initialDate && <button type="button" onClick={() => setSnapshotMode(false)} className="flex-1 py-3 text-xs font-bold text-[#8c8a87] border border-[#e3e0da] rounded-xl hover:bg-white transition-all">Cancel</button>}
-                 <button type="submit" className="flex-1 py-3 px-4 bg-primary text-white text-[12px] font-black uppercase tracking-wider rounded-xl shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-98 transition-all flex items-center justify-center gap-2">
+              <div className="pt-2 flex flex-col sm:flex-row gap-2">
+                 {subject.initialDate && <button type="button" onClick={() => setSnapshotMode(false)} className="w-full sm:flex-1 py-2.5 text-[11px] font-bold text-[var(--color-subtext)] border border-[var(--color-border)] rounded-xl hover:bg-white transition-all">Cancel</button>}
+                 <button type="submit" className="w-full sm:flex-1 py-2.5 px-4 bg-primary text-white text-[11px] font-black uppercase tracking-wider rounded-xl shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-98 transition-all flex items-center justify-center gap-2">
                     <Save size={14} /> Save Baseline
                  </button>
               </div>
@@ -115,16 +116,16 @@ const AttendanceRegister = ({ subject, onClose }) => {
             <div className="space-y-6">
               {/* Snapshot Header */}
               {subject.initialDate && (
-                <div className="flex items-center gap-4 p-4 bg-[#faf9f7] rounded-[20px] border border-[#e3e0da] border-dashed">
-                  <div className="w-12 h-12 rounded-2xl bg-white border border-[#e3e0da] flex flex-col items-center justify-center gap-0.5 shadow-sm">
-                    <Lock size={12} className="text-[#8c8a87]" />
-                    <span className="text-[9px] font-black text-[#0f0e0d] transform -translate-y-0.5">{new Date(subject.initialDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</span>
+                <div className="flex items-center gap-4 p-4 bg-[var(--color-bg)] rounded-[20px] border border-[var(--color-border)] border-dashed">
+                  <div className="w-12 h-12 rounded-2xl bg-card-bg border border-[var(--color-border)] flex flex-col items-center justify-center gap-0.5 shadow-sm">
+                    <Lock size={12} className="text-[var(--color-subtext)]" />
+                    <span className="text-[9px] font-black text-[var(--color-text)] transform -translate-y-0.5">{new Date(subject.initialDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</span>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-black text-[#0f0e0d]">Baseline Snapshot</p>
-                    <p className="text-[10px] font-bold text-[#8c8a87] uppercase tracking-wide">Sync point: {subject.initialAttended}/{subject.initialTotal}</p>
+                    <p className="text-sm font-black text-[var(--color-text)]">Baseline Snapshot</p>
+                    <p className="text-[10px] font-bold text-[var(--color-subtext)] uppercase tracking-wide">Sync point: {subject.initialAttended}/{subject.initialTotal}</p>
                   </div>
-                  <button onClick={() => setSnapshotMode(true)} className="p-2 rounded-lg text-[#8c8a87] hover:bg-white hover:text-primary transition-all"><Edit3 size={15} /></button>
+                  <button onClick={() => setSnapshotMode(true)} className="p-2 rounded-lg text-[var(--color-subtext)] hover:bg-white hover:text-primary transition-all"><Edit3 size={15} /></button>
                 </div>
               )}
 
@@ -139,23 +140,29 @@ const AttendanceRegister = ({ subject, onClose }) => {
               {/* Add Log Section */}
               <div className="space-y-3">
                 {!isAddingLog ? (
-                  <button onClick={() => setIsAddingLog(true)} className="w-full py-3.5 border border-dashed border-[#e3e0da] rounded-2xl text-[11px] font-black uppercase tracking-widest text-[#8c8a87] hover:border-primary/50 hover:text-primary transition-all flex items-center justify-center gap-2 bg-[#faf9f7]/50">
+                  <button onClick={() => setIsAddingLog(true)} className="w-full py-3.5 border border-dashed border-[var(--color-border)] rounded-2xl text-[11px] font-black uppercase tracking-widest text-[var(--color-subtext)] hover:border-primary/50 hover:text-primary transition-all flex items-center justify-center gap-2 bg-[var(--color-bg)]/50">
                     <Plus size={16} /> Add Daily Entry
                   </button>
                 ) : (
-                  <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="p-4 bg-white border border-primary/30 shadow-xl shadow-primary/5 rounded-2xl flex items-center gap-3">
-                    <input type="date" value={newLogDate} onChange={e => setNewLogDate(e.target.value)} className="bg-[#faf9f7] border border-[#e3e0da] rounded-lg px-2 py-1.5 text-xs font-bold text-[#0f0e0d] outline-none" min={subject.initialDate ? new Date(subject.initialDate).toISOString().split('T')[0] : undefined} />
-                    <select value={newLogStatus} onChange={e => setNewLogStatus(e.target.value)} className="flex-1 bg-[#faf9f7] border border-[#e3e0da] rounded-lg px-2 py-1.5 text-xs font-bold text-[#0f0e0d] outline-none">
-                      {STATUS_CHOICES.map(s => <option key={s} value={s}>{s}</option>)}
-                    </select>
-                    <div className="flex gap-2">
-                       <button onClick={() => handleSaveLog(newLogDate, newLogStatus)} className="p-1.5 text-green-600 hover:scale-110 transition-transform"><CheckCircle2 size={20} /></button>
-                       <button onClick={() => setIsAddingLog(false)} className="p-1.5 text-[#8c8a87] hover:scale-110 transition-transform"><X size={20} /></button>
+                  <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="p-4 bg-card-bg border border-primary/30 shadow-xl shadow-primary/5 rounded-2xl flex flex-col gap-3">
+                    <div className="flex items-center gap-3">
+                      <input type="date" value={newLogDate} onChange={e => setNewLogDate(e.target.value)} className="bg-[var(--color-bg)] border border-[var(--color-border)] rounded-lg px-2 py-1.5 text-xs font-bold text-[var(--color-text)] outline-none" min={subject.initialDate ? new Date(subject.initialDate).toISOString().split('T')[0] : undefined} />
+                      <select value={newLogStatus} onChange={e => setNewLogStatus(e.target.value)} className="flex-1 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-lg px-2 py-1.5 text-xs font-bold text-[var(--color-text)] outline-none">
+                        {STATUS_CHOICES.map(s => <option key={s} value={s}>{s}</option>)}
+                      </select>
+                      <div className="w-16 flex flex-col gap-0.5">
+                        <label className="text-[8px] font-black text-[var(--color-subtext)] uppercase ml-1">Credit</label>
+                        <input type="number" min="1" value={newLogCredit} onChange={e => setNewLogCredit(e.target.value)} className="w-full bg-[var(--color-bg)] border border-[var(--color-border)] rounded-lg px-2 py-1.5 text-xs font-bold text-[var(--color-text)] outline-none" />
+                      </div>
+                    </div>
+                    <div className="flex gap-2 justify-end pt-1 border-t border-[var(--color-border)]/30">
+                       <button onClick={() => handleSaveLog(newLogDate, newLogStatus, newLogCredit)} className="flex items-center gap-1.5 px-3 py-1.5 bg-green-500 text-white rounded-lg text-[10px] font-black uppercase tracking-wider hover:scale-105 transition-transform"><CheckCircle2 size={14} /> Add Log</button>
+                       <button onClick={() => setIsAddingLog(false)} className="flex items-center gap-1.5 px-3 py-1.5 bg-[var(--color-bg)] text-[var(--color-subtext)] rounded-lg text-[10px] font-black uppercase tracking-wider hover:scale-105 transition-transform"><X size={14} /> Cancel</button>
                     </div>
                   </motion.div>
                 )}
 
-                <div className="divide-y divide-[#e3e0da]/50 border-t border-[#e3e0da]/50">
+                <div className="divide-y divide-[var(--color-border)]/50 border-t border-[var(--color-border)]/50">
                   {sortedLogs.map((log) => {
                     const dateStr = new Date(log.date).toISOString().split('T')[0];
                     const isEditing = editingLogDate === dateStr;
@@ -165,20 +172,26 @@ const AttendanceRegister = ({ subject, onClose }) => {
                       <div key={dateStr} className="py-4 flex items-center justify-between gap-4 group">
                         <div className="flex items-center gap-4">
                            <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: colorConfig.text.replace('text-[', '').replace(']', '') }} />
-                           <span className="text-xs font-bold text-[#0f0e0d] w-16">{new Date(log.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</span>
+                           <span className="text-xs font-bold text-[var(--color-text)] w-16">{new Date(log.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</span>
                         </div>
                         
                         {isEditing ? (
-                          <div className="flex items-center gap-2 flex-1 animate-in slide-in-from-right-2">
-                             <select value={log.status} onChange={(e) => handleSaveLog(dateStr, e.target.value)} className="flex-1 bg-[#faf9f7] border border-[#e3e0da] rounded-lg px-3 py-1.5 text-xs font-bold text-[#0f0e0d] outline-none" autoFocus>
-                                {STATUS_CHOICES.map(s => <option key={s} value={s}>{s}</option>)}
-                             </select>
-                             <button onClick={() => setEditingLogDate(null)} className="p-1.5 text-[#8c8a87]"><X size={16} /></button>
+                          <div className="flex flex-col gap-2 flex-1 animate-in slide-in-from-right-2">
+                             <div className="flex items-center gap-2">
+                               <select value={log.status} onChange={(e) => handleSaveLog(dateStr, e.target.value, log.credit)} className="flex-1 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-lg px-3 py-1.5 text-xs font-bold text-[var(--color-text)] outline-none" autoFocus>
+                                  {STATUS_CHOICES.map(s => <option key={s} value={s}>{s}</option>)}
+                               </select>
+                               <div className="w-16">
+                                 <input type="number" min="1" value={log.credit || 1} onChange={(e) => handleSaveLog(dateStr, log.status, e.target.value)} className="w-full bg-[var(--color-bg)] border border-[var(--color-border)] rounded-lg px-2 py-1.5 text-xs font-bold text-[var(--color-text)] outline-none" />
+                               </div>
+                               <button onClick={() => setEditingLogDate(null)} className="p-1.5 text-[var(--color-subtext)]"><X size={16} /></button>
+                             </div>
                           </div>
                         ) : (
                           <div className="flex items-center gap-3">
+                             {log.credit > 1 && <span className="text-[9px] font-black text-primary bg-primary/10 px-1.5 py-0.5 rounded-md">{log.credit} Cr</span>}
                              <span className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${colorConfig.bg} ${colorConfig.text}`}>{log.status}</span>
-                             <button onClick={() => setEditingLogDate(dateStr)} className="p-1 px-3 text-[#8c8a87] hover:text-[#0f0e0d] transition-colors"><Edit3 size={14} /></button>
+                             <button onClick={() => setEditingLogDate(dateStr)} className="p-1 px-3 text-[var(--color-subtext)] hover:text-[var(--color-text)] transition-colors"><Edit3 size={14} /></button>
                           </div>
                         )}
                       </div>
@@ -186,8 +199,8 @@ const AttendanceRegister = ({ subject, onClose }) => {
                   })}
                   {sortedLogs.length === 0 && !isAddingLog && (
                     <div className="py-12 text-center">
-                       <p className="text-xs font-bold text-[#8c8a87]">No recent logs found.</p>
-                       <p className="text-[10px] text-[#8c8a87]/60 mt-1 uppercase tracking-widest">Logs before the baseline are hidden</p>
+                       <p className="text-xs font-bold text-[var(--color-subtext)]">No recent logs found.</p>
+                       <p className="text-[10px] text-[var(--color-subtext)]/60 mt-1 uppercase tracking-widest">Logs before the baseline are hidden</p>
                     </div>
                   )}
                 </div>

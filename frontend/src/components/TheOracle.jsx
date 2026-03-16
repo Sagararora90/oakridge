@@ -20,7 +20,7 @@ const parseTimeToMinutes = (timeStr) => {
 };
 
 const TheOracle = () => {
-  const { timetable, subjects, editDailyLog, token } = useStore();
+  const { timetable, subjects, editDailyLog, token, calculateBunkability } = useStore();
   const [activePrompt, setActivePrompt] = useState(null);
   const [dismissedSlots, setDismissedSlots] = useState(new Set()); // Keep track of dismissed prompts in this session
 
@@ -79,8 +79,31 @@ const TheOracle = () => {
 
         if (!hasLoggedToday) {
             // We found a match! Set the active prompt.
-            setActivePrompt({ slot, subject, key: slotKey });
-            return; // break out of loop, show only one prompt at a time
+            setActivePrompt({ slot, subject, key: slotKey, type: 'post-class' });
+            return;
+        }
+      }
+
+      // ── PREVENTIVE ALERT (UPCOMING) ──
+      const startTimeStr = parts[0].trim();
+      const startMins = parseTimeToMinutes(startTimeStr);
+      if (startMins) {
+        // Class starting in 1 to 15 mins
+        const isTimeForPreAlert = currentMins >= (startMins - 15) && currentMins < startMins;
+        if (isTimeForPreAlert) {
+          const slotKey = `pre_${todayStr}_${slot.time}`;
+          if (dismissedSlots.has(slotKey)) continue;
+
+          const subId = slot.subject?._id || slot.subject;
+          const subject = subjects.find(s => s._id === subId);
+          if (!subject) continue;
+
+          const bunk = calculateBunkability(subject);
+          // Only alert if bunkability is 'Risky' or 'Critical'
+          if (bunk.score < 50) {
+            setActivePrompt({ slot, subject, key: slotKey, type: 'pre-class', bunk });
+            return;
+          }
         }
       }
     }
@@ -123,15 +146,31 @@ const TheOracle = () => {
             <div style={s.content}>
                <p style={s.title}>The Oracle</p>
                <p style={s.text}>
-                 Looks like <b>{activePrompt.subject.name}</b> just ended. Were you present?
+                 {activePrompt.type === 'pre-class' ? (
+                   <>
+                     <b>{activePrompt.subject.name}</b> starts in a few minutes. 
+                     <span style={{ color: activePrompt.bunk.color, fontWeight: 800 }}> Bunkability is {activePrompt.bunk.label}</span>. 
+                     You really should attend!
+                   </>
+                 ) : (
+                   <>Looks like <b>{activePrompt.subject.name}</b> just ended. Were you present?</>
+                 )}
                </p>
                <div style={s.actions}>
-                  <button onClick={() => handleAction('Present')} style={s.btnYes} className="hover:opacity-90 active:scale-95 transition-all">
-                     <Check size={14} style={{ marginRight: 6 }} /> Present
-                  </button>
-                  <button onClick={() => handleAction('Absent')} style={s.btnNo} className="hover:opacity-90 active:scale-95 transition-all">
-                     <X size={14} style={{ marginRight: 6 }} /> Absent
-                  </button>
+                  {activePrompt.type === 'pre-class' ? (
+                     <button onClick={handleDismiss} style={{ ...s.btnYes, background: '#10b981' }} className="hover:opacity-90 active:scale-95 transition-all">
+                        <Check size={14} style={{ marginRight: 6 }} /> I'm on it
+                     </button>
+                  ) : (
+                    <>
+                      <button onClick={() => handleAction('Present')} style={s.btnYes} className="hover:opacity-90 active:scale-95 transition-all">
+                         <Check size={14} style={{ marginRight: 6 }} /> Present
+                      </button>
+                      <button onClick={() => handleAction('Absent')} style={s.btnNo} className="hover:opacity-90 active:scale-95 transition-all">
+                         <X size={14} style={{ marginRight: 6 }} /> Absent
+                      </button>
+                    </>
+                  )}
                </div>
             </div>
 
