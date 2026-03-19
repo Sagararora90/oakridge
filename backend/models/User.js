@@ -3,7 +3,8 @@ const bcrypt = require('bcryptjs');
 
 const AttendanceRecordSchema = new mongoose.Schema({
   date: { type: Date, default: Date.now },
-  status: { type: String, enum: ['Present', 'Absent', 'Skip', 'OD', 'Medical', 'Cancelled'], required: true }
+  status: { type: String, enum: ['Present', 'Absent', 'Skip', 'OD', 'Medical', 'Cancelled'], required: true },
+  credit: { type: Number, default: 1 }
 });
 
 const SubjectSchema = new mongoose.Schema({

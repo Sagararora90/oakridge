@@ -21,6 +21,12 @@ const useStore = create((set, get) => ({
   toggleTheme: () => {
     const newTheme = get().theme === 'light' ? 'dark' : 'light';
     localStorage.setItem('theme', newTheme);
+    
+    // Immediate DOM update for feel
+    const root = window.document.documentElement;
+    if (newTheme === 'dark') root.classList.add('dark');
+    else root.classList.remove('dark');
+    
     set({ theme: newTheme });
   },
 

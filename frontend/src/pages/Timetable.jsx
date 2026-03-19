@@ -1,238 +1,435 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Calendar, Clock, Save, Plus, Trash2, BookOpen, GraduationCap, ChevronRight, Menu } from 'lucide-react';
+import { Clock, Save, Plus, Trash2, BookOpen, X, Check, ChevronRight } from 'lucide-react';
 import useStore from '../store/useStore';
 import TimetableUpload from '../components/TimetableUpload';
 import toast from 'react-hot-toast';
 
-const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+/* ─────────────────────────────────────────────────────────
+   APPLE DEVELOPER STRUCTURE — CSS vars, theme-agnostic
+   Same layout language as Subjects (breadcrumb, rows,
+   inline edit, left rail) but uses the app's own tokens.
+───────────────────────────────────────────────────────── */
 
-const Timetable = () => {
-  const { subjects, timetable, updateTimetable, setSidebarOpen } = useStore();
-  const [localTimetable, setLocalTimetable] = useState(timetable || []);
-  const [activeDay, setActiveDay]           = useState(DAYS[new Date().getDay()]);
-  const [saving, setSaving]                 = useState(false);
-  const [saved, setSaved]                   = useState(false);
+const DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+const FONT = "'SF Pro Display',-apple-system,BlinkMacSystemFont,sans-serif";
+const MONO = "'SF Mono','Fira Code','Fira Mono',monospace";
+const SP   = { type: 'spring', stiffness: 340, damping: 28 };
 
-  // ── Helpers ──
-  const handleAddSlot = (day) => {
-    const next = localTimetable.map(d => ({ ...d, slots: [...d.slots] }));
-    let dayEntry = next.find(d => d.day === day);
-    if (!dayEntry) {
-      dayEntry = { day, slots: [] };
-      next.push(dayEntry);
-    }
-    dayEntry.slots.push({ time: '09:00 - 10:00', subject: subjects[0]?._id || '' });
-    setLocalTimetable(next);
+/* Apple system colour palette for subject markers */
+const PALETTE = [
+  '#2997FF','#30D158','#FF9F0A','#BF5AF2',
+  '#FF453A','#64D2FF','#FFD60A','#FF6B35',
+];
+const accent = (sub, i) => sub?.color || PALETTE[i % PALETTE.length];
+
+const lbl = {
+  fontSize: 10, fontWeight: 700, letterSpacing: '0.09em',
+  textTransform: 'uppercase', color: 'var(--color-subtext)', margin: 0,
+  fontFamily: FONT,
+};
+
+const fieldSt = {
+  width: '100%', padding: '9px 12px',
+  background: 'var(--color-surface)',
+  border: '1px solid var(--color-border)',
+  borderRadius: 8, fontSize: 13, fontWeight: 500,
+  color: 'var(--color-text)', fontFamily: FONT,
+  outline: 'none', appearance: 'none', WebkitAppearance: 'none',
+  boxSizing: 'border-box', transition: 'border-color 0.15s',
+};
+
+function useIsMobile(bp = 1024) {
+  const [m, set] = useState(() => typeof window !== 'undefined' ? window.innerWidth < bp : false);
+  useEffect(() => {
+    const fn = () => set(window.innerWidth < bp);
+    window.addEventListener('resize', fn, { passive: true });
+    return () => window.removeEventListener('resize', fn);
+  }, [bp]);
+  return m;
+}
+
+/* ════════════════════════════════════════════════════════════ */
+export default function Timetable() {
+  const { subjects, timetable, updateTimetable, fetchUser } = useStore();
+  const isMobile = useIsMobile();
+
+  const [local,     setLocal]     = useState(timetable || []);
+  const [activeDay, setActiveDay] = useState(
+    DAYS[new Date().getDay() === 0 ? 6 : new Date().getDay() - 1]
+  );
+  const [saving, setSaving] = useState(false);
+
+  const slotsFor = d => local.find(e => e.day === d)?.slots || [];
+
+  const addSlot = (day) => {
+    const next  = local.map(d => ({ ...d, slots: [...d.slots] }));
+    let   entry = next.find(d => d.day === day);
+    if (!entry) { entry = { day, slots: [] }; next.push(entry); }
+    entry.slots.push({ time: '09:00 - 10:00', subject: subjects[0]?._id || '', credit: 1 });
+    setLocal(next);
   };
 
-  const handleRemoveSlot = (day, idx) => {
-    const next = localTimetable.map(d =>
-      d.day === day ? { ...d, slots: d.slots.filter((_, i) => i !== idx) } : d
-    );
-    setLocalTimetable(next);
-  };
+  const removeSlot = (day, idx) =>
+    setLocal(local.map(d => d.day === day ? { ...d, slots: d.slots.filter((_, i) => i !== idx) } : d));
 
-  const handleSlotUpdate = (day, idx, field, value) => {
-    const next = localTimetable.map(d => {
+  const updateSlot = (day, idx, field, value) =>
+    setLocal(local.map(d => {
       if (d.day !== day) return d;
-      const slots = d.slots.map((s, i) => i === idx ? { ...s, [field]: value } : s);
-      return { ...d, slots };
-    });
-    setLocalTimetable(next);
-  };
+      return { ...d, slots: d.slots.map((s, i) => i === idx ? { ...s, [field]: value } : s) };
+    }));
 
   const handleSave = async () => {
     setSaving(true);
+    const id = toast.loading('Saving schedule…');
     try {
-      await updateTimetable(localTimetable);
-      setSaved(true);
-      toast.success('Schedule saved!');
-      setTimeout(() => setSaved(false), 2000);
-    } catch (err) {
-      toast.error('Failed to save schedule');
-    } finally {
-      setSaving(false);
+      await updateTimetable(local);
+      toast.success('Schedule saved', { id });
+    } catch { 
+      toast.error('Failed to save', { id }); 
+    } finally { 
+      setSaving(false); 
     }
   };
 
-  const currentSlots = localTimetable.find(d => d.day === activeDay)?.slots || [];
-  const shortDay = (day) => day.substring(0, 3);
+  const slots = slotsFor(activeDay);
+  const todayIdx = new Date().getDay() === 0 ? 6 : new Date().getDay() - 1;
 
   return (
-    <div className="flex-1 bg-[var(--color-bg)] min-h-screen pb-24 animate-in">
-      <div className="max-w-[1200px] mx-auto px-4 lg:px-7 py-6 lg:py-10 flex flex-col gap-6 lg:gap-8">
+    <div style={{ background: 'var(--color-bg)', minHeight: '100svh', paddingBottom: isMobile ? 96 : 48, fontFamily: FONT }}>
 
-        {/* ── HEADER ── */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-          <div className="flex items-center gap-3">
-            <button 
-              onClick={() => setSidebarOpen(true)}
-              className="lg:hidden w-8 h-8 bg-primary rounded-lg flex items-center justify-center shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all"
-            >
-              <Menu size={16} color="#fff" />
-            </button>
-            <div>
-              <h1 className="text-2xl lg:text-3xl font-bold text-[var(--color-text)] tracking-tight">Timetable</h1>
-              <p className="text-xs lg:text-sm text-[var(--color-subtext)] font-medium mt-1">Design your ideal weekly academic rhythm.</p>
-            </div>
-          </div>
-          <div className="flex flex-wrap items-center gap-3">
-            <TimetableUpload onComplete={() => setLocalTimetable(useStore.getState().timetable)} />
-            <button
-              onClick={handleSave}
-              disabled={saving}
-              className={`flex items-center gap-2.5 px-6 py-3 rounded-xl text-xs font-bold text-white shadow-lg transition-all ${saving ? 'opacity-70' : 'hover:scale-[1.02] active:scale-98'} ${saved ? 'bg-green-600 shadow-green-600/20' : 'bg-primary shadow-primary/20'}`}
-            >
-              <Save size={16} />
-              {saving ? 'Saving...' : saved ? 'Changes Saved ✓' : 'Save Changes'}
-            </button>
-          </div>
+      {/* ══ HEADER ══ */}
+      <header style={{
+        position: 'sticky', top: 0, zIndex: 30,
+        background: 'var(--color-bg)',
+        backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
+        borderBottom: '1px solid var(--color-border)',
+        padding: '0 24px', height: 52,
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12,
+      }}>
+        {/* breadcrumb */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--color-subtext)', fontFamily: FONT }}>Attend</span>
+          <ChevronRight size={12} style={{ color: 'var(--color-subtext)' }} />
+          <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-text)', letterSpacing: '-0.01em' }}>Timetable</span>
         </div>
 
-        {/* ── DAY NAVIGATION ── */}
-        <div className="flex items-center gap-2 bg-card-bg border border-[var(--color-border)] p-1.5 rounded-2xl overflow-x-auto no-scrollbar shadow-sm">
-          {DAYS.map(day => {
-            const slotCount = localTimetable.find(d => d.day === day)?.slots.length || 0;
-            const isActive  = activeDay === day;
-            return (
-              <button
-                key={day}
-                onClick={() => setActiveDay(day)}
-                className={`flex items-center gap-2.5 px-4 py-2.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${isActive ? 'bg-primary text-white shadow-md shadow-primary/20' : 'text-[var(--color-subtext)] hover:bg-[var(--color-bg)] hover:text-[var(--color-text)]'}`}
-              >
-                <span className="hidden sm:inline">{day}</span>
-                <span className="sm:hidden">{shortDay(day)}</span>
-                {slotCount > 0 && (
-                  <span className={`px-1.5 py-0.5 rounded-full text-[9px] font-black ${isActive ? 'bg-white/20 text-white' : 'bg-[var(--color-bg)] text-[var(--color-subtext)]'}`}>
-                    {slotCount}
-                  </span>
-                )}
-              </button>
-            );
-          })}
+        {/* controls */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <TimetableUpload onComplete={async () => {
+             await fetchUser();
+             const f = useStore.getState().timetable;
+             if (f) setLocal(f);
+          }} />
+
+          {/* save */}
+          <button onClick={handleSave} disabled={saving} style={{
+            display: 'flex', alignItems: 'center', gap: 6,
+            padding: '7px 14px', borderRadius: 9,
+            background: 'var(--color-primary)', color: '#fff',
+            border: 'none', cursor: 'pointer', fontFamily: FONT,
+            fontSize: 12, fontWeight: 700, letterSpacing: '-0.01em',
+            opacity: saving ? 0.65 : 1, transition: 'opacity 0.2s', whiteSpace: 'nowrap'
+          }}>
+            {saving
+              ? <div style={{ width: 13, height: 13, border: '2px solid rgba(255,255,255,0.3)', borderTopColor: '#fff', borderRadius: '50%', animation: 'ttspin .7s linear infinite' }} />
+              : <Save size={14} strokeWidth={2.5} />}
+            {saving ? 'Saving…' : (isMobile ? 'Save' : 'Save Schedule')}
+          </button>
+        </div>
+      </header>
+
+      {/* ══ BODY ══ */}
+      {isMobile
+        ? <MobileView days={DAYS} todayIdx={todayIdx} activeDay={activeDay} setActiveDay={setActiveDay} slots={slots} subjects={subjects} addSlot={addSlot} removeSlot={removeSlot} updateSlot={updateSlot} slotsFor={slotsFor} />
+        : <DesktopView days={DAYS} todayIdx={todayIdx} activeDay={activeDay} setActiveDay={setActiveDay} slots={slots} subjects={subjects} addSlot={addSlot} removeSlot={removeSlot} updateSlot={updateSlot} slotsFor={slotsFor} />
+      }
+
+      <style>{`
+        @keyframes ttspin { to { transform: rotate(360deg); } }
+      `}</style>
+    </div>
+  );
+}
+
+/* ══════════════════════════════════════════════════════════
+   DESKTOP VIEW
+══════════════════════════════════════════════════════════ */
+function DesktopView({ days, todayIdx, activeDay, setActiveDay, slots, subjects, addSlot, removeSlot, updateSlot, slotsFor }) {
+  return (
+    <div style={{ padding: '32px 24px', maxWidth: 960, margin: '0 auto', display: 'grid', gridTemplateColumns: '220px 1fr', gap: 40, alignItems: 'start' }}>
+
+      {/* ── SIDEBAR ── */}
+      <div style={{ position: 'sticky', top: 84, display: 'flex', flexDirection: 'column', gap: 4 }}>
+        <p style={{ ...lbl, marginBottom: 8, paddingLeft: 8 }}>Week</p>
+        {days.map((day, di) => {
+          const count    = slotsFor(day).length;
+          const isActive = day === activeDay;
+          const isToday  = di === todayIdx;
+
+          return (
+            <button key={day} onClick={() => setActiveDay(day)}
+              style={{
+                width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                padding: '8px 10px', borderRadius: 8, border: 'none', cursor: 'pointer', fontFamily: FONT,
+                background: isActive ? 'var(--color-surface)' : 'transparent',
+                color: isActive ? 'var(--color-text)' : 'var(--color-subtext)',
+                textAlign: 'left', transition: 'background 0.15s, color 0.15s',
+                boxShadow: isActive ? '0 1px 3px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.02), 0 0 0 1px var(--color-border)' : 'none',
+              }}
+              onMouseEnter={e => { if(!isActive) e.currentTarget.style.background = 'var(--hover)'; }}
+              onMouseLeave={e => { if(!isActive) e.currentTarget.style.background = 'transparent'; }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={{ fontSize: 13, fontWeight: isActive ? 600 : 500, letterSpacing: '-0.01em' }}>
+                  {day}
+                  {isToday && <span style={{ marginLeft: 6, fontSize: 10, color: 'var(--color-primary)', fontWeight: 700, backgroundColor: 'var(--color-primary-lo, rgba(0,122,255,0.1))', padding: '2px 6px', borderRadius: 4 }}>TODAY</span>}
+                </span>
+              </div>
+              {count > 0 && (
+                <span style={{ fontSize: 11, fontWeight: 600, color: isActive ? 'var(--color-text)' : 'var(--color-subtext)' }}>
+                  {count}
+                </span>
+              )}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* ── MAIN CONTENT ── */}
+      <div>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+          <div>
+            <p style={{ fontSize: 24, fontWeight: 800, color: 'var(--color-text)', margin: 0, letterSpacing: '-0.04em', lineHeight: 1 }}>{activeDay}</p>
+            <p style={{ ...lbl, marginTop: 6, textTransform: 'none', letterSpacing: '0' }}>{slots.length} class{slots.length !== 1 ? 'es' : ''}</p>
+          </div>
+          <button onClick={() => addSlot(activeDay)}
+            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', borderRadius: 9, border: '1px solid var(--color-border)', background: 'var(--color-surface)', cursor: 'pointer', fontFamily: FONT, fontSize: 13, fontWeight: 600, color: 'var(--color-text)', transition: 'background 0.15s' }}
+            onMouseEnter={e => e.currentTarget.style.background = 'var(--hover)'}
+            onMouseLeave={e => e.currentTarget.style.background = 'var(--color-surface)'}>
+            <Plus size={14} strokeWidth={2.5} style={{ color: 'var(--color-primary)' }}/> Add Class
+          </button>
         </div>
 
-        {/* ── DAY PANEL ── */}
-        <motion.div
-          key={activeDay}
-          initial={{ opacity: 0, scale: 0.99 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.2 }}
-          className="bg-card-bg border border-[var(--color-border)] rounded-[32px] overflow-hidden shadow-sm min-h-[480px] flex flex-col"
-        >
-          {/* Panel Header */}
-          <div className="flex items-center justify-between p-6 lg:p-8 border-b border-[var(--color-bg)]">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-primary/5 rounded-2xl flex items-center justify-center border border-primary/10">
-                <Calendar size={20} className="text-primary" />
-              </div>
-              <div>
-                <h2 className="text-xl font-extrabold text-[var(--color-text)] leading-none mb-1.5">{activeDay}</h2>
-                <p className="text-xs font-bold text-[var(--color-subtext)] uppercase tracking-wider">
-                  {currentSlots.length === 0 ? 'No sessions scheduled' : `${currentSlots.length} Session${currentSlots.length > 1 ? 's' : ''}`}
-                </p>
-              </div>
-            </div>
-            <button
-              onClick={() => handleAddSlot(activeDay)}
-              className="group flex items-center gap-2 px-4 py-2.5 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl text-xs font-bold text-[var(--color-text)] hover:bg-white hover:border-primary/50 hover:text-primary transition-all shadow-sm"
-            >
-              <Plus size={16} className="transition-transform group-hover:rotate-90" />
-              <span>Add Session</span>
-            </button>
-          </div>
-
-          {/* Slot Grid */}
-          <div className="p-6 lg:p-8 flex-1">
-            {currentSlots.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-20 text-center opacity-40">
-                <Clock size={40} className="text-[var(--color-subtext)] mb-4" />
-                <p className="text-sm font-bold text-[var(--color-text)]">Free Day</p>
-                <p className="text-[11px] font-medium text-[var(--color-subtext)] mt-1 max-w-[180px]">Enjoy your break or manually add sessions above.</p>
-              </div>
+        <AnimatePresence mode="wait">
+          <motion.div key={activeDay} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }} transition={{ duration: 0.2 }}>
+            {slots.length === 0 ? (
+              <EmptyState onAdd={() => addSlot(activeDay)} />
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                 <AnimatePresence mode="popLayout">
-                  {currentSlots.map((slot, idx) => {
-                    const sub = subjects.find(s => s._id === slot.subject);
-                    return (
-                      <SlotCard
-                        key={idx}
-                        slot={slot}
-                        idx={idx}
-                        sub={sub}
-                        subjects={subjects}
-                        activeDay={activeDay}
-                        onUpdate={handleSlotUpdate}
-                        onRemove={handleRemoveSlot}
-                      />
-                    );
-                  })}
+                  {slots.map((slot, idx) => (
+                    <SlotCard key={idx} slot={slot} idx={idx} subjects={subjects} day={activeDay} onUpdate={updateSlot} onRemove={removeSlot} />
+                  ))}
                 </AnimatePresence>
               </div>
             )}
-          </div>
-        </motion.div>
+          </motion.div>
+        </AnimatePresence>
       </div>
     </div>
   );
-};
+}
 
-const SlotCard = ({ slot, idx, sub, subjects, activeDay, onUpdate, onRemove }) => (
-  <motion.div
-    layout
-    initial={{ opacity: 0, y: 10 }}
-    animate={{ opacity: 1, y: 0 }}
-    exit={{ opacity: 0, scale: 0.95 }}
-    className="bg-[var(--color-bg)] border border-[var(--color-border)] rounded-2xl p-4 lg:p-5 flex flex-col gap-4 relative group hover:bg-white hover:border-primary/30 transition-all hover:shadow-xl hover:shadow-primary/5"
-  >
-    <div className="absolute top-0 left-0 bottom-0 w-1.5 rounded-l-2xl" style={{ background: sub?.color || 'var(--color-border)' }} />
-    
-    <div className="flex justify-between items-center pl-1">
-      <span className="text-[10px] font-black text-[var(--color-subtext)] uppercase tracking-widest px-1">Time Slot</span>
-      <button
-        onClick={() => onRemove(activeDay, idx)}
-        className="p-1.5 rounded-lg text-[var(--color-subtext)] opacity-0 group-hover:opacity-100 hover:text-danger hover:bg-red-50 transition-all"
-      >
-        <Trash2 size={13} />
+/* ══════════════════════════════════════════════════════════
+   MOBILE VIEW
+══════════════════════════════════════════════════════════ */
+function MobileView({ days, todayIdx, activeDay, setActiveDay, slots, subjects, addSlot, removeSlot, updateSlot, slotsFor }) {
+  return (
+    <div style={{ padding: '16px 14px 0' }}>
+
+      {/* Segmented Control / Pill strip */}
+      <div style={{ display: 'flex', gap: 6, overflowX: 'auto', WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none', msOverflowStyle: 'none', paddingBottom: 8, marginBottom: 16 }}>
+        {days.map((day, di) => {
+          const count    = slotsFor(day).length;
+          const isActive = day === activeDay;
+          const isToday  = di === todayIdx;
+          
+          return (
+            <button key={day} onClick={() => setActiveDay(day)}
+              style={{
+                flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
+                padding: '8px 14px', borderRadius: 10, border: 'none', cursor: 'pointer', fontFamily: FONT,
+                background: isActive ? 'var(--color-surface)' : 'transparent',
+                color: isActive ? 'var(--color-text)' : 'var(--color-subtext)',
+                boxShadow: isActive ? '0 1px 3px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.02), 0 0 0 1px var(--color-border)' : 'none',
+                transition: 'all 0.15s'
+              }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <span style={{ fontSize: 13, fontWeight: isActive ? 600 : 500, letterSpacing: '-0.01em' }}>{day.slice(0, 3)}</span>
+                {count > 0 && <div style={{ width: 5, height: 5, borderRadius: '50%', background: isActive ? 'var(--color-text)' : 'var(--color-primary)' }} />}
+              </div>
+            </button>
+          );
+        })}
+      </div>
+
+      <div style={{ display: 'flex', alignItems: 'center', justifyItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+        <div>
+          <p style={{ fontSize: 20, fontWeight: 800, color: 'var(--color-text)', margin: 0, letterSpacing: '-0.03em' }}>{activeDay}</p>
+        </div>
+        <button onClick={() => addSlot(activeDay)}
+          style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '6px 12px', borderRadius: 8, border: '1px solid var(--color-border)', background: 'var(--color-surface)', cursor: 'pointer', fontFamily: FONT, fontSize: 12, fontWeight: 600, color: 'var(--color-text)' }}>
+          <Plus size={13} strokeWidth={2.5} style={{ color: 'var(--color-primary)' }}/> Add
+        </button>
+      </div>
+
+      <AnimatePresence mode="wait">
+        <motion.div key={activeDay} initial={{ opacity: 0, x: 12 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -12 }} transition={{ duration: 0.18 }}>
+          {slots.length === 0 ? <EmptyState onAdd={() => addSlot(activeDay)} /> : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <AnimatePresence mode="popLayout">
+                {slots.map((slot, idx) => (
+                  <SlotCard key={idx} slot={slot} idx={idx} subjects={subjects} day={activeDay} onUpdate={updateSlot} onRemove={removeSlot} />
+                ))}
+              </AnimatePresence>
+            </div>
+          )}
+        </motion.div>
+      </AnimatePresence>
+    </div>
+  );
+}
+
+/* ══════════════════════════════════════════════════════════
+   SLOT CARD — Minimal Pro Developer Style
+══════════════════════════════════════════════════════════ */
+function SlotCard({ slot, idx, subjects, day, onUpdate, onRemove }) {
+  const sub   = subjects.find(s => s._id === slot.subject);
+  const color = accent(sub, idx);
+  const [editing, setEditing] = useState(false);
+
+  return (
+    <motion.div layout
+      initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.98 }} transition={SP}
+      style={{
+        background: 'var(--color-surface)',
+        borderRadius: 12,
+        border: '1px solid var(--color-border)',
+        boxShadow: '0 1px 2px rgba(0,0,0,0.02)',
+        overflow: 'hidden',
+        transition: 'box-shadow 0.2s, transform 0.2s',
+      }}>
+      
+      {!editing ? (
+        /* ── VIEW MODE ── */
+        <div style={{ display: 'flex', cursor: 'pointer' }} onClick={() => setEditing(true)}
+          onMouseEnter={e => e.currentTarget.parentNode.style.boxShadow = '0 4px 12px rgba(0,0,0,0.05)'}
+          onMouseLeave={e => e.currentTarget.parentNode.style.boxShadow = '0 1px 2px rgba(0,0,0,0.02)'}>
+          
+          {/* Subtle color indicator left bar */}
+          <div style={{ width: 3, background: color, flexShrink: 0 }} />
+
+          <div style={{ padding: '14px 16px', flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+                <p style={{ fontSize: 15, fontWeight: 600, color: 'var(--color-text)', margin: 0, letterSpacing: '-0.01em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {sub?.name || <span style={{ color: 'var(--color-subtext)', fontStyle: 'italic', fontWeight: 500 }}>Unassigned</span>}
+                </p>
+                {(slot.credit || 0) > 0 && (
+                  <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--color-subtext)', background: 'var(--color-bg)', border: '1px solid var(--color-border)', padding: '1px 6px', borderRadius: 4, letterSpacing: '0.04em' }}>
+                    {slot.credit} CR
+                  </span>
+                )}
+              </div>
+              
+              <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                <Clock size={12} strokeWidth={2} style={{ color: 'var(--color-subtext)' }} />
+                <span style={{ fontSize: 12, color: 'var(--color-subtext)', fontWeight: 500, fontFamily: MONO }}>
+                  {slot.time || '—'}
+                </span>
+              </div>
+            </div>
+
+            <ChevronRight size={16} style={{ color: 'var(--color-border)' }} />
+          </div>
+        </div>
+      ) : (
+        /* ── EDIT MODE ── */
+        <div style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 16 }}>
+          
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <div style={{ width: 8, height: 8, borderRadius: '50%', background: color }} />
+              <span style={lbl}>Edit Class</span>
+            </div>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button onClick={() => onRemove(day, idx)}
+                style={{ width: 28, height: 28, borderRadius: 8, border: '1px solid var(--color-border)', background: 'var(--color-surface)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FF3B30' }}>
+                <Trash2 size={13} />
+              </button>
+              <button onClick={() => setEditing(false)}
+                style={{ padding: '0 12px', height: 28, borderRadius: 8, border: 'none', background: 'var(--color-primary)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 12, fontWeight: 600, gap: 4 }}>
+                <Check size={14} strokeWidth={2.5} /> Done
+              </button>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <div>
+              <p style={{ ...lbl, marginBottom: 6 }}>Subject</p>
+              <div style={{ position: 'relative' }}>
+                <BookOpen size={14} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--color-subtext)', pointerEvents: 'none' }} />
+                <select value={slot.subject} onChange={e => onUpdate(day, idx, 'subject', e.target.value)} style={{ ...fieldSt, paddingLeft: 32 }}
+                  onFocus={e => e.target.style.borderColor = 'var(--color-primary)'}
+                  onBlur={e => e.target.style.borderColor = 'var(--color-border)'}>
+                  <option value="">— Unassigned —</option>
+                  {subjects.map(s => <option key={s._id} value={s._id}>{s.name}</option>)}
+                </select>
+              </div>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+              <div>
+                <p style={{ ...lbl, marginBottom: 6 }}>Time</p>
+                <div style={{ position: 'relative' }}>
+                  <Clock size={14} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--color-subtext)', pointerEvents: 'none' }} />
+                  <input type="text" value={slot.time} onChange={e => onUpdate(day, idx, 'time', e.target.value)} placeholder="09:00 - 10:00" style={{ ...fieldSt, paddingLeft: 32 }}
+                    onFocus={e => e.target.style.borderColor = 'var(--color-primary)'}
+                    onBlur={e => e.target.style.borderColor = 'var(--color-border)'} />
+                </div>
+              </div>
+              
+              <div>
+                <p style={{ ...lbl, marginBottom: 6 }}>Credits</p>
+                <div style={{ display: 'flex', gap: 4 }}>
+                  {[1, 2, 3, 4, 5].map(n => {
+                    const on = (slot.credit || 1) === n;
+                    return (
+                      <button key={n} onClick={() => onUpdate(day, idx, 'credit', n)}
+                        style={{ flex: 1, height: 35, borderRadius: 6, border: `1px solid ${on ? 'var(--color-primary)' : 'var(--color-border)'}`, background: on ? 'var(--color-primary)' : 'var(--color-bg)', color: on ? '#fff' : 'var(--color-text)', cursor: 'pointer', fontFamily: FONT, fontSize: 13, fontWeight: 600, transition: 'all 0.15s' }}>
+                        {n}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          </div>
+          
+        </div>
+      )}
+    </motion.div>
+  );
+}
+
+/* ── empty state ── */
+function EmptyState({ onAdd }) {
+  return (
+    <div style={{ textAlign: 'center', padding: '64px 20px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
+      <div style={{ width: 48, height: 48, borderRadius: 12, background: 'var(--color-surface)', border: '1px solid var(--color-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-subtext)' }}>
+        <Clock size={20} strokeWidth={1.5} />
+      </div>
+      <div>
+        <p style={{ fontSize: 16, fontWeight: 700, color: 'var(--color-text)', margin: 0, letterSpacing: '-0.02em' }}>Free day</p>
+        <p style={{ fontSize: 13, color: 'var(--color-subtext)', margin: '4px 0 0', fontWeight: 500 }}>No classes scheduled for this day.</p>
+      </div>
+      <button onClick={onAdd}
+        style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px', borderRadius: 8, border: '1px solid var(--color-border)', background: 'var(--color-surface)', cursor: 'pointer', fontFamily: FONT, fontSize: 13, fontWeight: 600, color: 'var(--color-text)', marginTop: 8, transition: 'background 0.15s' }}
+        onMouseEnter={e => e.currentTarget.style.background = 'var(--hover)'}
+        onMouseLeave={e => e.currentTarget.style.background = 'var(--color-surface)'}>
+        <Plus size={14} strokeWidth={2.5} style={{ color: 'var(--color-primary)' }}/> Add first class
       </button>
     </div>
-
-    <div className="flex items-center gap-3 bg-card-bg border border-[var(--color-border)] rounded-xl px-3 py-2.5 focus-within:border-primary/50 transition-all shadow-sm">
-      <Clock size={14} className="text-[var(--color-subtext)] shrink-0" />
-      <input
-        type="text"
-        value={slot.time}
-        onChange={(e) => onUpdate(activeDay, idx, 'time', e.target.value)}
-        placeholder="09:00 - 10:00"
-        className="w-full bg-transparent text-sm font-bold text-[var(--color-text)] outline-none"
-      />
-    </div>
-
-    <div className="space-y-1.5 pl-1">
-      <span className="text-[10px] font-black text-[var(--color-subtext)] uppercase tracking-widest px-1">Subject</span>
-      <div className="flex items-center gap-3 bg-card-bg border border-[var(--color-border)] rounded-xl px-3 py-2.5 focus-within:border-primary/50 transition-all shadow-sm">
-        <BookOpen size={14} className="text-[var(--color-subtext)] shrink-0" />
-        <select
-          value={slot.subject}
-          onChange={(e) => onUpdate(activeDay, idx, 'subject', e.target.value)}
-          className="w-full bg-transparent text-sm font-bold text-[var(--color-text)] outline-none appearance-none cursor-pointer"
-        >
-          <option value="">Not Mapped</option>
-          {subjects.map(s => <option key={s._id} value={s._id}>{s.name}</option>)}
-        </select>
-      </div>
-    </div>
-
-    {sub && (
-      <div className="mt-1 pl-1 flex items-center gap-2">
-         <div className="text-[10px] font-black px-2.5 py-1 rounded-full border border-dashed truncate max-w-full" style={{ borderColor: sub.color + '40', color: sub.color, backgroundColor: sub.color + '05' }}>
-            {sub.name}
-         </div>
-      </div>
-    )}
-  </motion.div>
-);
-
-export default Timetable;
+  );
+}

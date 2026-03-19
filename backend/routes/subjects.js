@@ -104,7 +104,7 @@ router.put('/:id', auth, async (req, res) => {
     const increment = credit || 1;
 
     if (status) {
-      subject.attendanceRecords.push({ status, credit: increment });
+      subject.attendanceRecords.push({ date: new Date(), status, credit: increment });
       
       // Use the unified recalculation engine
       recalculateAttendance(subject);

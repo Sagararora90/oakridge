@@ -70,14 +70,16 @@ const AttendanceRegister = ({ subject, onClose }) => {
         exit={{ scale: 0.95, opacity: 0, y: 10 }}
         className="bg-card-bg rounded-[32px] w-full max-w-[480px] max-h-[85vh] shadow-[0_32px_80px_rgba(0,0,0,0.15)] overflow-hidden flex flex-col relative z-10 border border-[var(--color-border)] mx-auto"
       >
-        <div className="p-5 lg:p-6 border-b border-[var(--color-border)] bg-[var(--color-bg)] flex items-center justify-between shrink-0">
-          <div>
-            <h2 className="text-base lg:text-xl font-extrabold text-[var(--color-text)] tracking-tight">{subject.name}</h2>
-            <p className="text-[10px] lg:text-xs text-[var(--color-subtext)] font-bold mt-1">
-              {subject.attended} / {subject.total} sessions <span className="text-primary ml-1.5">({subject.total > 0 ? ((subject.attended / subject.total) * 100).toFixed(1) : 0}%)</span>
-            </p>
+        <div className="p-5 md:p-6 border-b border-[var(--color-border)]/50 bg-[var(--color-bg)] flex items-center justify-between shrink-0">
+          <div className="flex-1 pr-4">
+            <h2 className="text-base md:text-xl font-extrabold text-[var(--color-text)] tracking-tight leading-tight">{subject.name}</h2>
+            <div className="flex items-center gap-2 mt-1.5">
+               <span className="text-[10px] md:text-xs text-[var(--color-subtext)] font-bold uppercase tracking-wider">{subject.attended}/{subject.total} Sessions</span>
+               <span className="w-1 h-1 rounded-full bg-[var(--color-border)]" />
+               <span className="text-[10px] md:text-xs font-black text-primary uppercase tracking-wider">{subject.total > 0 ? ((subject.attended / subject.total) * 100).toFixed(1) : 0}%</span>
+            </div>
           </div>
-          <button onClick={onClose} className="w-8 h-8 rounded-full bg-card-bg border border-[var(--color-border)] flex items-center justify-center text-[var(--color-subtext)] hover:text-[var(--color-text)] transition-all"><X size={16} /></button>
+          <button onClick={onClose} className="w-9 h-9 md:w-10 md:h-10 rounded-xl hover:bg-white border border-transparent hover:border-[var(--color-border)] flex items-center justify-center text-[var(--color-subtext)] transition-all shadow-sm"><X size={18} /></button>
         </div>
 
         <div className="p-6 overflow-y-auto flex-1">
@@ -155,9 +157,9 @@ const AttendanceRegister = ({ subject, onClose }) => {
                         <input type="number" min="1" value={newLogCredit} onChange={e => setNewLogCredit(e.target.value)} className="w-full bg-[var(--color-bg)] border border-[var(--color-border)] rounded-lg px-2 py-1.5 text-xs font-bold text-[var(--color-text)] outline-none" />
                       </div>
                     </div>
-                    <div className="flex gap-2 justify-end pt-1 border-t border-[var(--color-border)]/30">
-                       <button onClick={() => handleSaveLog(newLogDate, newLogStatus, newLogCredit)} className="flex items-center gap-1.5 px-3 py-1.5 bg-green-500 text-white rounded-lg text-[10px] font-black uppercase tracking-wider hover:scale-105 transition-transform"><CheckCircle2 size={14} /> Add Log</button>
-                       <button onClick={() => setIsAddingLog(false)} className="flex items-center gap-1.5 px-3 py-1.5 bg-[var(--color-bg)] text-[var(--color-subtext)] rounded-lg text-[10px] font-black uppercase tracking-wider hover:scale-105 transition-transform"><X size={14} /> Cancel</button>
+                    <div className="flex gap-2 justify-end pt-2">
+                       <button onClick={() => setIsAddingLog(false)} className="px-4 py-2 text-[var(--color-subtext)] rounded-xl text-[10px] font-black uppercase tracking-wider hover:bg-white transition-all">Cancel</button>
+                       <button onClick={() => handleSaveLog(newLogDate, newLogStatus, newLogCredit)} className="flex items-center gap-2 px-5 py-2.5 bg-green-500 text-white rounded-xl text-[10px] font-bold uppercase tracking-wider shadow-lg shadow-green-500/20 hover:scale-105 active:scale-95 transition-all"><Plus size={14} strokeWidth={3} /> Add Entry</button>
                     </div>
                   </motion.div>
                 )}
@@ -169,29 +171,30 @@ const AttendanceRegister = ({ subject, onClose }) => {
                     const colorConfig = STATUS_COLORS[log.status] || STATUS_COLORS.Present;
 
                     return (
-                      <div key={dateStr} className="py-4 flex items-center justify-between gap-4 group">
-                        <div className="flex items-center gap-4">
-                           <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: colorConfig.text.replace('text-[', '').replace(']', '') }} />
-                           <span className="text-xs font-bold text-[var(--color-text)] w-16">{new Date(log.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</span>
+                      <div key={dateStr} className="py-5 flex items-center justify-between gap-4 group hover:pl-2 transition-all">
+                        <div className="flex items-center gap-4 min-w-0">
+                           <div className="w-1.5 h-1.5 rounded-full shrink-0 shadow-sm" style={{ backgroundColor: colorConfig.text.replace('text-[', '').replace(']', '') }} />
+                           <div className="flex flex-col">
+                             <span className="text-sm font-bold text-[var(--color-text)] leading-none">{new Date(log.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</span>
+                             <span className="text-[9px] font-bold text-[var(--color-subtext)] uppercase tracking-tighter mt-1">{new Date(log.date).toLocaleDateString('en-GB', { weekday: 'short' })}</span>
+                           </div>
                         </div>
                         
                         {isEditing ? (
-                          <div className="flex flex-col gap-2 flex-1 animate-in slide-in-from-right-2">
-                             <div className="flex items-center gap-2">
-                               <select value={log.status} onChange={(e) => handleSaveLog(dateStr, e.target.value, log.credit)} className="flex-1 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-lg px-3 py-1.5 text-xs font-bold text-[var(--color-text)] outline-none" autoFocus>
-                                  {STATUS_CHOICES.map(s => <option key={s} value={s}>{s}</option>)}
-                               </select>
-                               <div className="w-16">
-                                 <input type="number" min="1" value={log.credit || 1} onChange={(e) => handleSaveLog(dateStr, log.status, e.target.value)} className="w-full bg-[var(--color-bg)] border border-[var(--color-border)] rounded-lg px-2 py-1.5 text-xs font-bold text-[var(--color-text)] outline-none" />
-                               </div>
-                               <button onClick={() => setEditingLogDate(null)} className="p-1.5 text-[var(--color-subtext)]"><X size={16} /></button>
+                          <div className="flex items-center gap-2 flex-1 animate-in slide-in-from-right-2">
+                             <select value={log.status} onChange={(e) => handleSaveLog(dateStr, e.target.value, log.credit)} className="flex-1 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl px-3 py-2 text-xs font-bold text-[var(--color-text)] outline-none" autoFocus>
+                                {STATUS_CHOICES.map(s => <option key={s} value={s}>{s}</option>)}
+                             </select>
+                             <div className="w-14">
+                               <input type="number" min="1" value={log.credit || 1} onChange={(e) => handleSaveLog(dateStr, log.status, e.target.value)} className="w-full bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl py-2 px-2 text-xs font-bold text-[var(--color-text)] outline-none text-center" />
                              </div>
+                             <button onClick={() => setEditingLogDate(null)} className="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--color-subtext)] hover:bg-white transition-all"><CheckCircle2 size={16} className="text-green-500" /></button>
                           </div>
                         ) : (
-                          <div className="flex items-center gap-3">
-                             {log.credit > 1 && <span className="text-[9px] font-black text-primary bg-primary/10 px-1.5 py-0.5 rounded-md">{log.credit} Cr</span>}
-                             <span className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${colorConfig.bg} ${colorConfig.text}`}>{log.status}</span>
-                             <button onClick={() => setEditingLogDate(dateStr)} className="p-1 px-3 text-[var(--color-subtext)] hover:text-[var(--color-text)] transition-colors"><Edit3 size={14} /></button>
+                          <div className="flex items-center gap-3 shrink-0">
+                             {log.credit > 1 && <span className="text-[9px] font-black text-primary bg-primary/10 px-2 py-0.5 rounded-md border border-primary/20">{log.credit} Cr</span>}
+                             <span className={`px-3 py-1.5 rounded-xl text-[10px] font-bold uppercase tracking-wider shadow-sm ${colorConfig.bg} ${colorConfig.text}`}>{log.status}</span>
+                             <button onClick={() => setEditingLogDate(dateStr)} className="w-9 h-9 rounded-xl flex items-center justify-center text-[var(--color-subtext)] hover:bg-white hover:text-primary transition-all border border-transparent hover:border-[var(--color-border)]"><Edit3 size={14} /></button>
                           </div>
                         )}
                       </div>

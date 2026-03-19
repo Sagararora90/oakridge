@@ -87,12 +87,12 @@ const Settings = () => {
         
         {/* ── HEADER ── */}
         <header className="flex items-center gap-3">
-           <div className="lg:hidden w-8 h-8 bg-primary rounded-lg flex items-center justify-center shadow-lg shadow-primary/20">
-             <GraduationCap size={16} color="#fff" />
+           <div className="lg:hidden w-10 h-10 bg-primary rounded-xl flex items-center justify-center shadow-lg shadow-primary/20">
+             <GraduationCap size={18} color="#fff" />
            </div>
            <div>
-             <h1 className="text-2xl lg:text-3xl font-bold text-text tracking-tight">Settings</h1>
-             <p className="text-xs lg:text-sm text-subtext font-medium mt-1">Personalize your experience and academic parameters.</p>
+             <h1 className="text-2xl lg:text-3xl font-black text-[var(--color-text)] tracking-tight">System Configuration</h1>
+             <p className="text-[10px] lg:text-xs text-[var(--color-subtext)] font-black uppercase tracking-[0.15em] mt-1 opacity-80">Personalize Your Academic Environment</p>
            </div>
         </header>
 
@@ -293,18 +293,19 @@ const Settings = () => {
           </div>
 
           {/* ── REPORTS & EXPORT ── */}
-          <div className="md:col-span-2 bg-card-bg border border-border rounded-[32px] p-6 lg:p-8 shadow-sm flex flex-col md:flex-row items-center justify-between gap-6 hover:shadow-xl transition-all border-b-[4px] border-b-primary">
-             <div className="flex items-center gap-4">
-                <div className="w-14 h-14 bg-primary/5 rounded-2xl flex items-center justify-center border border-primary/10">
-                   <FileText size={24} className="text-primary" />
+          <div className="md:col-span-2 bg-card-bg border border-[var(--color-border)] rounded-[32px] p-6 lg:p-10 shadow-sm flex flex-col md:flex-row items-center justify-between gap-8 hover:shadow-xl transition-all relative overflow-hidden group">
+             <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -mr-16 -mt-16 blur-3xl group-hover:bg-primary/10 transition-colors" />
+             <div className="flex items-center gap-5 relative z-10">
+                <div className="w-16 h-16 bg-primary/5 rounded-2xl flex items-center justify-center border border-primary/10 shadow-inner group-hover:scale-110 transition-transform">
+                   <FileText size={28} className="text-primary" />
                 </div>
                 <div>
-                   <h2 className="text-xl font-extrabold text-text leading-none mb-1.5">Consolidated Report</h2>
-                   <p className="text-xs font-bold text-subtext uppercase tracking-wider">Export all session data to PDF for academic record.</p>
+                   <h2 className="text-xl lg:text-2xl font-black text-[var(--color-text)] leading-none mb-2">Academic Transcript</h2>
+                   <p className="text-[10px] lg:text-xs font-black text-[var(--color-subtext)] uppercase tracking-[0.15em]">Consolidated Attendance Assessment (PDF)</p>
                 </div>
              </div>
-             <button onClick={exportToPDF} className="flex items-center gap-3 px-8 py-4 bg-primary text-white rounded-2xl text-sm font-black uppercase tracking-wider shadow-lg shadow-primary/20 hover:scale-[1.05] active:scale-95 transition-all text-center">
-                <Download size={18} /> Download PDF Report
+             <button onClick={exportToPDF} className="relative z-10 flex items-center gap-3 px-10 py-5 bg-primary text-white rounded-2xl text-[11px] font-black uppercase tracking-widest shadow-xl shadow-primary/25 hover:scale-[1.05] active:scale-95 transition-all text-center">
+                <Download size={18} strokeWidth={3} /> Generate Document
              </button>
           </div>
 

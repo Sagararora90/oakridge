@@ -37,20 +37,20 @@ const Exams = () => {
           <div className="flex items-center gap-3">
              <button 
                onClick={() => setSidebarOpen(true)}
-               className="lg:hidden w-8 h-8 bg-primary rounded-lg flex items-center justify-center shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all"
+               className="lg:hidden w-10 h-10 bg-primary rounded-xl flex items-center justify-center shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all"
              >
-               <Menu size={16} color="#fff" />
+               <Menu size={18} color="#fff" />
              </button>
              <div>
-               <h1 className="text-2xl lg:text-3xl font-bold text-[var(--color-text)] tracking-tight">Assessments</h1>
-               <p className="text-xs lg:text-sm text-[var(--color-subtext)] font-medium mt-1">Track your exams, midterms, and project deadlines.</p>
+               <h1 className="text-2xl lg:text-3xl font-black text-[var(--color-text)] tracking-tight">Active Assessments</h1>
+               <p className="text-[10px] lg:text-xs text-[var(--color-subtext)] font-black uppercase tracking-[0.15em] mt-1 opacity-80">Exam & Deadline Tracking</p>
              </div>
           </div>
           <button 
             onClick={() => setShowAdd(true)} 
-            className="flex items-center gap-2.5 bg-primary text-white border-none rounded-xl px-5 py-3 text-xs font-bold shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-98 transition-all w-fit"
+            className="flex items-center gap-2.5 bg-primary text-white border-none rounded-xl px-5 py-3.5 text-[10px] font-black uppercase tracking-wider shadow-lg shadow-primary/25 hover:scale-[1.02] active:scale-98 transition-all w-fit"
           >
-            <Plus size={16} /> Add Deadline
+            <Plus size={14} strokeWidth={3} /> Add New Entry
           </button>
         </header>
 

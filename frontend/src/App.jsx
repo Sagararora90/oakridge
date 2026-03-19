@@ -60,7 +60,12 @@ function App() {
   return (
     <ErrorBoundary FallbackComponent={ErrorFallback} onReset={() => window.location.href = '/'}>
       <Router>
-        <div className="flex bg-bg text-text min-h-screen transition-all duration-500">
+        <div className="flex bg-bg text-text min-h-screen transition-all duration-500 relative">
+          {/* Nebula Aurora Background */}
+          <div className="aurora-container">
+            <div className="aurora-mesh"></div>
+          </div>
+
           <Toaster 
             position="top-center" 
             toastOptions={{

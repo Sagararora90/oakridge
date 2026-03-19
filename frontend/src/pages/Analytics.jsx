@@ -4,7 +4,7 @@ import {
   AreaChart, Area, PieChart, Pie, Cell,
   ResponsiveContainer, Tooltip, BarChart, Bar, XAxis, YAxis
 } from 'recharts';
-import { Activity, Target, Award, ShieldAlert, GraduationCap, TrendingUp, TrendingDown, BookOpen, Menu } from 'lucide-react';
+import { Activity, Target, Award, ShieldAlert, GraduationCap, TrendingUp, TrendingDown, BookOpen, Menu, Sparkles, Filter } from 'lucide-react';
 import useStore from '../store/useStore';
 import RescuePlanModal from '../components/RescuePlanModal';
 import toast from 'react-hot-toast';
@@ -17,15 +17,15 @@ const Analytics = () => {
   const pieData = subjects.map(s => ({
     name:  s.name,
     value: s.attended,
-    color: s.color || '#185FA5',
+    color: s.color || '#4F46E5',
   }));
 
   const barData = subjects.map(s => ({
-    name:     s.name.length > 8 ? s.name.substring(0, 7) + '...' : s.name,
+    name:     s.name.substring(0, 3).toUpperCase(),
     fullName: s.name,
     Attended: s.attended,
     Missed:   s.total - s.attended,
-    color:    s.color || '#185FA5',
+    color:    s.color || '#4F46E5',
   }));
 
   const avgAttendance = subjects.length > 0
@@ -48,204 +48,183 @@ const Analytics = () => {
 
   if (subjects.length === 0) {
     return (
-      <div className="flex-1 bg-[var(--color-bg)] min-h-screen pb-24 animate-in">
+      <div className="flex-1 bg-[var(--color-bg)] min-h-screen pb-24 animate-in relative z-10 flex flex-col items-center justify-center">
         <div className="max-w-[1200px] mx-auto px-4 py-24 flex flex-col items-center justify-center text-center">
-            <div className="text-5xl mb-6">📊</div>
-            <p className="text-base font-bold text-[var(--color-text)]">No data to analyze</p>
-            <p className="text-xs text-[var(--color-subtext)] font-medium mt-2 max-w-[200px]">Add subjects and mark attendance to unlock your performance insights.</p>
+            <div className="w-24 h-24 nebula-glass rounded-[2rem] flex items-center justify-center mb-8 opacity-20">
+              <Activity size={40} className="text-[var(--color-subtext)]" />
+            </div>
+            <h3 className="text-2xl font-black text-[var(--color-text)] tracking-tight">ANALYSIS OFFLINE</h3>
+            <p className="text-xs font-bold text-[var(--color-subtext)] mt-3 uppercase tracking-[0.2em] opacity-60 max-w-[280px]">No academic telemetry detected for processing</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="flex-1 bg-[var(--color-bg)] min-h-screen pb-24 animate-in">
-      <div className="max-w-[1200px] mx-auto px-4 lg:px-7 py-6 lg:py-10 flex flex-col gap-8">
+    <div className="flex-1 bg-[var(--color-bg)] min-h-screen pb-24 animate-in relative z-10 p-4 lg:p-10">
+      <div className="max-w-[1600px] mx-auto space-y-8 lg:space-y-12">
 
         {/* ── HEADER ── */}
         <header className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-          <div className="flex items-center gap-3">
-             <button 
-               onClick={() => setSidebarOpen(true)}
-               className="lg:hidden w-8 h-8 bg-primary rounded-lg flex items-center justify-center shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all"
-             >
-               <Menu size={16} color="#fff" />
-             </button>
-             <div>
-               <h1 className="text-2xl lg:text-3xl font-bold text-[var(--color-text)] tracking-tight">Analytics</h1>
-               <p className="text-xs lg:text-sm text-[var(--color-subtext)] font-medium mt-1">Deep dive into your academic engagement and trends.</p>
-             </div>
+          <div className="flex items-center gap-4">
+            <button 
+              onClick={() => setSidebarOpen(true)}
+              className="lg:hidden w-12 h-12 nebula-glass rounded-2xl flex items-center justify-center shadow-lg hover:scale-105 active:scale-95 transition-all"
+            >
+              <Menu size={20} className="text-primary" />
+            </button>
+            <div>
+              <h1 className="text-3xl lg:text-4xl font-black text-[var(--color-text)] tracking-tighter leading-none mb-2">INTELLIGENCE</h1>
+              <p className="text-[10px] font-black text-[var(--color-subtext)] uppercase tracking-[0.2em] opacity-60">Deep Telemetry & Predictive Insights</p>
+            </div>
           </div>
-          <div className="bg-card-bg border border-[var(--color-border)] rounded-2xl p-4 lg:p-5 flex flex-col items-center min-w-[140px] shadow-sm relative overflow-hidden group">
-            <div className="absolute top-0 left-0 w-full h-1" style={{ background: avgAttendance >= 75 ? '#0F6E56' : '#A32D2D' }} />
-            <span className="text-[9px] font-black text-[var(--color-subtext)] uppercase tracking-widest mb-1.5">Overall Weighted Score</span>
-            <span className={`text-3xl font-black italic tracking-tighter ${avgAttendance >= 75 ? 'text-green-600' : 'text-red-600'}`}>
-              {avgAttendance.toFixed(1)}%
-            </span>
+          <div className="apple-card px-8 py-5 flex flex-col items-center min-w-[200px] shadow-2xl relative group border-primary/20 bg-gradient-to-br from-surface/40 to-primary/5">
+            <span className="text-[9px] font-black text-primary uppercase tracking-[0.2em] mb-2 opacity-80">Aggregate Efficiency</span>
+            <div className="text-5xl font-black tracking-tighter text-[var(--color-text)] leading-none flex items-baseline gap-1">
+              {avgAttendance.toFixed(1)}
+              <span className="text-xl opacity-40">%</span>
+            </div>
+            <div className={`absolute -bottom-1 left-0 h-1 rounded-full transition-all duration-1000`} style={{ width: `${avgAttendance}%`, background: avgAttendance >= 75 ? 'var(--secondary)' : 'var(--danger)' }} />
           </div>
         </header>
 
         {/* ── STATS ROW ── */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-5">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
           {[
-            { label: 'Total Attended', value: totalAttended, color: '#0F6E56', icon: <TrendingUp size={14} /> },
-            { label: 'Total Missed',   value: totalMissed,   color: '#A32D2D', icon: <TrendingDown size={14} /> },
-            { label: 'Courses Tracked',value: subjects.length, color: '#185FA5', icon: <BookOpen size={14} /> },
-            { label: 'Sessions Logged',value: totalClasses,  color: '#3C3489', icon: <Activity size={14} /> },
+            { label: 'Attended', value: totalAttended, color: 'var(--secondary)', icon: <TrendingUp size={22} /> },
+            { label: 'Missed',   value: totalMissed,   color: 'var(--danger)', icon: <TrendingDown size={22} /> },
+            { label: 'Modules',  value: subjects.length, color: 'var(--primary)', icon: <BookOpen size={22} /> },
+            { label: 'Total',    value: totalClasses,  color: 'var(--accent)', icon: <Activity size={22} /> },
           ].map((s, i) => (
-            <motion.div key={i} whileHover={{ y: -4 }} className="bg-card-bg border border-[var(--color-border)] border-t-[3px] rounded-2xl p-4 lg:p-6 shadow-sm hover:shadow-xl transition-all" style={{ borderTopColor: s.color }}>
-               <div className="flex items-center justify-between mb-3" style={{ color: s.color }}>
+            <motion.div 
+              key={i} 
+              whileHover={{ y: -6, scale: 1.02 }} 
+              className="apple-card p-8 flex flex-col justify-between group relative shadow-xl"
+            >
+               <div className="w-14 h-14 rounded-2xl nebula-glass flex items-center justify-center mb-6 shadow-inner" style={{ color: s.color }}>
                   {s.icon}
-                  <div className="w-1.5 h-1.5 rounded-full opacity-20" style={{ background: s.color }} />
                </div>
-               <div className="text-2xl lg:text-3xl font-black italic tracking-tighter text-[var(--color-text)] leading-none mb-1">{s.value}</div>
-               <div className="text-[10px] font-black uppercase text-[var(--color-subtext)] tracking-wider">{s.label}</div>
+               <div>
+                 <div className="text-4xl font-black text-[var(--color-text)] tracking-tighter mb-1">{s.value}</div>
+                 <div className="text-[10px] font-black text-[var(--color-subtext)] uppercase tracking-widest opacity-60">{s.label}</div>
+               </div>
+               <div className="absolute -bottom-4 -right-4 w-24 h-24 blur-3xl opacity-5 rounded-full" style={{ background: s.color }} />
             </motion.div>
           ))}
         </div>
 
         {/* ── CHARTS ROW 1 ── */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
-          <div className="lg:col-span-2 bg-card-bg border border-[var(--color-border)] rounded-[32px] p-6 lg:p-8 shadow-sm flex flex-col gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-10">
+          <div className="lg:col-span-2 apple-card p-8 lg:p-12 shadow-2xl flex flex-col gap-10">
              <div className="flex justify-between items-start">
                <div>
-                  <h2 className="text-lg font-extrabold text-[var(--color-text)] tracking-tight">Presence Distribution</h2>
-                  <p className="text-[11px] font-bold text-[var(--color-subtext)] uppercase tracking-widest mt-1">Attended vs Missed Comparison</p>
+                  <h2 className="text-2xl font-black text-[var(--color-text)] tracking-tighter leading-none mb-2">TELEMETRY FLOW</h2>
+                  <p className="text-[10px] font-black text-[var(--color-subtext)] uppercase tracking-widest opacity-60">Temporal Presence Distribution</p>
                </div>
-               <div className="flex items-center gap-4 text-[10px] font-black uppercase tracking-widest">
-                  <div className="flex items-center gap-1.5 text-green-600"><div className="w-2 h-2 rounded-full bg-green-600" /> Attended</div>
-                  <div className="flex items-center gap-1.5 text-red-600"><div className="w-2 h-2 rounded-full bg-red-600" /> Missed</div>
+               <div className="flex items-center gap-6 text-[9px] font-black uppercase tracking-widest">
+                  <div className="flex items-center gap-2 text-primary"><div className="w-2.5 h-2.5 rounded-full bg-primary" /> Attended</div>
+                  <div className="flex items-center gap-2 text-danger"><div className="w-2.5 h-2.5 rounded-full bg-danger opacity-40" /> Missed</div>
                </div>
              </div>
              
-             <div className="h-[240px] w-full">
+             <div className="h-[300px] w-full">
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={barData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                     <defs>
-                      <linearGradient id="areaGreen" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#0F6E56" stopOpacity={0.1} />
-                        <stop offset="95%" stopColor="#0F6E56" stopOpacity={0} />
-                      </linearGradient>
-                      <linearGradient id="areaRed" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#A32D2D" stopOpacity={0.08} />
-                        <stop offset="95%" stopColor="#A32D2D" stopOpacity={0} />
+                      <linearGradient id="areaGradient" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="var(--primary)" stopOpacity={0.15} />
+                        <stop offset="95%" stopColor="var(--primary)" stopOpacity={0} />
                       </linearGradient>
                     </defs>
-                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: 'var(--color-subtext)', fontSize: 10, fontWeight: 700 }} dy={10} />
-                    <Tooltip contentStyle={{ background: '#fff', border: '1px solid var(--color-border)', borderRadius: '16px', fontSize: '11px', boxShadow: '0 10px 30px rgba(0,0,0,0.05)' }} />
-                    <Area type="monotone" dataKey="Attended" stroke="#0F6E56" strokeWidth={3} fill="url(#areaGreen)" dot={{ r: 4, fill: '#fff', stroke: '#0F6E56', strokeWidth: 2 }} />
-                    <Area type="monotone" dataKey="Missed" stroke="#A32D2D" strokeWidth={3} fill="url(#areaRed)" dot={{ r: 4, fill: '#fff', stroke: '#A32D2D', strokeWidth: 2 }} />
+                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: 'var(--color-subtext)', fontSize: 10, fontWeight: 900 }} dy={15} />
+                    <Tooltip contentStyle={{ background: 'rgba(255,255,255,0.8)', backdropFilter: 'blur(20px)', border: '1px solid var(--color-border)', borderRadius: '20px', fontSize: '11px', fontWeight: 800 }} />
+                    <Area type="monotone" dataKey="Attended" stroke="var(--primary)" strokeWidth={4} fill="url(#areaGradient)" dot={{ r: 5, fill: '#fff', stroke: 'var(--primary)', strokeWidth: 3 }} activeDot={{ r: 8, fill: 'var(--primary)', stroke: '#fff', strokeWidth: 3 }} />
+                    <Area type="monotone" dataKey="Missed" stroke="var(--danger)" strokeWidth={2} strokeDasharray="6 6" fill="transparent" opacity={0.3} />
                   </AreaChart>
                 </ResponsiveContainer>
              </div>
           </div>
 
-          <div className="bg-card-bg border border-[var(--color-border)] rounded-[32px] p-6 lg:p-8 shadow-sm flex flex-col">
-             <div className="mb-6">
-                <h2 className="text-lg font-extrabold text-[var(--color-text)] tracking-tight">Load Balance</h2>
-                <p className="text-[11px] font-bold text-[var(--color-subtext)] uppercase tracking-widest mt-1">Subject Weightage</p>
+          <div className="apple-card p-8 lg:p-10 shadow-2xl flex flex-col">
+             <div className="mb-8">
+                <h2 className="text-2xl font-black text-[var(--color-text)] tracking-tighter leading-none mb-2">EQUILIBRIUM</h2>
+                <p className="text-[10px] font-black text-[var(--color-subtext)] uppercase tracking-widest opacity-60">Module Load Balance</p>
              </div>
-             <div className="h-[200px] relative">
+             <div className="h-[240px] relative">
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
-                    <Pie data={pieData} innerRadius={60} outerRadius={85} paddingAngle={5} dataKey="value" stroke="none">
-                      {pieData.map((entry, i) => <Cell key={i} fill={entry.color} fillOpacity={0.8} />)}
+                    <Pie data={pieData} innerRadius={70} outerRadius={100} paddingAngle={8} dataKey="value" stroke="none">
+                      {pieData.map((entry, i) => <Cell key={i} fill={entry.color} fillOpacity={0.9} />)}
                     </Pie>
-                    <Tooltip contentStyle={{ background: '#fff', border: '1px solid var(--color-border)', borderRadius: '16px', fontSize: '11px' }} />
+                    <Tooltip contentStyle={{ background: 'rgba(255,255,255,0.8)', backdropFilter: 'blur(20px)', border: 'none', borderRadius: '16px', fontSize: '11px', fontWeight: 800 }} />
                   </PieChart>
                 </ResponsiveContainer>
                 <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                   <span className="text-2xl font-black italic italic-0 text-[var(--color-text)] leading-none">{totalAttended}</span>
-                   <span className="text-[9px] font-black text-[var(--color-subtext)] uppercase tracking-tighter mt-1">Sessions</span>
+                   <span className="text-4xl font-black text-[var(--color-text)] tracking-tighter leading-none">{totalAttended}</span>
+                   <span className="text-[9px] font-black text-[var(--color-subtext)] uppercase tracking-widest opacity-60 mt-2">Sessions</span>
                 </div>
              </div>
-             <div className="mt-8 space-y-3">
-                {subjects.slice(0, 4).map((s, i) => (
+             <div className="mt-10 space-y-4">
+                {subjects.slice(0, 5).map((s, i) => (
                   <div key={i} className="flex items-center justify-between gap-4">
-                     <div className="flex items-center gap-2.5 min-w-0">
-                        <div className="w-2 h-2 rounded-full shrink-0" style={{ background: s.color }} />
-                        <span className="text-[11px] font-bold text-[var(--color-text)] truncate">{s.name}</span>
+                     <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-2.5 h-2.5 rounded-full shrink-0 shadow-sm" style={{ background: s.color }} />
+                        <span className="text-[11px] font-black text-[var(--color-text)] truncate uppercase tracking-tight">{s.name}</span>
                      </div>
-                     <span className="text-[11px] font-black text-[var(--color-subtext)] shrink-0">{s.attended}</span>
+                     <span className="text-[11px] font-black text-[var(--color-subtext)] shrink-0 opacity-60">{s.attended}</span>
                   </div>
                 ))}
              </div>
           </div>
         </div>
 
-        {/* ── BAR CHART ── */}
-        <div className="bg-card-bg border border-[var(--color-border)] rounded-[32px] p-6 lg:p-8 shadow-sm space-y-8">
-           <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-              <div>
-                 <h2 className="text-lg font-extrabold text-[var(--color-text)] tracking-tight">Comparative Analysis</h2>
-                 <p className="text-[11px] font-bold text-[var(--color-subtext)] uppercase tracking-widest mt-1">Performance Benchmarking</p>
-              </div>
-              <div className="flex items-center gap-4 text-[10px] font-black uppercase tracking-widest">
-                  <div className="flex items-center gap-1.5 text-green-600"><div className="w-3 h-3 rounded-md bg-green-600" /> Attended</div>
-                  <div className="flex items-center gap-1.5 text-red-600/30"><div className="w-3 h-3 rounded-md bg-red-600/30" /> Missed</div>
-              </div>
-           </div>
-           
-           <div className="h-[300px] w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={barData} barGap={6} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: 'var(--color-subtext)', fontSize: 10, fontWeight: 700 }} dy={10} />
-                  <YAxis axisLine={false} tickLine={false} tick={{ fill: 'var(--color-subtext)', fontSize: 10, fontWeight: 700 }} />
-                  <Tooltip cursor={{ fill: 'var(--color-bg)' }} contentStyle={{ background: '#fff', border: '1px solid var(--color-border)', borderRadius: '16px', fontSize: '11px' }} />
-                  <Bar dataKey="Attended" fill="#0F6E56" radius={[6, 6, 0, 0]} barSize={24} />
-                  <Bar dataKey="Missed" fill="#A32D2D" fillOpacity={0.15} radius={[6, 6, 0, 0]} barSize={24} />
-                </BarChart>
-              </ResponsiveContainer>
-           </div>
-        </div>
-
         {/* ── INSIGHTS ── */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 lg:gap-6">
-           <div className="bg-card-bg border border-[var(--color-border)] rounded-[24px] p-6 shadow-sm flex flex-col h-full hover:shadow-xl transition-all">
-              <div className="w-10 h-10 bg-primary/5 rounded-xl flex items-center justify-center mb-5 border border-primary/10">
-                 <Target size={18} className="text-primary" />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-10">
+           <motion.div whileHover={{ y: -8 }} className="apple-card p-10 flex flex-col h-full shadow-2xl group">
+              <div className="w-14 h-14 nebula-glass rounded-2xl flex items-center justify-center mb-8 shadow-inner border-primary/20">
+                 <Target size={24} className="text-primary" />
               </div>
-              <h3 className="text-sm font-black text-[var(--color-text)] uppercase tracking-wider mb-2">Efficiency Rating</h3>
-              <p className="text-xs font-medium text-[var(--color-subtext)] leading-relaxed flex-1">
+              <h3 className="text-sm font-black text-[var(--color-text)] uppercase tracking-widest mb-4">Oracle's Verdict</h3>
+              <p className="text-xs font-bold text-[var(--color-subtext)] leading-relaxed flex-1 opacity-80 uppercase tracking-tight">
                  {avgAttendance >= 75 
-                   ? "You're consistently meeting the 75% engagement threshold. Keep this momentum to secure your semester goals."
-                   : "Your current engagement is below the mandatory 75%. Prioritize subjects with a 'Warning' status to recover."}
+                   ? "Consistent threshold convergence detected. Optimal engagement levels maintained within target parameters."
+                   : "Critical threshold violation. System engagement is below 75% baseline. Intervention required immediately."}
               </p>
-           </div>
+           </motion.div>
 
-           <div className="bg-card-bg border border-[var(--color-border)] rounded-[24px] p-6 shadow-sm flex flex-col h-full hover:shadow-xl transition-all">
-              <div className="w-10 h-10 bg-green-50 rounded-xl flex items-center justify-center mb-5 border border-green-100">
-                 <Award size={18} className="text-green-600" />
+           <motion.div whileHover={{ y: -8 }} className="apple-card p-10 flex flex-col h-full shadow-2xl group border-secondary/20">
+              <div className="w-14 h-14 nebula-glass rounded-2xl flex items-center justify-center mb-8 shadow-inner border-secondary/20">
+                 <Award size={24} className="text-secondary" />
               </div>
-              <h3 className="text-sm font-black text-[var(--color-text)] uppercase tracking-wider mb-2">Strongest Subject</h3>
-              <p className="text-xs font-medium text-[var(--color-subtext)] leading-relaxed flex-1">
-                 {best ? `${best.name} is your benchmark subject with ${best.total > 0 ? (best.attended / best.total * 100).toFixed(1) : 0}% attendance. Use its study schedule as a model for others.` : "No data available yet."}
+              <h3 className="text-sm font-black text-[var(--color-text)] uppercase tracking-widest mb-4">Apex Performer</h3>
+              <p className="text-xs font-bold text-[var(--color-subtext)] leading-relaxed flex-1 opacity-80 uppercase tracking-tight">
+                 {best ? `${best.name.toUpperCase()} is your standard-bearer at ${best.total > 0 ? (best.attended / best.total * 100).toFixed(1) : 0}%. Synchronize other modules to this baseline.` : "Awaiting telemetry data..."}
               </p>
-           </div>
+           </motion.div>
 
-           <div className="bg-card-bg border border-orange-100 rounded-[24px] p-6 shadow-sm flex flex-col h-full border-b-[3px] border-b-orange-400 group relative">
-              <div className="w-10 h-10 bg-orange-50 rounded-xl flex items-center justify-center mb-5 border border-orange-100">
-                 <Activity size={18} className="text-orange-600" />
+           <motion.div whileHover={{ y: -8 }} className="apple-card p-10 flex flex-col h-full shadow-2xl border-danger/20 group relative overflow-hidden">
+              <div className="w-14 h-14 nebula-glass rounded-2xl flex items-center justify-center mb-8 shadow-inner border-danger/20">
+                 <ShieldAlert size={24} className="text-danger" />
               </div>
-              <h3 className="text-sm font-black text-[var(--color-text)] uppercase tracking-wider mb-2">Rescue Target</h3>
+              <h3 className="text-sm font-black text-[var(--color-text)] uppercase tracking-widest mb-4">Critical Outlier</h3>
               <div className="flex-1">
                  {worst && worst !== best ? (
-                   <div className="space-y-4">
-                      <p className="text-xs font-medium text-[var(--color-subtext)] leading-relaxed">
-                        {worst.name} requires intervention at {worst.total > 0 ? (worst.attended / worst.total * 100).toFixed(1) : 0}%. Let's build a recovery strategy.
+                   <div className="space-y-6">
+                      <p className="text-xs font-bold text-[var(--color-subtext)] leading-relaxed opacity-80 uppercase tracking-tight">
+                        {worst.name.toUpperCase()} is underperforming at {(worst.attended / worst.total * 100).toFixed(1)}%. Deploy rescue protocol.
                       </p>
                       <button 
                         onClick={() => setRescueSubject(worst)}
-                        className="w-full flex items-center justify-center gap-2 py-3 bg-orange-50 text-orange-700 rounded-xl text-[11px] font-black uppercase tracking-wider hover:bg-orange-600 hover:text-white transition-all shadow-sm"
+                        className="btn-nebula w-full !py-3 bg-gradient-to-br from-danger to-accent shadow-danger/20 text-[9px]"
                       >
-                         <ShieldAlert size={14} /> Calculate Strategy
+                         <Sparkles size={14} /> COMMENCE RESCUE
                       </button>
                    </div>
                  ) : (
-                   <p className="text-xs font-medium text-[var(--color-subtext)] leading-relaxed">All subjects are performing within the same deviation range. No critical outliers detected.</p>
+                   <p className="text-xs font-bold text-[var(--color-subtext)] leading-relaxed opacity-80 uppercase tracking-tight">All academic subsystems are operating within synchronized parameters.</p>
                  )}
               </div>
-           </div>
+           </motion.div>
         </div>
 
         {/* ── RESCUE MODAL ── */}

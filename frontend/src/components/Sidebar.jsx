@@ -1,246 +1,327 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import {
-  Users, LayoutDashboard, BookOpen, Calendar,
+  LayoutDashboard, BookOpen, Calendar,
   BrainCircuit, Settings, LogOut, GraduationCap,
-  X, Menu, Target, BarChart3, Sun, Moon
+  X, Target, BarChart3, Sun, Moon
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import useStore from '../store/useStore';
 
-const navItems = [
+/* ─── nav config ─────────────────────────────────────────── */
+const NAV_ITEMS = [
   { name: 'Dashboard',  icon: LayoutDashboard, path: '/dashboard'  },
-  { name: 'Timetable',  icon: Calendar,         path: '/timetable'  },
-  { name: 'Exams',      icon: Target,           path: '/exams'      },
-  { name: 'AI Planner', icon: BrainCircuit,     path: '/ai-planner' },
-  { name: 'Analytics',  icon: BarChart3,        path: '/analytics'  },
-  { name: 'Subjects',   icon: BookOpen,         path: '/subjects'   },
-  { name: 'Settings',   icon: Settings,         path: '/settings'   },
+  { name: 'Timetable',  icon: Calendar,        path: '/timetable'  },
+  { name: 'Exams',      icon: Target,          path: '/exams'      },
+  { name: 'AI Planner', icon: BrainCircuit,    path: '/ai-planner' },
+  { name: 'Analytics',  icon: BarChart3,       path: '/analytics'  },
+  { name: 'Subjects',   icon: BookOpen,        path: '/subjects'   },
+  { name: 'Settings',   icon: Settings,        path: '/settings'   },
 ];
 
-const bottomBarItems = [
-  { name: 'Home',      icon: LayoutDashboard, path: '/dashboard'  },
-  { name: 'Schedule',  icon: Calendar,        path: '/timetable'  },
-  { name: 'Ask AI',    icon: BrainCircuit,    path: '/ai-planner' },
-  { name: 'Analysis',  icon: BarChart3,       path: '/analytics'  },
-  { name: 'Subjects',  icon: BookOpen,        path: '/subjects'   },
-  { name: 'Settings',  icon: Settings,        path: '/settings'   },
+const BOTTOM_ITEMS = [
+  { name: 'Home',     icon: LayoutDashboard, path: '/dashboard'  },
+  { name: 'Schedule', icon: Calendar,        path: '/timetable'  },
+  { name: 'Ask AI',   icon: BrainCircuit,    path: '/ai-planner' },
+  { name: 'Analysis', icon: BarChart3,       path: '/analytics'  },
+  { name: 'Subjects', icon: BookOpen,        path: '/subjects'   },
+  { name: 'Settings', icon: Settings,        path: '/settings'   },
 ];
 
-const Sidebar = () => {
+/* ─── motion presets — same as Dashboard ────────────────── */
+const SPRING = { type: 'spring', stiffness: 420, damping: 34 };
+
+/* ─── style atoms — mirrors Dashboard's token system ─────── */
+const T = {
+  font: "-apple-system,'SF Pro Display',sans-serif",
+};
+
+/* ════════════════════════════════════════════════════════════ */
+
+export default function Sidebar() {
   const { logout, user, theme, toggleTheme, sidebarOpen, setSidebarOpen } = useStore();
   const navigate = useNavigate();
 
-  const handleLogout = () => {
-    logout();
-    navigate('/login');
-  };
+  const handleLogout = () => { logout(); navigate('/login'); };
 
   return (
     <>
-      {/* ══════════════════════════════
-          DESKTOP SIDEBAR  (lg+)
-      ══════════════════════════════ */}
-      <div className="hidden lg:flex w-64 h-screen sticky top-0 flex-col bg-sidebar-bg border-r border-border z-50 shadow-sm">
-        <div className="flex flex-col h-full py-8">
+      {/* ══ DESKTOP SIDEBAR (≥ 1024 px) ══════════════════════ */}
+      <aside style={{
+        display: 'none',               /* overridden by media query below */
+        width: 240,
+        height: '100vh',
+        position: 'sticky',
+        top: 0,
+        flexDirection: 'column',
+        background: 'var(--sidebar-bg, var(--color-card-bg))',
+        borderRight: '1px solid var(--color-border)',
+        zIndex: 50,
+        fontFamily: T.font,
+        flexShrink: 0,
+      }}
+        className="desktop-sidebar"   /* targeted by <style> below */
+      >
+        <div style={{ display: 'flex', flexDirection: 'column', height: '100%', padding: '28px 0 24px', overflow: 'hidden' }}>
 
           {/* Logo */}
-          <div className="flex items-center gap-3 mb-12 px-8">
-            <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center shadow-md">
-              <GraduationCap className="text-white w-6 h-6" />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '0 20px', marginBottom: 36 }}>
+            <div style={{ width: 36, height: 36, borderRadius: 10, background: 'var(--color-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <GraduationCap size={18} color="#fff" />
             </div>
-            <h1 className="text-xl font-bold tracking-tight text-text">Oakridge</h1>
+            <div>
+              <p style={{ fontSize: 14, fontWeight: 800, color: 'var(--color-text)', letterSpacing: '-0.03em', margin: 0, lineHeight: 1 }}>
+                OAKRIDGE
+              </p>
+              <p style={{ fontSize: 9, fontWeight: 700, color: 'var(--color-subtext)', letterSpacing: '0.1em', textTransform: 'uppercase', margin: '3px 0 0' }}>
+                Intelligence
+              </p>
+            </div>
           </div>
 
-          {/* Nav */}
-          <div className="px-4 space-y-8 flex-1 overflow-y-auto">
-            <NavGroup label="Main Menu"        items={navItems.slice(0, 4)} />
-            <NavGroup label="Social & Personal" items={navItems.slice(4)}   />
+          {/* Nav groups */}
+          <div style={{ flex: 1, overflowY: 'auto', padding: '0 12px', display: 'flex', flexDirection: 'column', gap: 28 }}>
+            <NavGroup label="Main"     items={NAV_ITEMS.slice(0, 4)} />
+            <NavGroup label="Personal" items={NAV_ITEMS.slice(4)} />
           </div>
 
-          {/* User + Logout */}
-          <div className="mt-auto px-4 pt-6 border-t border-border">
-            <button
-              onClick={toggleTheme}
-              className="w-full flex items-center justify-between px-4 py-3 mb-3 bg-bg rounded-2xl hover:bg-bg/80 transition-all border border-border/50"
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
-                  {theme === 'light' ? <Moon size={16} /> : <Sun size={16} />}
-                </div>
-                <span className="text-sm font-bold text-text">
-                  {theme === 'light' ? 'Dark Mode' : 'Light Mode'}
-                </span>
-              </div>
-            </button>
+          {/* Footer */}
+          <div style={{ padding: '16px 12px 0', borderTop: '1px solid var(--color-border)', marginTop: 16, display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <ThemeToggle theme={theme} onToggle={toggleTheme} />
             <UserCard user={user} />
-            <LogoutButton onClick={handleLogout} />
+            <LogoutBtn onClick={handleLogout} />
           </div>
         </div>
-      </div>
+      </aside>
 
-      {/* MOBILE TOP BAR REMOVED because we have bottom bar and redundant theme icons */}
-
-      {/* ══════════════════════════════
-          MOBILE SLIDE-IN DRAWER
-      ══════════════════════════════ */}
+      {/* ══ MOBILE SLIDE-IN DRAWER ══════════════════════════ */}
       <AnimatePresence>
         {sidebarOpen && (
           <>
+            {/* backdrop */}
             <motion.div
               key="backdrop"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
               onClick={() => setSidebarOpen(false)}
-              className="lg:hidden fixed inset-0 z-50 bg-black/40 backdrop-blur-sm"
+              style={{ position: 'fixed', inset: 0, zIndex: 50, background: 'rgba(0,0,0,0.38)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)' }}
             />
+
+            {/* drawer panel */}
             <motion.div
               key="drawer"
-              initial={{ x: '-100%' }}
-              animate={{ x: 0 }}
-              exit={{ x: '-100%' }}
+              initial={{ x: '-100%' }} animate={{ x: 0 }} exit={{ x: '-100%' }}
               transition={{ type: 'spring', damping: 28, stiffness: 280 }}
-              className="lg:hidden fixed top-0 left-0 bottom-0 z-50 w-72 bg-sidebar-bg flex flex-col shadow-2xl"
-            >
+              style={{
+                position: 'fixed', top: 0, left: 0, bottom: 0, zIndex: 51,
+                width: 272,
+                background: 'var(--sidebar-bg, var(--color-card-bg))',
+                display: 'flex', flexDirection: 'column',
+                boxShadow: '4px 0 40px rgba(0,0,0,0.15)',
+                fontFamily: T.font,
+              }}>
+
               {/* Drawer header */}
-              <div className="flex items-center justify-between px-6 py-5 border-b border-border">
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 bg-primary rounded-xl flex items-center justify-center">
-                    <GraduationCap className="text-white w-5 h-5" />
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '18px 20px', borderBottom: '1px solid var(--color-border)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <div style={{ width: 34, height: 34, borderRadius: 9, background: 'var(--color-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <GraduationCap size={17} color="#fff" />
                   </div>
-                  <span className="text-lg font-bold text-text">Oakridge</span>
+                  <span style={{ fontSize: 15, fontWeight: 800, color: 'var(--color-text)', letterSpacing: '-0.03em' }}>
+                    Oakridge
+                  </span>
                 </div>
                 <button
                   onClick={() => setSidebarOpen(false)}
-                  className="w-8 h-8 flex items-center justify-center rounded-lg text-subtext hover:bg-bg transition-all"
-                >
-                  <X className="w-4 h-4" />
+                  style={{ width: 30, height: 30, borderRadius: 8, border: '1px solid var(--color-border)', background: 'var(--color-surface)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'var(--color-subtext)', fontFamily: T.font }}>
+                  <X size={14} />
                 </button>
               </div>
 
               {/* Drawer nav */}
-              <div className="flex-1 overflow-y-auto px-4 py-6 space-y-8 no-scrollbar">
-                <NavGroup label="Main Menu"        items={navItems.slice(0, 4)} onNavigate={() => setSidebarOpen(false)} />
-                <NavGroup label="Social & Personal" items={navItems.slice(4)}   onNavigate={() => setSidebarOpen(false)} />
+              <div style={{ flex: 1, overflowY: 'auto', padding: '20px 12px', display: 'flex', flexDirection: 'column', gap: 24 }}>
+                <NavGroup label="Main"          items={NAV_ITEMS.slice(0, 4)} onNavigate={() => setSidebarOpen(false)} />
+                <NavGroup label="Personal"      items={NAV_ITEMS.slice(4)}    onNavigate={() => setSidebarOpen(false)} />
               </div>
 
               {/* Drawer footer */}
-              <div className="px-4 pb-8 pt-4 border-t border-border">
-                <button
-                  onClick={toggleTheme}
-                  className="w-full flex items-center justify-between px-4 py-3 mb-4 bg-bg rounded-2xl border border-border/50 transition-all active:scale-95"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
-                      {theme === 'light' ? <Moon size={16} /> : <Sun size={16} />}
-                    </div>
-                    <span className="text-sm font-bold text-text">
-                      {theme === 'light' ? 'Dark Mode' : 'Light Mode'}
-                    </span>
-                  </div>
-                  <div className={`w-10 h-5 rounded-full p-1 transition-colors relative ${theme === 'dark' ? 'bg-primary' : 'bg-subtext/20'}`}>
-                    <motion.div 
-                      animate={{ x: theme === 'dark' ? 20 : 0 }}
-                      className="w-3 h-3 bg-white rounded-full shadow-sm"
-                    />
-                  </div>
-                </button>
+              <div style={{ padding: '12px 12px 24px', borderTop: '1px solid var(--color-border)', display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <ThemeToggle theme={theme} onToggle={toggleTheme} />
                 <UserCard user={user} />
-                <LogoutButton onClick={handleLogout} />
+                <LogoutBtn onClick={handleLogout} />
               </div>
             </motion.div>
           </>
         )}
       </AnimatePresence>
 
-      {/* ══════════════════════════════
-          MOBILE BOTTOM TAB BAR  (below lg)
-      ══════════════════════════════ */}
-      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-sidebar-bg/95 backdrop-blur-xl border-t border-border/50 flex items-center justify-between px-1 py-1 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] safe-bottom">
-        {bottomBarItems.map((item) => (
-          <NavLink
-            key={item.path}
-            to={item.path}
-            className={({ isActive }) =>
-              `flex flex-col items-center justify-center gap-1.5 flex-1 py-2.5 transition-all duration-200 min-w-0 ${
-                isActive ? 'text-primary' : 'text-subtext/60'
-              }`
-            }
-          >
+      {/* ══ MOBILE BOTTOM TAB BAR (< 1024 px) ══════════════ */}
+      <nav
+        className="mobile-bottom-bar"
+        style={{
+          display: 'none',            /* shown by media query */
+          position: 'fixed',
+          bottom: 20, left: 16, right: 16,
+          zIndex: 50,
+          background: 'var(--color-card-bg)',
+          border: '1px solid var(--color-border)',
+          borderRadius: 20,
+          padding: '6px 4px',
+          boxShadow: '0 8px 32px rgba(0,0,0,0.10)',
+          fontFamily: T.font,
+          alignItems: 'center',
+          justifyContent: 'space-around',
+        }}>
+        {BOTTOM_ITEMS.map(item => (
+          <NavLink key={item.path} to={item.path} style={{ textDecoration: 'none', flex: 1, minWidth: 0 }}>
             {({ isActive }) => (
-              <>
-                <div className={`transition-all duration-300 ${isActive ? 'scale-110' : ''}`}>
-                  <item.icon className={`${isActive ? 'w-5 h-5' : 'w-5 h-5 opacity-70'}`} />
-                </div>
-                <span className={`text-[9px] font-bold tracking-tight leading-none transition-all duration-300 ${isActive ? 'opacity-100' : 'opacity-100'}`}>
-                  {item.name}
-                </span>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, padding: '6px 2px', position: 'relative' }}>
+                {/* active pill background */}
                 {isActive && (
-                  <motion.div 
-                    layoutId="activeTabMobile"
-                    className="absolute bottom-1 w-1 h-1 bg-primary rounded-full" 
+                  <motion.div
+                    layoutId="activePill"
+                    transition={SPRING}
+                    style={{ position: 'absolute', inset: 0, borderRadius: 12, background: 'var(--color-primary-lo, rgba(0,122,255,0.10))' }}
                   />
                 )}
-              </>
+                <item.icon
+                  size={19}
+                  strokeWidth={isActive ? 2.2 : 1.7}
+                  style={{ color: isActive ? 'var(--color-primary)' : 'var(--color-subtext)', position: 'relative', zIndex: 1 }}
+                />
+                <span style={{
+                  fontSize: 9, fontWeight: isActive ? 700 : 500,
+                  color: isActive ? 'var(--color-primary)' : 'var(--color-subtext)',
+                  letterSpacing: '0.02em',
+                  position: 'relative', zIndex: 1,
+                  lineHeight: 1,
+                }}>
+                  {item.name}
+                </span>
+              </div>
             )}
           </NavLink>
         ))}
       </nav>
+
+      {/* ── responsive show/hide via <style> ── */}
+      <style>{`
+        @media (min-width: 1024px) {
+          .desktop-sidebar  { display: flex !important; }
+          .mobile-bottom-bar { display: none !important; }
+        }
+        @media (max-width: 1023px) {
+          .desktop-sidebar  { display: none !important; }
+          .mobile-bottom-bar { display: flex !important; }
+        }
+        /* hide scrollbars in sidebar nav lists */
+        .sidebar-scroll::-webkit-scrollbar { display: none; }
+        .sidebar-scroll { -ms-overflow-style: none; scrollbar-width: none; }
+      `}</style>
     </>
   );
-};
+}
 
-// ── Shared components ──
+/* ─── sub-components ──────────────────────────────────────── */
 
-const NavGroup = ({ label, items, onNavigate }) => (
-  <div>
-    <p className="text-[10px] font-bold text-subtext uppercase tracking-widest mb-4 px-4">
-      {label}
-    </p>
-    <nav className="space-y-1">
-      {items.map((item) => (
-        <NavLink
-          key={item.path}
-          to={item.path}
-          onClick={onNavigate}
-          className={({ isActive }) =>
-            `flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 font-medium text-sm ${
-              isActive
-                ? 'bg-primary text-white shadow-lg shadow-primary/20'
-                : 'text-sidebar-text hover:bg-bg'
-            }`
-          }
-        >
-          {/* ✅ use item.name not item.label */}
-          <item.icon className="w-4 h-4 shrink-0" />
-          <span>{item.name}</span>
-        </NavLink>
-      ))}
-    </nav>
-  </div>
-);
-
-const UserCard = ({ user }) => (
-  <div className="flex items-center gap-3 px-4 py-3 mb-3 bg-bg rounded-2xl">
-    <div className="w-9 h-9 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-primary font-bold text-sm shrink-0">
-      {user?.name?.charAt(0).toUpperCase() || 'S'}
+function NavGroup({ label, items, onNavigate }) {
+  return (
+    <div>
+      <p style={{ fontSize: 9, fontWeight: 700, color: 'var(--color-subtext)', letterSpacing: '0.1em', textTransform: 'uppercase', margin: '0 0 8px 10px' }}>
+        {label}
+      </p>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+        {items.map(item => (
+          <NavLink key={item.path} to={item.path} onClick={onNavigate} style={{ textDecoration: 'none' }}>
+            {({ isActive }) => (
+              <div style={{
+                display: 'flex', alignItems: 'center', gap: 10,
+                padding: '8px 10px', borderRadius: 10,
+                background: isActive ? 'var(--color-primary-lo, rgba(0,122,255,0.08))' : 'transparent',
+                color: isActive ? 'var(--color-primary)' : 'var(--color-subtext)',
+                cursor: 'pointer',
+                transition: 'background 0.15s, color 0.15s',
+              }}
+                onMouseEnter={e => { if (!isActive) { e.currentTarget.style.background = 'var(--hover)'; e.currentTarget.style.color = 'var(--color-text)'; }}}
+                onMouseLeave={e => { if (!isActive) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--color-subtext)'; }}}
+              >
+                {/* left accent bar */}
+                <div style={{ width: 3, height: 16, borderRadius: 2, background: isActive ? 'var(--color-primary)' : 'transparent', flexShrink: 0, transition: 'background 0.15s' }} />
+                <item.icon size={16} strokeWidth={isActive ? 2.2 : 1.8} style={{ flexShrink: 0 }} />
+                <span style={{ fontSize: 13, fontWeight: isActive ? 600 : 500, letterSpacing: '-0.01em', lineHeight: 1 }}>
+                  {item.name}
+                </span>
+              </div>
+            )}
+          </NavLink>
+        ))}
+      </div>
     </div>
-    <div className="flex-1 min-w-0">
-      <p className="text-sm font-bold text-text truncate">{user?.name || 'Scholar'}</p>
-      <p className="text-[10px] text-subtext font-medium uppercase tracking-widest">Premium Student</p>
+  );
+}
+
+function ThemeToggle({ theme, onToggle }) {
+  return (
+    <button
+      onClick={onToggle}
+      style={{
+        width: '100%', display: 'flex', alignItems: 'center', gap: 10,
+        padding: '9px 10px', borderRadius: 10,
+        background: 'var(--color-surface)',
+        border: '1px solid var(--color-border)',
+        cursor: 'pointer', fontFamily: "-apple-system,'SF Pro Display',sans-serif",
+        transition: 'background 0.15s',
+      }}
+      onMouseEnter={e => e.currentTarget.style.background = 'var(--hover)'}
+      onMouseLeave={e => e.currentTarget.style.background = 'var(--color-surface)'}>
+      <div style={{ width: 28, height: 28, borderRadius: 8, background: 'var(--color-bg)', border: '1px solid var(--color-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-primary)', flexShrink: 0 }}>
+        {theme === 'light' ? <Moon size={14} /> : <Sun size={14} />}
+      </div>
+      <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--color-text)', letterSpacing: '-0.01em' }}>
+        {theme === 'light' ? 'Dark Mode' : 'Light Mode'}
+      </span>
+    </button>
+  );
+}
+
+function UserCard({ user }) {
+  const initial = user?.name?.charAt(0).toUpperCase() || 'S';
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 10px', borderRadius: 10, background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
+      {/* avatar — matches Dashboard header avatar logic */}
+      <img
+        src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.name || 'U'}&backgroundColor=007AFF`}
+        alt={user?.name || 'User'}
+        style={{ width: 30, height: 30, borderRadius: '50%', border: '1.5px solid var(--color-border)', flexShrink: 0 }}
+      />
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-text)', margin: 0, letterSpacing: '-0.01em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          {user?.name || 'Scholar'}
+        </p>
+        <p style={{ fontSize: 10, fontWeight: 500, color: 'var(--color-subtext)', margin: '1px 0 0', letterSpacing: '0.01em' }}>
+          Premium Account
+        </p>
+      </div>
     </div>
-  </div>
-);
+  );
+}
 
-const LogoutButton = ({ onClick }) => (
-  <button
-    onClick={onClick}
-    className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-subtext hover:text-danger hover:bg-danger/5 transition-all duration-200 font-bold text-[10px] uppercase tracking-widest"
-  >
-    <LogOut className="w-4 h-4" />
-    Logout
-  </button>
-);
-
-export default Sidebar;
+function LogoutBtn({ onClick }) {
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        width: '100%', display: 'flex', alignItems: 'center', gap: 10,
+        padding: '9px 10px', borderRadius: 10,
+        background: 'transparent', border: 'none',
+        cursor: 'pointer', fontFamily: "-apple-system,'SF Pro Display',sans-serif",
+        color: 'var(--color-subtext)',
+        transition: 'background 0.15s, color 0.15s',
+        textAlign: 'left',
+      }}
+      onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,59,48,0.08)'; e.currentTarget.style.color = '#FF3B30'; }}
+      onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--color-subtext)'; }}>
+      <LogOut size={15} style={{ flexShrink: 0, opacity: 0.7 }} />
+      <span style={{ fontSize: 13, fontWeight: 600, letterSpacing: '-0.01em' }}>Logout</span>
+    </button>
+  );
+}
