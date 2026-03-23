@@ -148,26 +148,9 @@ router.put('/:id', auth, async (req, res) => {
       if (initialTotal !== undefined) subject.initialTotal = initialTotal;
       if (initialDate !== undefined) subject.initialDate = initialDate ? new Date(initialDate) : null;
 
-      // Recalculate totals whenever initial values or date change
+      // Use the unified recalculation engine
       if (initialAttended !== undefined || initialTotal !== undefined || initialDate !== undefined) {
-        let trackedAttended = 0;
-        let trackedTotal = 0;
-        const baseDate = subject.initialDate ? new Date(subject.initialDate) : null;
-
-        subject.attendanceRecords.forEach(record => {
-          // Only count records ON or AFTER the initialDate
-          if (baseDate && record.date && new Date(record.date) < baseDate) return;
-          
-          const recCredit = record.credit || 1;
-          if (record.status === 'Present') {
-            trackedAttended += recCredit;
-            trackedTotal += recCredit;
-          } else if (record.status === 'Absent') {
-            trackedTotal += recCredit;
-          }
-        });
-        subject.attended = (subject.initialAttended || 0) + trackedAttended;
-        subject.total = (subject.initialTotal || 0) + trackedTotal;
+        recalculateAttendance(subject);
       }
     }
 
@@ -184,10 +167,14 @@ const recalculateAttendance = (subject) => {
   let trackedAttended = 0;
   let trackedTotal = 0;
   const baseDate = subject.initialDate ? new Date(subject.initialDate) : null;
+  const baseDateStr = baseDate ? baseDate.toISOString().split('T')[0] : null;
 
   subject.attendanceRecords.forEach(record => {
-    // Lock logic: Ignore entries before the snapshot date
-    if (baseDate && record.date && new Date(record.date) < baseDate) return;
+    // Lock logic: Ignore entries BEFORE the snapshot date (strip time for stability)
+    if (baseDateStr && record.date) {
+      const recDateStr = new Date(record.date).toISOString().split('T')[0];
+      if (recDateStr < baseDateStr) return;
+    }
     
     // Cancelled classes increment NEITHER attended nor total
     if (record.status === 'Cancelled') return;
@@ -230,46 +217,61 @@ router.put('/:id/snapshot', auth, async (req, res) => {
   }
 });
 
-// @route   PUT api/subjects/:id/log
-// @desc    Add or edit a daily attendance log (Editable Timeline)
-router.put('/:id/log', auth, async (req, res) => {
-    const { date, status, credit } = req.body; // status: 'Present', 'Absent', 'OD', 'Medical'
+// @route   PUT api/subjects/:id/log/:logId
+// @desc    Edit a daily attendance log by ID
+router.put('/:id/log/:logId', auth, async (req, res) => {
+    const { date, status, credit } = req.body;
     try {
       const user = await User.findById(req.user.id);
       const subject = user.subjects.id(req.params.id);
       if (!subject) return res.status(404).json({ message: 'Subject not found' });
   
-      const targetDateStr = new Date(date).toISOString().split('T')[0];
-      const baseDateStr = subject.initialDate ? new Date(subject.initialDate).toISOString().split('T')[0] : null;
-  
-      // Lock validation
-      if (baseDateStr && targetDateStr < baseDateStr) {
-        return res.status(403).json({ message: 'Cannot edit logs before the Snapshot date' });
-      }
-  
-      // Find if a log already exists for this date
-      let existingLog = null;
-      for (let record of subject.attendanceRecords) {
-        if (record.date && new Date(record.date).toISOString().split('T')[0] === targetDateStr) {
-          existingLog = record;
-          break;
+      const log = subject.attendanceRecords.id(req.params.logId);
+      if (!log) return res.status(404).json({ message: 'Log not found' });
+
+      if (date) {
+        const targetDateStr = new Date(date).toISOString().split('T')[0];
+        const baseDateStr = subject.initialDate ? new Date(subject.initialDate).toISOString().split('T')[0] : null;
+    
+        // Lock validation
+        if (baseDateStr && targetDateStr < baseDateStr) {
+          return res.status(403).json({ message: 'Cannot move logs before the Snapshot date' });
         }
+        log.date = new Date(date);
       }
-  
-      if (existingLog) {
-        existingLog.status = status;
-        if (credit !== undefined) existingLog.credit = credit;
-      } else {
-        subject.attendanceRecords.push({ date: new Date(date), status, credit: credit || 1 });
-      }
+
+      if (status) log.status = status;
+      if (credit !== undefined) log.credit = credit;
   
       recalculateAttendance(subject);
-    await user.save();
-    res.json(subject);
-  } catch (err) {
-    console.error(err.message);
-    res.status(500).send('Server error');
-  }
+      await user.save();
+      res.json(subject);
+    } catch (err) {
+      console.error(err.message);
+      res.status(500).send('Server error');
+    }
+});
+
+// @route   DELETE api/subjects/:id/log/:logId
+// @desc    Delete an attendance log entry
+router.delete('/:id/log/:logId', auth, async (req, res) => {
+    try {
+      const user = await User.findById(req.user.id);
+      const subject = user.subjects.id(req.params.id);
+      if (!subject) return res.status(404).json({ message: 'Subject not found' });
+  
+      const log = subject.attendanceRecords.id(req.params.logId);
+      if (!log) return res.status(404).json({ message: 'Log not found' });
+
+      log.deleteOne();
+      
+      recalculateAttendance(subject);
+      await user.save();
+      res.json(subject);
+    } catch (err) {
+      console.error(err.message);
+      res.status(500).send('Server error');
+    }
 });
 
 // @route   GET api/subjects/projections

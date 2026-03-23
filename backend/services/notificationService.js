@@ -71,24 +71,45 @@ const checkAndSendNotifications = async (User) => {
         if (!startMins) continue;
 
         const reminderWindow = settings.reminderTime || 15;
-        const isTimeForAlert = currentMins >= (startMins - reminderWindow) && currentMins < startMins;
+        const isTimeForUpcoming = currentMins >= (startMins - reminderWindow) && currentMins < startMins;
+        const isTimeForMissed = currentMins >= (startMins + 30) && currentMins < (startMins + 45);
 
-        if (isTimeForAlert) {
-          const slotKey = `${todayStr}_${slot._id || slot.time}`;
+        if (isTimeForUpcoming || isTimeForMissed) {
+          const type = isTimeForUpcoming ? 'upcoming' : 'missed';
+          const slotKey = `${todayStr}_${slot._id || slot.time}_${type}`;
           
           if (user.notificationSettings.sentNotifications.includes(slotKey)) continue;
 
-          // Find subject name
+          // Find subject
           const subject = user.subjects.id(slot.subject);
           const subjectName = subject ? subject.name : 'Unknown Subject';
 
-          // Send Email
-          if (settings.emailEnabled && targetEmail) {
-            await sendEmailNotification(
-              targetEmail, 
-              `Upcoming Class: ${subjectName}`, 
-              `Hi ${user.name || 'Scholar'},\n\nYour class ${subjectName} starts at ${startTimeStr}.\n\nStay on top of your attendance!`
+          if (isTimeForUpcoming) {
+            // Send Upcoming Email
+            if (settings.emailEnabled && targetEmail) {
+              await sendEmailNotification(
+                targetEmail, 
+                `Alert: ${subjectName}`, 
+                `Hi ${user.name || 'Scholar'},\n\nYour class ${subjectName} starts at ${startTimeStr}. Betichod class laga liyo!\n\nDon't miss it.`
+              );
+            }
+          } else if (isTimeForMissed) {
+            // Check if already marked present/other for today
+            const record = subject && subject.attendanceRecords.find(r => 
+              new Date(r.date).toISOString().split('T')[0] === todayStr
             );
+
+            // Send if no record exists OR if record exists but is 'Absent'
+            const isAbsent = record && record.status === 'Absent';
+            const needsAlert = !record || isAbsent;
+
+            if (needsAlert && settings.emailEnabled && targetEmail) {
+              await sendEmailNotification(
+                targetEmail, 
+                `Missed: ${subjectName}`, 
+                `Betichod class chord di?\n\n${subjectName} started at ${startTimeStr} and ${isAbsent ? 'is marked as Absent' : 'you haven\'t marked your attendance yet'}. Laga liyo agali baar!`
+              );
+            }
           }
 
           user.notificationSettings.sentNotifications.push(slotKey);

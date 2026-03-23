@@ -1,200 +1,207 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  CheckCircle2, Edit3, RotateCcw, Zap, CalendarDays, ChevronDown, Check, X
+  RotateCcw, CalendarDays, ChevronDown, Check, X, AlertCircle, Info
 } from 'lucide-react';
 import useStore from '../store/useStore';
 
+const SPRING = { type: 'spring', stiffness: 420, damping: 34 };
+
 const SubjectCard = ({ subject, onMark, onEdit, onUndo, onOpenRegister, projection }) => {
   const getRecoveryDate = useStore(state => state.getRecoveryDate);
-  const calculateBunkability = useStore(state => state.calculateBunkability);
+  const isUpdating = useStore(state => state.updatingAttendance[subject._id]);
   
-  const recoveryDate    = getRecoveryDate(subject._id);
-  const bunkability     = calculateBunkability(subject);
+  const recoveryDate = getRecoveryDate(subject._id);
   const [isMoreOpen, setIsMoreOpen] = useState(false);
 
   const required   = subject.requiredAttendance || 75;
-  const percentage = subject.total > 0
-    ? (subject.attended / subject.total) * 100
-    : 0;
-  const pct = percentage.toFixed(1);
+  const percentage = subject.total > 0 ? (subject.attended / subject.total) * 100 : 0;
+  const pct = parseFloat(percentage.toFixed(1));
 
-  // Bunk allowance & Recovery calc
-  const bunkAllowance = Math.floor(
-    (subject.attended - (required / 100) * subject.total) / (required / 100)
-  );
+  // Bunk allowance & Recovery
+  const bunkAllowance = Math.floor((subject.attended - (required / 100) * subject.total) / (required / 100));
+  const nextClassesToSafe = Math.max(0, Math.ceil(((required / 100) * subject.total - subject.attended) / (1 - required / 100)));
 
-  const nextClassesToSafe = Math.max(
-    0,
-    Math.ceil(
-      ((required / 100) * subject.total - subject.attended) /
-      (1 - required / 100)
-    )
-  );
-
-  const isSafe    = percentage >= required;
+  const isSafe = percentage >= required;
   const isWarning = !isSafe && percentage >= required - 5;
-
-  const statusMsg = isSafe
-    ? bunkAllowance > 0
-      ? `Safe to skip ${bunkAllowance} more class${bunkAllowance > 1 ? 'es' : ''}`
-      : 'At the limit — attend every class'
-    : recoveryDate === 'Impossible'
-      ? 'Goal unreachable this semester'
-      : recoveryDate === 'Set semester end to see date' || recoveryDate === 'Add schedule to see date'
-        ? recoveryDate
-        : `Attend ${nextClassesToSafe} more to recover (by ${recoveryDate})`;
-
-  const isUpdating = useStore(state => state.updatingAttendance[subject._id]);
-  const brandColor = subject.color || '#185FA5';
+  const brandColor = subject.color || 'var(--color-primary)';
+  
+  // Status Logic
+  const statusColor = isSafe ? 'var(--color-success)' : isWarning ? 'var(--color-warning)' : 'var(--color-danger)';
+  const statusBg    = isSafe ? 'var(--color-success-lo)' : isWarning ? 'var(--color-warning-lo)' : 'var(--color-danger-lo)';
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 10 }}
+    <motion.div 
+      initial={{ opacity: 0, y: 12 }} 
       animate={{ opacity: 1, y: 0 }}
-      whileHover={{ y: -8, scale: 1.02 }}
-      className={`apple-card p-7 lg:p-8 flex flex-col gap-6 group relative overflow-hidden ${isUpdating ? 'opacity-60 grayscale-[0.5]' : ''}`}
+      layout
+      style={{
+        background: 'var(--color-card-bg)',
+        border: '1px solid var(--color-border)',
+        borderRadius: 20,
+        padding: '18px 20px',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 14,
+        position: 'relative',
+        boxShadow: 'var(--shadow-sm)',
+        opacity: isUpdating ? 0.6 : 1,
+        transition: 'box-shadow 0.3s ease',
+      }}
+      onMouseEnter={e => e.currentTarget.style.boxShadow = 'var(--shadow-md)'}
+      onMouseLeave={e => e.currentTarget.style.boxShadow = 'var(--shadow-sm)'}
     >
-      {/* Decorative Glow */}
-      <div className="absolute -top-24 -right-24 w-48 h-48 bg-primary/10 rounded-full blur-[80px] group-hover:bg-primary/20 transition-colors duration-1000" />
-      {/* ── TOP SECTION �      <div className="flex justify-between items-start gap-4 relative z-10">
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-3 mb-2">
-             <div className="w-3 h-3 rounded-full shrink-0 shadow-[0_0_10px_rgba(0,0,0,0.1)]" style={{ background: brandColor }} />
-             <h3 className="text-lg lg:text-xl font-black text-[var(--color-text)] truncate tracking-tighter leading-none">{subject.name}</h3>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="text-[9px] font-black text-[var(--color-subtext)] uppercase tracking-[0.15em] opacity-60">Module Core</span>
-            <div className="w-1 h-1 rounded-full bg-[var(--color-border)]" />
-            <span className="text-[9px] font-black text-primary uppercase tracking-[0.15em]">Target {required}%</span>
-          </div>
+      
+      {/* Decorative accent */}
+      <div style={{ position: 'absolute', top: 12, right: 12, width: 8, height: 8, borderRadius: '50%', background: brandColor }} />
+      
+      {/* ── HEADER ── */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', paddingRight: 10 }}>
+        <div 
+          onClick={() => onEdit(subject)} 
+          style={{ flex: 1, minWidth: 0, cursor: 'pointer' }}
+        >
+          <h3 style={{ fontSize: 16, fontWeight: 750, color: 'var(--color-text)', margin: 0, letterSpacing: '-0.02em', lineHeight: 1.2 }}>
+            {subject.name}
+          </h3>
+          <p style={{ fontSize: 11, fontWeight: 600, color: 'var(--color-subtext)', margin: '4px 0 0', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+            {subject.attended} / {subject.total} Sessions
+          </p>
         </div>
-
-        <div className="flex flex-col items-end gap-3 text-right">
-          <div className="flex flex-col">
-            <span className="text-[32px] lg:text-[40px] font-black tracking-tighter leading-none gradient-text" 
-                  style={{ backgroundImage: `linear-gradient(135deg, ${isSafe ? 'var(--secondary)' : isWarning ? 'var(--warning)' : 'var(--danger)'} 0%, var(--text) 200%)` }}>
-              {pct}%
-            </span>
-          </div>
-          <div 
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-[0.15em] border border-[var(--color-border)] nebula-glass"
-            style={{ color: bunkability.color }}
-          >
-            <Zap size={10} fill={bunkability.color} className="animate-pulse" />
-            {bunkability.label}
-          </div>
+        <div style={{ textAlign: 'right' }}>
+          <span style={{ fontSize: 24, fontWeight: 900, color: statusColor, letterSpacing: '-0.04em', lineHeight: 1 }}>
+            {pct.toFixed(0)}%
+          </span>
+          <p style={{ fontSize: 9, fontWeight: 700, color: 'var(--color-subtext)', margin: 0 }}>CURRENT</p>
         </div>
       </div>
-   </div>
 
       {/* ── PROGRESS ── */}
-      <div className="space-y-2.5 relative z-10">
-        <div className="flex justify-between items-center px-1">
-          <span className="text-[11px] font-medium text-[var(--color-subtext)] uppercase tracking-wider">Classes Attended</span>
-          <span className="text-xs font-semibold text-[var(--color-text)]">{subject.attended} <span className="text-[11px] font-medium text-[var(--color-subtext)]">/</span> {subject.total}</span>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+        <div style={{ height: 5, background: 'var(--color-border)', borderRadius: 2.5, overflow: 'hidden', position: 'relative' }}>
+          <motion.div 
+            initial={{ width: 0 }} 
+            animate={{ width: `${Math.min(100, percentage)}%` }}
+            transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
+            style={{ height: '100%', background: statusColor }} 
+          />
+          {/* Target marker */}
+          <div style={{ position: 'absolute', top: 0, bottom: 0, width: 2, background: 'var(--color-text)', opacity: 0.15, left: `${required}%` }} />
         </div>
-        <div className="relative h-2 bg-[var(--color-border)]/50 rounded-full overflow-hidden">
-           <motion.div 
-             initial={{ width: 0 }} 
-             animate={{ width: `${Math.min(100, percentage)}%` }} 
-             transition={{ duration: 1.2, ease: "circOut" }}
-             className="h-full rounded-full" 
-             style={{ backgroundColor: isSafe ? 'var(--secondary)' : isWarning ? 'var(--warning)' : 'var(--danger)' }} 
-           />
-           {/* Marker for Target */}
-           <div className="absolute top-0 h-full w-[2px] bg-white/60 shadow-sm z-10" style={{ left: `${required}%` }} />
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--color-subtext)' }}>Required {required}%</span>
+          {isSafe ? (
+            <span style={{ fontSize: 10, fontWeight: 800, color: 'var(--color-success)', display: 'flex', alignItems: 'center', gap: 3 }}>
+              +{bunkAllowance} Safe
+            </span>
+          ) : (
+            <span style={{ fontSize: 10, fontWeight: 800, color: isWarning ? 'var(--color-warning)' : 'var(--color-danger)', display: 'flex', alignItems: 'center', gap: 3 }}>
+              {nextClassesToSafe} Needed
+            </span>
+          )}
         </div>
       </div>
 
-      {/* ── INSIGHT CHIP ── */}
-      <div className={`p-3 rounded-xl flex items-start gap-2.5 transition-colors ${isSafe ? 'bg-green-500/10' : 'bg-red-500/10'}`}>
-         <div className={`mt-0.5 shrink-0 ${isSafe ? 'text-green-600 dark:text-green-500' : 'text-red-600 dark:text-red-500'}`}>
-            {isSafe ? <CheckCircle2 size={16} /> : <Zap size={16} />}
-         </div>
-         <p className={`text-[11px] lg:text-xs font-medium leading-relaxed ${isSafe ? 'text-green-700 dark:text-green-400' : 'text-red-700 dark:text-red-400'}`}>{statusMsg}</p>
+      {/* ── STATUS TIP ── */}
+      <div style={{ 
+        padding: '10px 12px', 
+        background: statusBg, 
+        borderRadius: 12, 
+        display: 'flex', 
+        alignItems: 'center', 
+        gap: 8,
+        border: `1px solid ${statusBg}`
+      }}>
+        {isSafe ? <Check size={12} color="var(--color-success)" strokeWidth={3} /> : <AlertCircle size={12} color={statusColor} />}
+        <p style={{ fontSize: 11, fontWeight: 650, margin: 0, color: statusColor, lineHeight: 1.3 }}>
+          {isSafe 
+            ? bunkAllowance > 0 ? `You can safely miss ${bunkAllowance} more.` : 'At the limit — attend next.'
+            : recoveryDate === 'Impossible' ? 'Goal unreachable this semester.' : `Recover in ${nextClassesToSafe} sessions.`
+          }
+        </p>
       </div>
 
       {/* ── ACTIONS ── */}
-      <div className="flex flex-col gap-3 mt-auto relative z-10">
-        <div className="flex gap-2">
-           <button 
-             onClick={() => onMark(subject._id, 'Present')} 
-             disabled={isUpdating}
-             className="btn-primary flex-1 py-2.5 px-3 text-xs"
-           >
-              <Check size={14} strokeWidth={3} /> Present
-           </button>
-           <button 
-             onClick={() => onMark(subject._id, 'Absent')} 
-             disabled={isUpdating}
-             className="btn-secondary flex-1 py-2.5 px-3 text-xs bg-[var(--color-surface)] hover:bg-[var(--color-border)]/50 border border-[var(--color-border)]"
-           >
-              <X size={14} strokeWidth={3} /> Absent
-           </button>
-           
-           <div className="relative">
-              <button 
-                disabled={isUpdating} 
-                onClick={() => setIsMoreOpen(!isMoreOpen)}
-                className={`w-10 h-full rounded-xl border flex items-center justify-center transition-colors ${isMoreOpen ? 'bg-primary/10 border-primary/30 text-primary' : 'border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-subtext)] hover:bg-[var(--color-bg)]'}`}
-              >
-                 <ChevronDown size={14} className={`transition-transform duration-200 ${isMoreOpen ? 'rotate-180' : ''}`} />
-              </button>
-              
-              <AnimatePresence>
-                {isMoreOpen && (
-                  <>
-                    <div className="fixed inset-0 z-40" onClick={() => setIsMoreOpen(false)} />
-                    <motion.div 
-                      initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                      className="absolute right-0 bottom-full mb-2 bg-[var(--color-card-bg)] border border-[var(--color-border)] rounded-xl shadow-lg z-50 w-44 overflow-hidden origin-bottom-right"
-                    >
-                       <div className="p-2 border-b border-[var(--color-border)] bg-[var(--color-bg)]/50 flex items-center justify-between px-3">
-                          <span className="text-[10px] font-semibold text-[var(--color-subtext)] uppercase tracking-wider">Quick Actions</span>
-                          <button onClick={() => setIsMoreOpen(false)} className="text-[var(--color-subtext)] hover:text-[var(--color-text)] transition-colors"><X size={12} /></button>
-                       </div>
-                       <div className="py-1">
-                          {['Medical', 'OD', 'Cancelled'].map(st => (
-                            <button 
-                              key={st} 
-                              onClick={() => {
-                                onMark(subject._id, st);
-                                setIsMoreOpen(false);
-                              }} 
-                              className="w-full text-left px-3 py-2 text-xs font-medium text-[var(--color-text)] hover:bg-[var(--color-surface)] flex items-center justify-between group/row"
-                            >
-                              {st}
-                              <ChevronDown size={10} className="-rotate-90 opacity-0 group-hover/row:opacity-40 transition-opacity" />
-                            </button>
-                          ))}
-                          {onUndo && (
-                            <button 
-                              onClick={() => {
-                                onUndo(subject._id);
-                                setIsMoreOpen(false);
-                              }} 
-                              className="w-full text-left px-3 py-2 text-xs font-medium text-primary hover:bg-primary/5 flex items-center gap-2 border-t border-[var(--color-border)] mt-1"
-                            >
-                              <RotateCcw size={11} /> Undo Last Action
-                            </button>
-                          )}
-                       </div>
-                    </motion.div>
-                  </>
-                )}
-              </AnimatePresence>
-           </div>
-        </div>
+      <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
+        <button onClick={() => onMark(subject._id, 'Present')} disabled={isUpdating}
+          className="btn-primary" style={{ flex: 1.2, height: 38, padding: 0, fontSize: 12, borderRadius: 10 }}>
+          <Check size={14} strokeWidth={2.5} /> Present
+        </button>
+        
+        <div style={{ position: 'relative', display: 'flex', gap: 8, flex: 1 }}>
+          <button onClick={() => onMark(subject._id, 'Absent')} disabled={isUpdating}
+            className="btn-secondary" style={{ flex: 1, height: 38, padding: 0, fontSize: 12, borderRadius: 10, border: '1px solid var(--color-border)', color: 'var(--color-danger)' }}>
+            <X size={14} strokeWidth={2.5} />
+          </button>
 
-        {onOpenRegister && (
-           <button onClick={() => onOpenRegister(subject)} className="w-full py-2.5 rounded-xl border border-[var(--color-border)] text-xs font-medium text-[var(--color-subtext)] flex items-center justify-center gap-2 hover:border-primary/50 hover:text-primary transition-colors bg-[var(--color-surface)]">
-              <CalendarDays size={14} /> Full Register
-           </button>
-        )}
+          <button onClick={() => setIsMoreOpen(!isMoreOpen)} disabled={isUpdating}
+            className="btn-secondary" style={{ width: 38, height: 38, padding: 0, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <ChevronDown size={14} style={{ transform: isMoreOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
+          </button>
+
+          <AnimatePresence>
+            {isMoreOpen && (
+              <>
+                <div style={{ position: 'fixed', inset: 0, zIndex: 40 }} onClick={() => setIsMoreOpen(false)} />
+                <motion.div 
+                  initial={{ opacity: 0, y: 8, scale: 0.96 }} 
+                  animate={{ opacity: 1, y: 0, scale: 1 }} 
+                  exit={{ opacity: 0, y: 8, scale: 0.96 }} 
+                  transition={SPRING}
+                  style={{ 
+                    position: 'absolute', right: 0, bottom: 'calc(100% + 8px)', 
+                    width: 140, background: 'var(--color-card-bg)', 
+                    border: '1px solid var(--color-border)', borderRadius: 12, 
+                    boxShadow: 'var(--shadow-lg)', zIndex: 50, padding: 4 
+                  }}
+                >
+                  {['Medical', 'OD', 'Cancelled'].map(st => (
+                    <button key={st} onClick={() => { onMark(subject._id, st); setIsMoreOpen(false); }}
+                      style={{ 
+                        display: 'flex', alignItems: 'center', width: '100%', 
+                        padding: '8px 10px', borderRadius: 8, border: 'none', 
+                        background: 'none', fontSize: 12, fontWeight: 600, 
+                        color: 'var(--color-text)', cursor: 'pointer', textAlign: 'left', 
+                        fontFamily: 'inherit' 
+                      }}
+                      onMouseEnter={e => e.currentTarget.style.background = 'var(--hover)'}
+                      onMouseLeave={e => e.currentTarget.style.background = 'none'}
+                    >
+                      {st}
+                    </button>
+                  ))}
+                  <div style={{ height: 1, background: 'var(--color-border)', margin: '4px 0' }} />
+                  <button onClick={() => { onUndo(subject._id); setIsMoreOpen(false); }}
+                    style={{ 
+                      display: 'flex', alignItems: 'center', gap: 6, width: '100%', 
+                      padding: '8px 10px', borderRadius: 8, border: 'none', 
+                      background: 'none', fontSize: 12, fontWeight: 700, 
+                      color: 'var(--color-primary)', cursor: 'pointer', textAlign: 'left', 
+                      fontFamily: 'inherit' 
+                    }}
+                    onMouseEnter={e => e.currentTarget.style.background = 'var(--hover)'}
+                    onMouseLeave={e => e.currentTarget.style.background = 'none'}
+                  >
+                    <RotateCcw size={12} /> Undo Last
+                  </button>
+                </motion.div>
+              </>
+            )}
+          </AnimatePresence>
+        </div>
       </div>
+
+      <button onClick={() => onOpenRegister(subject)}
+        className="btn-secondary" 
+        style={{ 
+          width: '100%', height: 36, padding: 0, borderRadius: 10, fontSize: 11, fontWeight: 750, 
+          color: 'var(--color-subtext)', display: 'flex', alignItems: 'center', 
+          justifyContent: 'center', gap: 8, border: '1px solid var(--color-border)' 
+        }}
+      >
+        <CalendarDays size={13} /> View Register
+      </button>
+
     </motion.div>
   );
 };

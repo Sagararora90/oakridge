@@ -2,238 +2,451 @@ import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   AreaChart, Area, PieChart, Pie, Cell,
-  ResponsiveContainer, Tooltip, BarChart, Bar, XAxis, YAxis
+  ResponsiveContainer, Tooltip, XAxis, YAxis,
 } from 'recharts';
-import { Activity, Target, Award, ShieldAlert, GraduationCap, TrendingUp, TrendingDown, BookOpen, Menu, Sparkles, Filter } from 'lucide-react';
+import {
+  Activity, Target, Award, ShieldAlert,
+  TrendingUp, TrendingDown, BookOpen, Sparkles,
+} from 'lucide-react';
 import useStore from '../store/useStore';
 import RescuePlanModal from '../components/RescuePlanModal';
-import toast from 'react-hot-toast';
 
+/* ─── Tokens ─────────────────────────────────────────────────── */
+const FONT   = "-apple-system,BlinkMacSystemFont,'SF Pro Text','Helvetica Neue',sans-serif";
+const SPRING = { type: 'spring', stiffness: 340, damping: 30 };
+
+/* ─── Helpers ────────────────────────────────────────────────── */
+function pct(attended, total) {
+  return total > 0 ? (attended / total) * 100 : 0;
+}
+
+const useIsMobile = (bp = 768) => {
+  const [m, set] = React.useState(() => typeof window !== 'undefined' ? window.innerWidth < bp : false);
+  React.useEffect(() => {
+    const fn = () => set(window.innerWidth < bp);
+    window.addEventListener('resize', fn, { passive: true });
+    return () => window.removeEventListener('resize', fn);
+  }, [bp]);
+  return m;
+};
+
+/* ─── Stat card ──────────────────────────────────────────────── */
+function StatCard({ label, value, icon: Icon, color, isMobile }) {
+  return (
+    <motion.div
+      whileHover={{ y: -3 }}
+      transition={SPRING}
+      style={{
+        background: '#FFFFFF',
+        borderRadius: 18,
+        border: '1px solid rgba(0,0,0,0.07)',
+        padding: isMobile ? '16px' : '22px 22px 20px',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: isMobile ? 10 : 14,
+        fontFamily: FONT,
+      }}
+    >
+      <div style={{
+        width: isMobile ? 32 : 40, height: isMobile ? 32 : 40, borderRadius: 11,
+        background: color + '18',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        color,
+      }}>
+        <Icon size={isMobile ? 16 : 18} strokeWidth={2} />
+      </div>
+      <div>
+        <div style={{ fontSize: isMobile ? 22 : 28, fontWeight: 700, color: '#1D1D1F', letterSpacing: '-0.04em', lineHeight: 1 }}>
+          {value}
+        </div>
+        <div style={{ fontSize: 11, fontWeight: 600, color: '#86868B', marginTop: 5, letterSpacing: '0.02em' }}>
+          {label}
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
+/* ─── Insight card ───────────────────────────────────────────── */
+function InsightCard({ icon: Icon, iconColor, iconBg, title, children, accent }) {
+  return (
+    <motion.div
+      whileHover={{ y: -3 }}
+      transition={SPRING}
+      style={{
+        background: '#FFFFFF',
+        borderRadius: 18,
+        border: accent ? `1px solid ${accent}28` : '1px solid rgba(0,0,0,0.07)',
+        padding: '22px 22px 20px',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 14,
+        fontFamily: FONT,
+      }}
+    >
+      <div style={{
+        width: 38, height: 38, borderRadius: 10,
+        background: iconBg,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        color: iconColor,
+        flexShrink: 0,
+      }}>
+        <Icon size={17} strokeWidth={2} />
+      </div>
+      <div style={{ fontSize: 11, fontWeight: 700, color: '#1D1D1F', letterSpacing: '0.05em', textTransform: 'uppercase' }}>
+        {title}
+      </div>
+      <div style={{ fontSize: 13, color: '#6E6E73', lineHeight: 1.6, flex: 1, fontWeight: 400 }}>
+        {children}
+      </div>
+    </motion.div>
+  );
+}
+
+/* ─── Custom tooltip ─────────────────────────────────────────── */
+const CustomTooltip = ({ active, payload, label }) => {
+  if (!active || !payload?.length) return null;
+  return (
+    <div style={{
+      background: '#FFFFFF',
+      border: '1px solid rgba(0,0,0,0.09)',
+      borderRadius: 12,
+      padding: '10px 14px',
+      fontFamily: FONT,
+      fontSize: 12,
+      boxShadow: '0 8px 24px rgba(0,0,0,0.1)',
+      zIndex: 100,
+    }}>
+      <p style={{ fontWeight: 700, color: '#1D1D1F', marginBottom: 4 }}>{payload[0]?.payload?.fullName || label}</p>
+      {payload.map((p, i) => (
+        <p key={i} style={{ color: p.color, fontWeight: 600, margin: '2px 0' }}>
+          {p.name}: {p.value}
+        </p>
+      ))}
+    </div>
+  );
+};
+
+/* ════════════════════════════════════════════════════════════════ */
 const Analytics = () => {
-  const { subjects, setSidebarOpen } = useStore();
+  const isMobile = useIsMobile();
+  const { subjects } = useStore();
   const [rescueSubject, setRescueSubject] = React.useState(null);
 
-  // ── Data ──
+  /* ── derived data ── */
   const pieData = subjects.map(s => ({
     name:  s.name,
     value: s.attended,
-    color: s.color || '#4F46E5',
+    color: s.color || '#007AFF',
   }));
 
   const barData = subjects.map(s => ({
-    name:     s.name.substring(0, 3).toUpperCase(),
+    name:     s.name.substring(0, 4).toUpperCase(),
     fullName: s.name,
     Attended: s.attended,
     Missed:   s.total - s.attended,
-    color:    s.color || '#4F46E5',
+    color:    s.color || '#007AFF',
   }));
 
   const avgAttendance = subjects.length > 0
-    ? subjects.reduce((acc, s) =>
-        acc + (s.total > 0 ? (s.attended / s.total) * 100 : 0), 0
-      ) / subjects.length
+    ? subjects.reduce((acc, s) => acc + pct(s.attended, s.total), 0) / subjects.length
     : 0;
 
   const totalAttended = subjects.reduce((a, s) => a + s.attended, 0);
   const totalClasses  = subjects.reduce((a, s) => a + s.total,    0);
   const totalMissed   = totalClasses - totalAttended;
 
-  const ranked = [...subjects].sort((a, b) => {
-    const pa = a.total > 0 ? a.attended / a.total : 0;
-    const pb = b.total > 0 ? b.attended / b.total : 0;
-    return pb - pa;
-  });
-  const best  = ranked[0];
-  const worst = ranked[ranked.length - 1];
+  const ranked = [...subjects].sort((a, b) => pct(b.attended, b.total) - pct(a.attended, a.total));
+  const best   = ranked[0];
+  const worst  = ranked[ranked.length - 1];
 
+  const isHealthy = avgAttendance >= 75;
+
+  /* ── empty state ── */
   if (subjects.length === 0) {
     return (
-      <div className="flex-1 bg-[var(--color-bg)] min-h-screen pb-24 animate-in relative z-10 flex flex-col items-center justify-center">
-        <div className="max-w-[1200px] mx-auto px-4 py-24 flex flex-col items-center justify-center text-center">
-            <div className="w-24 h-24 nebula-glass rounded-[2rem] flex items-center justify-center mb-8 opacity-20">
-              <Activity size={40} className="text-[var(--color-subtext)]" />
-            </div>
-            <h3 className="text-2xl font-black text-[var(--color-text)] tracking-tight">ANALYSIS OFFLINE</h3>
-            <p className="text-xs font-bold text-[var(--color-subtext)] mt-3 uppercase tracking-[0.2em] opacity-60 max-w-[280px]">No academic telemetry detected for processing</p>
+      <div style={{
+        minHeight: '100svh', background: '#F5F5F7',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        fontFamily: FONT,
+      }}>
+        <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14, padding: 24 }}>
+          <div style={{
+            width: 60, height: 60, borderRadius: 18,
+            background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.1)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>
+            <Activity size={26} strokeWidth={1.4} style={{ color: '#86868B' }} />
+          </div>
+          <p style={{ fontSize: 19, fontWeight: 700, color: '#1D1D1F', letterSpacing: '-0.03em', margin: 0 }}>No data yet</p>
+          <p style={{ fontSize: 14, color: '#86868B', margin: 0, maxWidth: 240, lineHeight: 1.5 }}>
+            Add subjects to start seeing your attendance analytics.
+          </p>
         </div>
       </div>
     );
   }
 
+  /* ════ RENDER ════ */
   return (
-    <div className="flex-1 bg-[var(--color-bg)] min-h-screen pb-24 animate-in relative z-10 p-4 lg:p-10">
-      <div className="max-w-[1600px] mx-auto space-y-8 lg:space-y-12">
+    <div style={{ background: '#F5F5F7', minHeight: '100svh', paddingBottom: 64, fontFamily: FONT }}>
+      <div style={{ maxWidth: 1100, margin: '0 auto', padding: isMobile ? '0 16px' : '0 24px' }}>
 
         {/* ── HEADER ── */}
-        <header className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-          <div className="flex items-center gap-4">
-            <button 
-              onClick={() => setSidebarOpen(true)}
-              className="lg:hidden w-12 h-12 nebula-glass rounded-2xl flex items-center justify-center shadow-lg hover:scale-105 active:scale-95 transition-all"
-            >
-              <Menu size={20} className="text-primary" />
-            </button>
-            <div>
-              <h1 className="text-3xl lg:text-4xl font-black text-[var(--color-text)] tracking-tighter leading-none mb-2">INTELLIGENCE</h1>
-              <p className="text-[10px] font-black text-[var(--color-subtext)] uppercase tracking-[0.2em] opacity-60">Deep Telemetry & Predictive Insights</p>
-            </div>
+        <header style={{
+          display: 'flex', 
+          flexDirection: isMobile ? 'column' : 'row',
+          alignItems: isMobile ? 'flex-start' : 'center', 
+          justifyContent: 'space-between',
+          padding: isMobile ? '24px 0 20px' : '28px 0 24px', 
+          gap: 16,
+          borderBottom: '1px solid rgba(0,0,0,0.06)',
+          marginBottom: 28,
+        }}>
+          <div>
+            <h1 style={{ fontSize: isMobile ? 24 : 26, fontWeight: 700, color: '#1D1D1F', margin: 0, letterSpacing: '-0.03em' }}>
+              Analytics
+            </h1>
+            <p style={{ fontSize: isMobile ? 12 : 13, color: '#86868B', margin: '3px 0 0', fontWeight: 400 }}>
+              Attendance overview across all courses
+            </p>
           </div>
-          <div className="apple-card px-8 py-5 flex flex-col items-center min-w-[200px] shadow-2xl relative group border-primary/20 bg-gradient-to-br from-surface/40 to-primary/5">
-            <span className="text-[9px] font-black text-primary uppercase tracking-[0.2em] mb-2 opacity-80">Aggregate Efficiency</span>
-            <div className="text-5xl font-black tracking-tighter text-[var(--color-text)] leading-none flex items-baseline gap-1">
-              {avgAttendance.toFixed(1)}
-              <span className="text-xl opacity-40">%</span>
+
+          <div style={{
+            background: '#FFFFFF',
+            border: `1px solid ${isHealthy ? '#34C75930' : '#FF3B3030'}`,
+            borderRadius: 16,
+            padding: '14px 22px',
+            textAlign: 'center',
+            width: isMobile ? '100%' : 130,
+            position: 'relative',
+            overflow: 'hidden',
+          }}>
+            <div style={{ fontSize: 11, fontWeight: 600, color: '#86868B', letterSpacing: '0.04em', marginBottom: 4 }}>
+              Overall
             </div>
-            <div className={`absolute -bottom-1 left-0 h-1 rounded-full transition-all duration-1000`} style={{ width: `${avgAttendance}%`, background: avgAttendance >= 75 ? 'var(--secondary)' : 'var(--danger)' }} />
+            <div style={{
+              fontSize: 32, fontWeight: 700, letterSpacing: '-0.04em', lineHeight: 1,
+              color: isHealthy ? '#1A6632' : '#C0241C',
+            }}>
+              {avgAttendance.toFixed(1)}<span style={{ fontSize: 16, opacity: 0.5 }}>%</span>
+            </div>
+            <div style={{
+              position: 'absolute', bottom: 0, left: 0,
+              height: 3,
+              width: `${Math.min(avgAttendance, 100)}%`,
+              background: isHealthy ? '#34C759' : '#FF3B30',
+              borderRadius: '0 3px 0 0',
+              transition: 'width 1s ease',
+            }} />
           </div>
         </header>
 
         {/* ── STATS ROW ── */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
-          {[
-            { label: 'Attended', value: totalAttended, color: 'var(--secondary)', icon: <TrendingUp size={22} /> },
-            { label: 'Missed',   value: totalMissed,   color: 'var(--danger)', icon: <TrendingDown size={22} /> },
-            { label: 'Modules',  value: subjects.length, color: 'var(--primary)', icon: <BookOpen size={22} /> },
-            { label: 'Total',    value: totalClasses,  color: 'var(--accent)', icon: <Activity size={22} /> },
-          ].map((s, i) => (
-            <motion.div 
-              key={i} 
-              whileHover={{ y: -6, scale: 1.02 }} 
-              className="apple-card p-8 flex flex-col justify-between group relative shadow-xl"
-            >
-               <div className="w-14 h-14 rounded-2xl nebula-glass flex items-center justify-center mb-6 shadow-inner" style={{ color: s.color }}>
-                  {s.icon}
-               </div>
-               <div>
-                 <div className="text-4xl font-black text-[var(--color-text)] tracking-tighter mb-1">{s.value}</div>
-                 <div className="text-[10px] font-black text-[var(--color-subtext)] uppercase tracking-widest opacity-60">{s.label}</div>
-               </div>
-               <div className="absolute -bottom-4 -right-4 w-24 h-24 blur-3xl opacity-5 rounded-full" style={{ background: s.color }} />
-            </motion.div>
-          ))}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(auto-fill, minmax(200px, 1fr))',
+          gap: isMobile ? 8 : 12,
+          marginBottom: 28,
+        }}>
+          <StatCard label={isMobile ? "Attended" : "Sessions attended"} value={totalAttended} icon={TrendingUp}   color="#34C759" isMobile={isMobile} />
+          <StatCard label={isMobile ? "Missed" : "Sessions missed"}   value={totalMissed}   icon={TrendingDown} color="#FF3B30" isMobile={isMobile} />
+          <StatCard label={isMobile ? "Courses" : "Active courses"}           value={subjects.length} icon={BookOpen}   color="#007AFF" isMobile={isMobile} />
+          <StatCard label={isMobile ? "Total" : "Total sessions"}    value={totalClasses}  icon={Activity}     color="#AF52DE" isMobile={isMobile} />
         </div>
 
-        {/* ── CHARTS ROW 1 ── */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-10">
-          <div className="lg:col-span-2 apple-card p-8 lg:p-12 shadow-2xl flex flex-col gap-10">
-             <div className="flex justify-between items-start">
-               <div>
-                  <h2 className="text-2xl font-black text-[var(--color-text)] tracking-tighter leading-none mb-2">TELEMETRY FLOW</h2>
-                  <p className="text-[10px] font-black text-[var(--color-subtext)] uppercase tracking-widest opacity-60">Temporal Presence Distribution</p>
-               </div>
-               <div className="flex items-center gap-6 text-[9px] font-black uppercase tracking-widest">
-                  <div className="flex items-center gap-2 text-primary"><div className="w-2.5 h-2.5 rounded-full bg-primary" /> Attended</div>
-                  <div className="flex items-center gap-2 text-danger"><div className="w-2.5 h-2.5 rounded-full bg-danger opacity-40" /> Missed</div>
-               </div>
-             </div>
-             
-             <div className="h-[300px] w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={barData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                    <defs>
-                      <linearGradient id="areaGradient" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="var(--primary)" stopOpacity={0.15} />
-                        <stop offset="95%" stopColor="var(--primary)" stopOpacity={0} />
-                      </linearGradient>
-                    </defs>
-                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: 'var(--color-subtext)', fontSize: 10, fontWeight: 900 }} dy={15} />
-                    <Tooltip contentStyle={{ background: 'rgba(255,255,255,0.8)', backdropFilter: 'blur(20px)', border: '1px solid var(--color-border)', borderRadius: '20px', fontSize: '11px', fontWeight: 800 }} />
-                    <Area type="monotone" dataKey="Attended" stroke="var(--primary)" strokeWidth={4} fill="url(#areaGradient)" dot={{ r: 5, fill: '#fff', stroke: 'var(--primary)', strokeWidth: 3 }} activeDot={{ r: 8, fill: 'var(--primary)', stroke: '#fff', strokeWidth: 3 }} />
-                    <Area type="monotone" dataKey="Missed" stroke="var(--danger)" strokeWidth={2} strokeDasharray="6 6" fill="transparent" opacity={0.3} />
-                  </AreaChart>
-                </ResponsiveContainer>
-             </div>
-          </div>
+        {/* ── CHARTS ROW ── */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: isMobile ? '1fr' : 'minmax(0,2fr) minmax(0,1fr)',
+          gap: 12,
+          marginBottom: 28,
+        }}>
 
-          <div className="apple-card p-8 lg:p-10 shadow-2xl flex flex-col">
-             <div className="mb-8">
-                <h2 className="text-2xl font-black text-[var(--color-text)] tracking-tighter leading-none mb-2">EQUILIBRIUM</h2>
-                <p className="text-[10px] font-black text-[var(--color-subtext)] uppercase tracking-widest opacity-60">Module Load Balance</p>
-             </div>
-             <div className="h-[240px] relative">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie data={pieData} innerRadius={70} outerRadius={100} paddingAngle={8} dataKey="value" stroke="none">
-                      {pieData.map((entry, i) => <Cell key={i} fill={entry.color} fillOpacity={0.9} />)}
-                    </Pie>
-                    <Tooltip contentStyle={{ background: 'rgba(255,255,255,0.8)', backdropFilter: 'blur(20px)', border: 'none', borderRadius: '16px', fontSize: '11px', fontWeight: 800 }} />
-                  </PieChart>
-                </ResponsiveContainer>
-                <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                   <span className="text-4xl font-black text-[var(--color-text)] tracking-tighter leading-none">{totalAttended}</span>
-                   <span className="text-[9px] font-black text-[var(--color-subtext)] uppercase tracking-widest opacity-60 mt-2">Sessions</span>
-                </div>
-             </div>
-             <div className="mt-10 space-y-4">
-                {subjects.slice(0, 5).map((s, i) => (
-                  <div key={i} className="flex items-center justify-between gap-4">
-                     <div className="flex items-center gap-3 min-w-0">
-                        <div className="w-2.5 h-2.5 rounded-full shrink-0 shadow-sm" style={{ background: s.color }} />
-                        <span className="text-[11px] font-black text-[var(--color-text)] truncate uppercase tracking-tight">{s.name}</span>
-                     </div>
-                     <span className="text-[11px] font-black text-[var(--color-subtext)] shrink-0 opacity-60">{s.attended}</span>
+          {/* area chart */}
+          <div style={{
+            background: '#FFFFFF', borderRadius: 18,
+            border: '1px solid rgba(0,0,0,0.07)',
+            padding: isMobile ? '18px 18px 12px' : '22px 22px 14px',
+          }}>
+            <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', alignItems: isMobile ? 'flex-start' : 'center', justifyContent: 'space-between', marginBottom: 20, gap: 12 }}>
+              <div>
+                <p style={{ fontSize: 15, fontWeight: 700, color: '#1D1D1F', margin: 0, letterSpacing: '-0.02em' }}>
+                  Attendance flow
+                </p>
+                <p style={{ fontSize: 12, color: '#86868B', margin: '3px 0 0', fontWeight: 400 }}>
+                  Per-course breakdown
+                </p>
+              </div>
+              <div style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
+                {[['#007AFF', 'Attended'], ['#FF3B30', 'Missed']].map(([c, l]) => (
+                  <div key={l} style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 11, color: '#86868B', fontWeight: 600 }}>
+                    <div style={{ width: 7, height: 7, borderRadius: '50%', background: c }} />
+                    {l}
                   </div>
                 ))}
-             </div>
+              </div>
+            </div>
+
+            <div style={{ height: isMobile ? 200 : 240 }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={barData} margin={{ top: 8, right: 8, left: -24, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="ag1" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%"   stopColor="#007AFF" stopOpacity={0.14} />
+                      <stop offset="100%" stopColor="#007AFF" stopOpacity={0}    />
+                    </linearGradient>
+                    <linearGradient id="ag2" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%"   stopColor="#FF3B30" stopOpacity={0.08} />
+                      <stop offset="100%" stopColor="#FF3B30" stopOpacity={0}    />
+                    </linearGradient>
+                  </defs>
+                  <XAxis
+                    dataKey="name"
+                    axisLine={false} tickLine={false}
+                    tick={{ fill: '#AEAEB2', fontSize: 10, fontWeight: 600, fontFamily: FONT }}
+                    dy={10}
+                  />
+                  <YAxis hide />
+                  <Tooltip content={<CustomTooltip />} />
+                  <Area
+                    type="monotone" dataKey="Attended"
+                    stroke="#007AFF" strokeWidth={2.5}
+                    fill="url(#ag1)"
+                    dot={{ r: 4, fill: '#FFFFFF', stroke: '#007AFF', strokeWidth: 2 }}
+                    activeDot={{ r: 6, fill: '#007AFF', stroke: '#FFFFFF', strokeWidth: 2 }}
+                  />
+                  <Area
+                    type="monotone" dataKey="Missed"
+                    stroke="#FF3B30" strokeWidth={1.5}
+                    strokeDasharray="5 4"
+                    fill="url(#ag2)"
+                    dot={false}
+                    opacity={0.6}
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          {/* donut */}
+          <div style={{
+            background: '#FFFFFF', borderRadius: 18,
+            border: '1px solid rgba(0,0,0,0.07)',
+            padding: '22px 20px',
+            display: 'flex', flexDirection: 'column',
+          }}>
+            <p style={{ fontSize: 15, fontWeight: 700, color: '#1D1D1F', margin: '0 0 4px', letterSpacing: '-0.02em' }}>
+              Distribution
+            </p>
+            <p style={{ fontSize: 12, color: '#86868B', margin: '0 0 16px', fontWeight: 400 }}>
+              Sessions by course
+            </p>
+
+            <div style={{ height: 180, position: 'relative', flexShrink: 0 }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={pieData}
+                    innerRadius={58} outerRadius={82}
+                    paddingAngle={4} dataKey="value" stroke="none"
+                  >
+                    {pieData.map((entry, i) => (
+                      <Cell key={i} fill={entry.color} fillOpacity={0.88} />
+                    ))}
+                  </Pie>
+                  <Tooltip content={<CustomTooltip />} />
+                </PieChart>
+              </ResponsiveContainer>
+              <div style={{
+                position: 'absolute', inset: 0,
+                display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                pointerEvents: 'none',
+              }}>
+                <span style={{ fontSize: 26, fontWeight: 700, color: '#1D1D1F', letterSpacing: '-0.04em', lineHeight: 1 }}>
+                  {totalAttended}
+                </span>
+                <span style={{ fontSize: 11, color: '#86868B', fontWeight: 500, marginTop: 3 }}>
+                  sessions
+                </span>
+              </div>
+            </div>
           </div>
         </div>
 
         {/* ── INSIGHTS ── */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-10">
-           <motion.div whileHover={{ y: -8 }} className="apple-card p-10 flex flex-col h-full shadow-2xl group">
-              <div className="w-14 h-14 nebula-glass rounded-2xl flex items-center justify-center mb-8 shadow-inner border-primary/20">
-                 <Target size={24} className="text-primary" />
-              </div>
-              <h3 className="text-sm font-black text-[var(--color-text)] uppercase tracking-widest mb-4">Oracle's Verdict</h3>
-              <p className="text-xs font-bold text-[var(--color-subtext)] leading-relaxed flex-1 opacity-80 uppercase tracking-tight">
-                 {avgAttendance >= 75 
-                   ? "Consistent threshold convergence detected. Optimal engagement levels maintained within target parameters."
-                   : "Critical threshold violation. System engagement is below 75% baseline. Intervention required immediately."}
-              </p>
-           </motion.div>
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(260px, 1fr))',
+          gap: 12,
+        }}>
 
-           <motion.div whileHover={{ y: -8 }} className="apple-card p-10 flex flex-col h-full shadow-2xl group border-secondary/20">
-              <div className="w-14 h-14 nebula-glass rounded-2xl flex items-center justify-center mb-8 shadow-inner border-secondary/20">
-                 <Award size={24} className="text-secondary" />
-              </div>
-              <h3 className="text-sm font-black text-[var(--color-text)] uppercase tracking-widest mb-4">Apex Performer</h3>
-              <p className="text-xs font-bold text-[var(--color-subtext)] leading-relaxed flex-1 opacity-80 uppercase tracking-tight">
-                 {best ? `${best.name.toUpperCase()} is your standard-bearer at ${best.total > 0 ? (best.attended / best.total * 100).toFixed(1) : 0}%. Synchronize other modules to this baseline.` : "Awaiting telemetry data..."}
-              </p>
-           </motion.div>
+          <InsightCard
+            icon={Target}
+            iconColor="#007AFF"
+            iconBg="#E8F0FF"
+            title="Overall verdict"
+            accent="#007AFF"
+          >
+            {isHealthy
+              ? `You're tracking well at ${avgAttendance.toFixed(1)}% — above the 75% threshold.`
+              : `Your average of ${avgAttendance.toFixed(1)}% is below the 75% requirement.`}
+          </InsightCard>
 
-           <motion.div whileHover={{ y: -8 }} className="apple-card p-10 flex flex-col h-full shadow-2xl border-danger/20 group relative overflow-hidden">
-              <div className="w-14 h-14 nebula-glass rounded-2xl flex items-center justify-center mb-8 shadow-inner border-danger/20">
-                 <ShieldAlert size={24} className="text-danger" />
+          <InsightCard
+            icon={Award}
+            iconColor="#1A6632"
+            iconBg="#E8F8ED"
+            title="Best course"
+            accent="#34C759"
+          >
+            {best
+              ? `${best.name} leads at ${pct(best.attended, best.total).toFixed(1)}%.`
+              : 'Not enough data yet.'}
+          </InsightCard>
+
+          <InsightCard
+            icon={ShieldAlert}
+            iconColor="#C0241C"
+            iconBg="#FFEEED"
+            title="Needs attention"
+            accent="#FF3B30"
+          >
+            {worst && worst !== best ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                <span>
+                  {worst.name} is at {pct(worst.attended, worst.total).toFixed(1)}%.
+                </span>
+                <button
+                  onClick={() => setRescueSubject(worst)}
+                  style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7,
+                    padding: '10px 0', borderRadius: 10,
+                    border: 'none', background: '#FF3B30', color: '#FFFFFF',
+                    fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: FONT,
+                    transition: 'background .12s, transform .1s',
+                  }}
+                  onMouseEnter={e => e.currentTarget.style.background = '#E0352C'}
+                  onMouseLeave={e => e.currentTarget.style.background = '#FF3B30'}
+                  onMouseDown={e => e.currentTarget.style.transform = 'scale(.97)'}
+                  onMouseUp={e => e.currentTarget.style.transform = 'scale(1)'}
+                >
+                  <Sparkles size={13} /> Rescue plan
+                </button>
               </div>
-              <h3 className="text-sm font-black text-[var(--color-text)] uppercase tracking-widest mb-4">Critical Outlier</h3>
-              <div className="flex-1">
-                 {worst && worst !== best ? (
-                   <div className="space-y-6">
-                      <p className="text-xs font-bold text-[var(--color-subtext)] leading-relaxed opacity-80 uppercase tracking-tight">
-                        {worst.name.toUpperCase()} is underperforming at {(worst.attended / worst.total * 100).toFixed(1)}%. Deploy rescue protocol.
-                      </p>
-                      <button 
-                        onClick={() => setRescueSubject(worst)}
-                        className="btn-nebula w-full !py-3 bg-gradient-to-br from-danger to-accent shadow-danger/20 text-[9px]"
-                      >
-                         <Sparkles size={14} /> COMMENCE RESCUE
-                      </button>
-                   </div>
-                 ) : (
-                   <p className="text-xs font-bold text-[var(--color-subtext)] leading-relaxed opacity-80 uppercase tracking-tight">All academic subsystems are operating within synchronized parameters.</p>
-                 )}
-              </div>
-           </motion.div>
+            ) : (
+              'All courses are meeting their attendance targets.'
+            )}
+          </InsightCard>
         </div>
 
-        {/* ── RESCUE MODAL ── */}
-        <AnimatePresence>
-          {rescueSubject && (
-            <RescuePlanModal subject={rescueSubject} onClose={() => setRescueSubject(null)} />
-          )}
-        </AnimatePresence>
       </div>
+
+      <AnimatePresence>
+        {rescueSubject && (
+          <RescuePlanModal subject={rescueSubject} onClose={() => setRescueSubject(null)} />
+        )}
+      </AnimatePresence>
     </div>
   );
 };

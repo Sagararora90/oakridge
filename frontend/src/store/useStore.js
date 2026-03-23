@@ -69,8 +69,10 @@ const useStore = create((set, get) => ({
         semesterEndDate: res.data.semesterEndDate
       });
     } catch (err) {
-      set({ user: null, token: null });
-      localStorage.removeItem('token');
+      if (err.response?.status === 401) {
+        set({ user: null, token: null });
+        localStorage.removeItem('token');
+      }
     }
   },
 
@@ -207,15 +209,27 @@ const useStore = create((set, get) => ({
     }
   },
 
-  editDailyLog: async (id, logData) => {
+  editDailyLog: async (subjectId, logId, logData) => {
     try {
-      const res = await api.put(`/subjects/${id}/log`, logData);
+      const res = await api.put(`/subjects/${subjectId}/log/${logId}`, logData);
       set((state) => ({
-        subjects: state.subjects.map((s) => (s._id === id ? res.data : s)),
+        subjects: state.subjects.map((s) => (s._id === subjectId ? res.data : s)),
       }));
     } catch (err) {
       console.error('Failed to edit daily log:', err);
       throw err;
+    }
+  },
+
+  deleteDailyLog: async (subjectId, logId) => {
+    try {
+      const res = await api.delete(`/subjects/${subjectId}/log/${logId}`);
+      set((state) => ({
+        subjects: state.subjects.map((s) => (s._id === subjectId ? res.data : s)),
+      }));
+      toast.success('Log entry deleted');
+    } catch (err) {
+      toast.error('Failed to delete log');
     }
   },
 

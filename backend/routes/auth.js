@@ -24,7 +24,7 @@ router.post('/signup', async (req, res) => {
 
     // Promisify jwt.sign for better error handling in async flow
     const token = await new Promise((resolve, reject) => {
-      jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '7d' }, (err, token) => {
+      jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '30d' }, (err, token) => {
         if (err) reject(err);
         else resolve(token);
       });
@@ -67,7 +67,7 @@ router.post('/login', async (req, res) => {
     const payload = { user: { id: user.id } };
     
     const token = await new Promise((resolve, reject) => {
-      jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '7d' }, (err, token) => {
+      jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '30d' }, (err, token) => {
         if (err) reject(err);
         else resolve(token);
       });
