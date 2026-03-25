@@ -37,9 +37,9 @@ function StatCard({ label, value, icon: Icon, color, isMobile }) {
       whileHover={{ y: -3 }}
       transition={SPRING}
       style={{
-        background: '#FFFFFF',
+        background: 'var(--color-card-bg)',
         borderRadius: 18,
-        border: '1px solid rgba(0,0,0,0.07)',
+        border: '1px solid var(--color-border)',
         padding: isMobile ? '16px' : '22px 22px 20px',
         display: 'flex',
         flexDirection: 'column',
@@ -49,17 +49,18 @@ function StatCard({ label, value, icon: Icon, color, isMobile }) {
     >
       <div style={{
         width: isMobile ? 32 : 40, height: isMobile ? 32 : 40, borderRadius: 11,
-        background: color + '18',
+        background: 'var(--color-surface)',
+        border: '1px solid var(--color-border)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         color,
       }}>
         <Icon size={isMobile ? 16 : 18} strokeWidth={2} />
       </div>
       <div>
-        <div style={{ fontSize: isMobile ? 22 : 28, fontWeight: 700, color: '#1D1D1F', letterSpacing: '-0.04em', lineHeight: 1 }}>
+        <div style={{ fontSize: isMobile ? 22 : 28, fontWeight: 700, color: 'var(--color-text)', letterSpacing: '-0.04em', lineHeight: 1 }}>
           {value}
         </div>
-        <div style={{ fontSize: 11, fontWeight: 600, color: '#86868B', marginTop: 5, letterSpacing: '0.02em' }}>
+        <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--color-subtext)', marginTop: 5, letterSpacing: '0.02em' }}>
           {label}
         </div>
       </div>
@@ -74,9 +75,9 @@ function InsightCard({ icon: Icon, iconColor, iconBg, title, children, accent })
       whileHover={{ y: -3 }}
       transition={SPRING}
       style={{
-        background: '#FFFFFF',
+        background: 'var(--color-card-bg)',
         borderRadius: 18,
-        border: accent ? `1px solid ${accent}28` : '1px solid rgba(0,0,0,0.07)',
+        border: accent ? `1px solid color-mix(in srgb, ${accent} 28%, transparent)` : '1px solid var(--color-border)',
         padding: '22px 22px 20px',
         display: 'flex',
         flexDirection: 'column',
@@ -86,17 +87,18 @@ function InsightCard({ icon: Icon, iconColor, iconBg, title, children, accent })
     >
       <div style={{
         width: 38, height: 38, borderRadius: 10,
-        background: iconBg,
+        background: 'var(--color-surface)',
+        border: '1px solid var(--color-border)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         color: iconColor,
         flexShrink: 0,
       }}>
         <Icon size={17} strokeWidth={2} />
       </div>
-      <div style={{ fontSize: 11, fontWeight: 700, color: '#1D1D1F', letterSpacing: '0.05em', textTransform: 'uppercase' }}>
+      <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--color-text)', letterSpacing: '0.05em', textTransform: 'uppercase' }}>
         {title}
       </div>
-      <div style={{ fontSize: 13, color: '#6E6E73', lineHeight: 1.6, flex: 1, fontWeight: 400 }}>
+      <div style={{ fontSize: 13, color: 'var(--color-subtext)', lineHeight: 1.6, flex: 1, fontWeight: 400 }}>
         {children}
       </div>
     </motion.div>
@@ -108,16 +110,16 @@ const CustomTooltip = ({ active, payload, label }) => {
   if (!active || !payload?.length) return null;
   return (
     <div style={{
-      background: '#FFFFFF',
-      border: '1px solid rgba(0,0,0,0.09)',
+      background: 'var(--color-card-bg)',
+      border: '1px solid var(--color-border)',
       borderRadius: 12,
       padding: '10px 14px',
       fontFamily: FONT,
       fontSize: 12,
-      boxShadow: '0 8px 24px rgba(0,0,0,0.1)',
+      boxShadow: 'var(--shadow-lg)',
       zIndex: 100,
     }}>
-      <p style={{ fontWeight: 700, color: '#1D1D1F', marginBottom: 4 }}>{payload[0]?.payload?.fullName || label}</p>
+      <p style={{ fontWeight: 700, color: 'var(--color-text)', marginBottom: 4 }}>{payload[0]?.payload?.fullName || label}</p>
       {payload.map((p, i) => (
         <p key={i} style={{ color: p.color, fontWeight: 600, margin: '2px 0' }}>
           {p.name}: {p.value}
@@ -134,10 +136,40 @@ const Analytics = () => {
   const [rescueSubject, setRescueSubject] = React.useState(null);
 
   /* ── derived data ── */
+  const historyData = React.useMemo(() => {
+    const last14Days = [];
+    for (let i = 13; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      last14Days.push({
+        dateStr: d.toISOString().split('T')[0],
+        label:   d.toLocaleDateString('en-US', { day: 'numeric', month: 'short' }),
+        Attended: 0,
+        Missed:   0,
+      });
+    }
+
+    subjects.forEach(s => {
+      s.attendanceRecords?.forEach(log => {
+        if (!log.date) return;
+        const date = new Date(log.date).toISOString().split('T')[0];
+        const dayMatch = last14Days.find(d => d.dateStr === date);
+        if (dayMatch) {
+          if (log.status === 'Present' || log.status === 'OD' || log.status === 'Medical') {
+            dayMatch.Attended += (log.credit || 1);
+          } else if (log.status === 'Absent') {
+            dayMatch.Missed += (log.credit || 1);
+          }
+        }
+      });
+    });
+    return last14Days;
+  }, [subjects]);
+
   const pieData = subjects.map(s => ({
     name:  s.name,
     value: s.attended,
-    color: s.color || '#007AFF',
+    color: s.color || 'var(--color-primary)',
   }));
 
   const barData = subjects.map(s => ({
@@ -145,7 +177,7 @@ const Analytics = () => {
     fullName: s.name,
     Attended: s.attended,
     Missed:   s.total - s.attended,
-    color:    s.color || '#007AFF',
+    color:    s.color || 'var(--color-primary)',
   }));
 
   const avgAttendance = subjects.length > 0
@@ -166,20 +198,20 @@ const Analytics = () => {
   if (subjects.length === 0) {
     return (
       <div style={{
-        minHeight: '100svh', background: '#F5F5F7',
+        minHeight: '100svh', background: 'var(--color-bg)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         fontFamily: FONT,
       }}>
         <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14, padding: 24 }}>
           <div style={{
             width: 60, height: 60, borderRadius: 18,
-            background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.1)',
+            background: 'var(--color-card-bg)', border: '1px solid var(--color-border)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}>
-            <Activity size={26} strokeWidth={1.4} style={{ color: '#86868B' }} />
+            <Activity size={26} strokeWidth={1.4} style={{ color: 'var(--color-subtext)' }} />
           </div>
-          <p style={{ fontSize: 19, fontWeight: 700, color: '#1D1D1F', letterSpacing: '-0.03em', margin: 0 }}>No data yet</p>
-          <p style={{ fontSize: 14, color: '#86868B', margin: 0, maxWidth: 240, lineHeight: 1.5 }}>
+          <p style={{ fontSize: 19, fontWeight: 700, color: 'var(--color-text)', letterSpacing: '-0.03em', margin: 0 }}>No data yet</p>
+          <p style={{ fontSize: 14, color: 'var(--color-subtext)', margin: 0, maxWidth: 240, lineHeight: 1.5 }}>
             Add subjects to start seeing your attendance analytics.
           </p>
         </div>
@@ -189,7 +221,7 @@ const Analytics = () => {
 
   /* ════ RENDER ════ */
   return (
-    <div style={{ background: '#F5F5F7', minHeight: '100svh', paddingBottom: 64, fontFamily: FONT }}>
+    <div style={{ background: 'var(--color-bg)', minHeight: '100svh', paddingBottom: 64, fontFamily: FONT }}>
       <div style={{ maxWidth: 1100, margin: '0 auto', padding: isMobile ? '0 16px' : '0 24px' }}>
 
         {/* ── HEADER ── */}
@@ -200,21 +232,21 @@ const Analytics = () => {
           justifyContent: 'space-between',
           padding: isMobile ? '24px 0 20px' : '28px 0 24px', 
           gap: 16,
-          borderBottom: '1px solid rgba(0,0,0,0.06)',
+          borderBottom: '1px solid var(--color-border)',
           marginBottom: 28,
         }}>
           <div>
-            <h1 style={{ fontSize: isMobile ? 24 : 26, fontWeight: 700, color: '#1D1D1F', margin: 0, letterSpacing: '-0.03em' }}>
+            <h1 style={{ fontSize: isMobile ? 24 : 26, fontWeight: 700, color: 'var(--color-text)', margin: 0, letterSpacing: '-0.03em' }}>
               Analytics
             </h1>
-            <p style={{ fontSize: isMobile ? 12 : 13, color: '#86868B', margin: '3px 0 0', fontWeight: 400 }}>
+            <p style={{ fontSize: isMobile ? 12 : 13, color: 'var(--color-subtext)', margin: '3px 0 0', fontWeight: 400 }}>
               Attendance overview across all courses
             </p>
           </div>
 
           <div style={{
-            background: '#FFFFFF',
-            border: `1px solid ${isHealthy ? '#34C75930' : '#FF3B3030'}`,
+            background: 'var(--color-card-bg)',
+            border: `1px solid var(--color-border)`,
             borderRadius: 16,
             padding: '14px 22px',
             textAlign: 'center',
@@ -222,12 +254,12 @@ const Analytics = () => {
             position: 'relative',
             overflow: 'hidden',
           }}>
-            <div style={{ fontSize: 11, fontWeight: 600, color: '#86868B', letterSpacing: '0.04em', marginBottom: 4 }}>
+            <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--color-subtext)', letterSpacing: '0.04em', marginBottom: 4 }}>
               Overall
             </div>
             <div style={{
               fontSize: 32, fontWeight: 700, letterSpacing: '-0.04em', lineHeight: 1,
-              color: isHealthy ? '#1A6632' : '#C0241C',
+              color: isHealthy ? 'var(--color-success)' : 'var(--color-danger)',
             }}>
               {avgAttendance.toFixed(1)}<span style={{ fontSize: 16, opacity: 0.5 }}>%</span>
             </div>
@@ -235,7 +267,7 @@ const Analytics = () => {
               position: 'absolute', bottom: 0, left: 0,
               height: 3,
               width: `${Math.min(avgAttendance, 100)}%`,
-              background: isHealthy ? '#34C759' : '#FF3B30',
+              background: isHealthy ? 'var(--color-success)' : 'var(--color-danger)',
               borderRadius: '0 3px 0 0',
               transition: 'width 1s ease',
             }} />
@@ -249,10 +281,10 @@ const Analytics = () => {
           gap: isMobile ? 8 : 12,
           marginBottom: 28,
         }}>
-          <StatCard label={isMobile ? "Attended" : "Sessions attended"} value={totalAttended} icon={TrendingUp}   color="#34C759" isMobile={isMobile} />
-          <StatCard label={isMobile ? "Missed" : "Sessions missed"}   value={totalMissed}   icon={TrendingDown} color="#FF3B30" isMobile={isMobile} />
-          <StatCard label={isMobile ? "Courses" : "Active courses"}           value={subjects.length} icon={BookOpen}   color="#007AFF" isMobile={isMobile} />
-          <StatCard label={isMobile ? "Total" : "Total sessions"}    value={totalClasses}  icon={Activity}     color="#AF52DE" isMobile={isMobile} />
+          <StatCard label={isMobile ? "Attended" : "Sessions attended"} value={totalAttended} icon={TrendingUp}   color="var(--color-success)" isMobile={isMobile} />
+          <StatCard label={isMobile ? "Missed" : "Sessions missed"}   value={totalMissed}   icon={TrendingDown} color="var(--color-danger)" isMobile={isMobile} />
+          <StatCard label={isMobile ? "Courses" : "Active courses"}           value={subjects.length} icon={BookOpen}   color="var(--color-primary)" isMobile={isMobile} />
+          <StatCard label={isMobile ? "Total" : "Total sessions"}    value={totalClasses}  icon={Activity}     color="var(--color-accent)" isMobile={isMobile} />
         </div>
 
         {/* ── CHARTS ROW ── */}
@@ -265,22 +297,22 @@ const Analytics = () => {
 
           {/* area chart */}
           <div style={{
-            background: '#FFFFFF', borderRadius: 18,
-            border: '1px solid rgba(0,0,0,0.07)',
+            background: 'var(--color-card-bg)', borderRadius: 18,
+            border: '1px solid var(--color-border)',
             padding: isMobile ? '18px 18px 12px' : '22px 22px 14px',
           }}>
             <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', alignItems: isMobile ? 'flex-start' : 'center', justifyContent: 'space-between', marginBottom: 20, gap: 12 }}>
               <div>
-                <p style={{ fontSize: 15, fontWeight: 700, color: '#1D1D1F', margin: 0, letterSpacing: '-0.02em' }}>
-                  Attendance flow
+                <p style={{ fontSize: 15, fontWeight: 700, color: 'var(--color-text)', margin: 0, letterSpacing: '-0.02em' }}>
+                  Attendance trend
                 </p>
-                <p style={{ fontSize: 12, color: '#86868B', margin: '3px 0 0', fontWeight: 400 }}>
-                  Per-course breakdown
+                <p style={{ fontSize: 12, color: 'var(--color-subtext)', margin: '3px 0 0', fontWeight: 400 }}>
+                  Last 14 days activity
                 </p>
               </div>
               <div style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
-                {[['#007AFF', 'Attended'], ['#FF3B30', 'Missed']].map(([c, l]) => (
-                  <div key={l} style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 11, color: '#86868B', fontWeight: 600 }}>
+                {[['var(--color-primary)', 'Attended'], ['var(--color-danger)', 'Missed']].map(([c, l]) => (
+                  <div key={l} style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 11, color: 'var(--color-subtext)', fontWeight: 600 }}>
                     <div style={{ width: 7, height: 7, borderRadius: '50%', background: c }} />
                     {l}
                   </div>
@@ -290,35 +322,35 @@ const Analytics = () => {
 
             <div style={{ height: isMobile ? 200 : 240 }}>
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={barData} margin={{ top: 8, right: 8, left: -24, bottom: 0 }}>
+                <AreaChart data={historyData} margin={{ top: 8, right: 8, left: -24, bottom: 0 }}>
                   <defs>
                     <linearGradient id="ag1" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%"   stopColor="#007AFF" stopOpacity={0.14} />
-                      <stop offset="100%" stopColor="#007AFF" stopOpacity={0}    />
+                      <stop offset="0%"   stopColor="var(--color-primary)" stopOpacity={0.14} />
+                      <stop offset="100%" stopColor="var(--color-primary)" stopOpacity={0}    />
                     </linearGradient>
                     <linearGradient id="ag2" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%"   stopColor="#FF3B30" stopOpacity={0.08} />
-                      <stop offset="100%" stopColor="#FF3B30" stopOpacity={0}    />
+                      <stop offset="0%"   stopColor="var(--color-danger)" stopOpacity={0.08} />
+                      <stop offset="100%" stopColor="var(--color-danger)" stopOpacity={0}    />
                     </linearGradient>
                   </defs>
                   <XAxis
-                    dataKey="name"
+                    dataKey="label"
                     axisLine={false} tickLine={false}
-                    tick={{ fill: '#AEAEB2', fontSize: 10, fontWeight: 600, fontFamily: FONT }}
+                    tick={{ fill: 'var(--color-subtext)', fontSize: 10, fontWeight: 600, fontFamily: FONT }}
                     dy={10}
                   />
                   <YAxis hide />
                   <Tooltip content={<CustomTooltip />} />
                   <Area
                     type="monotone" dataKey="Attended"
-                    stroke="#007AFF" strokeWidth={2.5}
+                    stroke="var(--color-primary)" strokeWidth={2.5}
                     fill="url(#ag1)"
-                    dot={{ r: 4, fill: '#FFFFFF', stroke: '#007AFF', strokeWidth: 2 }}
-                    activeDot={{ r: 6, fill: '#007AFF', stroke: '#FFFFFF', strokeWidth: 2 }}
+                    dot={{ r: 4, fill: 'var(--color-bg)', stroke: 'var(--color-primary)', strokeWidth: 2 }}
+                    activeDot={{ r: 6, fill: 'var(--color-primary)', stroke: 'var(--color-bg)', strokeWidth: 2 }}
                   />
                   <Area
                     type="monotone" dataKey="Missed"
-                    stroke="#FF3B30" strokeWidth={1.5}
+                    stroke="var(--color-danger)" strokeWidth={1.5}
                     strokeDasharray="5 4"
                     fill="url(#ag2)"
                     dot={false}
@@ -331,15 +363,15 @@ const Analytics = () => {
 
           {/* donut */}
           <div style={{
-            background: '#FFFFFF', borderRadius: 18,
-            border: '1px solid rgba(0,0,0,0.07)',
+            background: 'var(--color-card-bg)', borderRadius: 18,
+            border: '1px solid var(--color-border)',
             padding: '22px 20px',
             display: 'flex', flexDirection: 'column',
           }}>
-            <p style={{ fontSize: 15, fontWeight: 700, color: '#1D1D1F', margin: '0 0 4px', letterSpacing: '-0.02em' }}>
+            <p style={{ fontSize: 15, fontWeight: 700, color: 'var(--color-text)', margin: '0 0 4px', letterSpacing: '-0.02em' }}>
               Distribution
             </p>
-            <p style={{ fontSize: 12, color: '#86868B', margin: '0 0 16px', fontWeight: 400 }}>
+            <p style={{ fontSize: 12, color: 'var(--color-subtext)', margin: '0 0 16px', fontWeight: 400 }}>
               Sessions by course
             </p>
 
@@ -363,10 +395,10 @@ const Analytics = () => {
                 display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
                 pointerEvents: 'none',
               }}>
-                <span style={{ fontSize: 26, fontWeight: 700, color: '#1D1D1F', letterSpacing: '-0.04em', lineHeight: 1 }}>
+                <span style={{ fontSize: 26, fontWeight: 700, color: 'var(--color-text)', letterSpacing: '-0.04em', lineHeight: 1 }}>
                   {totalAttended}
                 </span>
-                <span style={{ fontSize: 11, color: '#86868B', fontWeight: 500, marginTop: 3 }}>
+                <span style={{ fontSize: 11, color: 'var(--color-subtext)', fontWeight: 500, marginTop: 3 }}>
                   sessions
                 </span>
               </div>
@@ -383,10 +415,10 @@ const Analytics = () => {
 
           <InsightCard
             icon={Target}
-            iconColor="#007AFF"
-            iconBg="#E8F0FF"
+            iconColor="var(--color-primary)"
+            iconBg="var(--color-primary-lo)"
             title="Overall verdict"
-            accent="#007AFF"
+            accent="var(--color-primary)"
           >
             {isHealthy
               ? `You're tracking well at ${avgAttendance.toFixed(1)}% — above the 75% threshold.`
@@ -395,10 +427,10 @@ const Analytics = () => {
 
           <InsightCard
             icon={Award}
-            iconColor="#1A6632"
-            iconBg="#E8F8ED"
+            iconColor="var(--color-success)"
+            iconBg="var(--color-success-lo)"
             title="Best course"
-            accent="#34C759"
+            accent="var(--color-success)"
           >
             {best
               ? `${best.name} leads at ${pct(best.attended, best.total).toFixed(1)}%.`
@@ -407,10 +439,10 @@ const Analytics = () => {
 
           <InsightCard
             icon={ShieldAlert}
-            iconColor="#C0241C"
-            iconBg="#FFEEED"
+            iconColor="var(--color-danger)"
+            iconBg="var(--color-danger-lo)"
             title="Needs attention"
-            accent="#FF3B30"
+            accent="var(--color-danger)"
           >
             {worst && worst !== best ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -422,12 +454,13 @@ const Analytics = () => {
                   style={{
                     display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7,
                     padding: '10px 0', borderRadius: 10,
-                    border: 'none', background: '#FF3B30', color: '#FFFFFF',
+                    border: 'none', background: 'var(--color-danger)', color: 'white',
                     fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: FONT,
                     transition: 'background .12s, transform .1s',
                   }}
-                  onMouseEnter={e => e.currentTarget.style.background = '#E0352C'}
-                  onMouseLeave={e => e.currentTarget.style.background = '#FF3B30'}
+                  onMouseEnter={e => e.currentTarget.style.background = 'var(--color-danger)'}
+                  onMouseLeave={e => e.currentTarget.style.background = 'var(--color-danger)'}
+
                   onMouseDown={e => e.currentTarget.style.transform = 'scale(.97)'}
                   onMouseUp={e => e.currentTarget.style.transform = 'scale(1)'}
                 >

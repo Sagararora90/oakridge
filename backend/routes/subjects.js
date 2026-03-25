@@ -70,13 +70,14 @@ router.get('/', auth, async (req, res) => {
 // @route   POST api/subjects
 // @desc    Add a subject
 router.post('/', auth, async (req, res) => {
-  const { name, requiredAttendance, color, initialAttended, initialTotal } = req.body;
+  const { name, requiredAttendance, color, initialAttended, initialTotal, professor } = req.body;
   try {
     const user = await User.findById(req.user.id);
     const newSubject = { 
       name, 
       requiredAttendance: requiredAttendance || 75, 
-      color: color || '#3b82f6', 
+      color: color || '#3b82f6',
+      professor: professor || '',
       initialAttended: initialAttended || 0,
       initialTotal: initialTotal || 0,
       attended: initialAttended || 0, 
@@ -94,87 +95,28 @@ router.post('/', auth, async (req, res) => {
 
 // @route   PUT api/subjects/:id
 // @desc    Update a subject (edit details or mark attendance legacy)
-router.put('/:id', auth, async (req, res) => {
-  const { attended, total, status, name, requiredAttendance, color, initialAttended, initialTotal, initialDate, credit } = req.body;
-  try {
-    const user = await User.findById(req.user.id);
-    const subject = user.subjects.id(req.params.id);
-    if (!subject) return res.status(404).json({ message: 'Subject not found' });
+// [NOTE] Moved generic /:id route below more specific /:id/log routes to prevent potential overlap issues
 
-    const increment = credit || 1;
-
-    if (status) {
-      subject.attendanceRecords.push({ date: new Date(), status, credit: increment });
-      
-      // Use the unified recalculation engine
-      recalculateAttendance(subject);
-
-      // Streak & Gamification
-      if (status === 'Present' || status === 'OD' || status === 'Medical') {
-        const today = new Date().toISOString().split('T')[0];
-        const lastDate = user.lastAttendanceDate ? new Date(user.lastAttendanceDate).toISOString().split('T')[0] : null;
-        
-        if (lastDate !== today) {
-          const yesterday = new Date();
-          yesterday.setDate(yesterday.getDate() - 1);
-          const yesterdayStr = yesterday.toISOString().split('T')[0];
-          
-          if (lastDate === yesterdayStr) {
-            user.streak = (user.streak || 0) + 1;
-          } else {
-            user.streak = 1;
-          }
-          user.lastAttendanceDate = new Date();
-        }
-
-        // Badge checks
-        const existingBadges = new Set((user.badges || []).map(b => b.name));
-        if (user.streak >= 7 && !existingBadges.has('Weekly Warrior')) {
-          user.badges.push({ name: 'Weekly Warrior', icon: '🔥' });
-        }
-        if (user.streak >= 30 && !existingBadges.has('Monthly Master')) {
-          user.badges.push({ name: 'Monthly Master', icon: '⭐' });
-        }
-        if (subject.attended >= 50 && !existingBadges.has('Half Century')) {
-          user.badges.push({ name: 'Half Century', icon: '💯' });
-        }
-      }
-    } else {
-      if (name !== undefined) subject.name = name;
-      if (requiredAttendance !== undefined) subject.requiredAttendance = requiredAttendance;
-      if (color !== undefined) subject.color = color;
-      
-      if (initialAttended !== undefined) subject.initialAttended = initialAttended;
-      if (initialTotal !== undefined) subject.initialTotal = initialTotal;
-      if (initialDate !== undefined) subject.initialDate = initialDate ? new Date(initialDate) : null;
-
-      // Use the unified recalculation engine
-      if (initialAttended !== undefined || initialTotal !== undefined || initialDate !== undefined) {
-        recalculateAttendance(subject);
-      }
-    }
-
-    await user.save();
-    res.json(subject);
-  } catch (err) {
-    console.error(err.message);
-    res.status(500).send('Server error');
-  }
-});
+// Helper for Safe Date Conversion
+const toSafeISO = (d) => {
+  if (!d) return null;
+  const date = new Date(d);
+  if (isNaN(date.getTime())) return null;
+  return date.toISOString().split('T')[0];
+};
 
 // Helper for Recalculation Engine
 const recalculateAttendance = (subject) => {
   let trackedAttended = 0;
   let trackedTotal = 0;
-  const baseDate = subject.initialDate ? new Date(subject.initialDate) : null;
-  const baseDateStr = baseDate ? baseDate.toISOString().split('T')[0] : null;
+  
+  const baseDateStr = toSafeISO(subject.initialDate);
 
   subject.attendanceRecords.forEach(record => {
-    // Lock logic: Ignore entries BEFORE the snapshot date (strip time for stability)
-    if (baseDateStr && record.date) {
-      const recDateStr = new Date(record.date).toISOString().split('T')[0];
-      if (recDateStr < baseDateStr) return;
-    }
+    const recDateStr = toSafeISO(record.date);
+
+    // Lock logic: Ignore entries BEFORE the snapshot date
+    if (baseDateStr && recDateStr && recDateStr < baseDateStr) return;
     
     // Cancelled classes increment NEITHER attended nor total
     if (record.status === 'Cancelled') return;
@@ -190,7 +132,7 @@ const recalculateAttendance = (subject) => {
   subject.attended = (subject.initialAttended || 0) + trackedAttended;
   subject.total = (subject.initialTotal || 0) + trackedTotal;
 
-  // Sync individual counts for completeness
+  // Sync individual counts
   subject.odCount = subject.attendanceRecords.filter(r => r.status === 'OD').reduce((a, b) => a + (b.credit || 1), 0);
   subject.medicalCount = subject.attendanceRecords.filter(r => r.status === 'Medical').reduce((a, b) => a + (b.credit || 1), 0);
 };
@@ -261,17 +203,92 @@ router.delete('/:id/log/:logId', auth, async (req, res) => {
       if (!subject) return res.status(404).json({ message: 'Subject not found' });
   
       const log = subject.attendanceRecords.id(req.params.logId);
-      if (!log) return res.status(404).json({ message: 'Log not found' });
+      if (!log) return res.status(404).json({ message: `Log ${req.params.logId} not found in subject ${subject.name}` });
 
-      log.deleteOne();
+      subject.attendanceRecords.pull(req.params.logId);
       
       recalculateAttendance(subject);
       await user.save();
       res.json(subject);
     } catch (err) {
       console.error(err.message);
-      res.status(500).send('Server error');
+      res.status(500).send('Server error during log deletion');
     }
+});
+
+// @route   PUT api/subjects/:id
+// @desc    Update a subject (edit details or mark attendance legacy)
+// [MOVED DOWN] to avoid segment overlap with more specific routes
+router.put('/:id', auth, async (req, res) => {
+  const { attended, total, status, name, requiredAttendance, color, initialAttended, initialTotal, initialDate, credit, date } = req.body;
+  try {
+    const user = await User.findById(req.user.id);
+    const subject = user.subjects.id(req.params.id);
+    if (!subject) return res.status(404).json({ message: 'Subject not found' });
+
+    const increment = credit || 1;
+    const targetDate = date ? new Date(date) : new Date();
+
+    if (status) {
+      subject.attendanceRecords.push({ date: targetDate, status, credit: increment });
+      
+      // Use the unified recalculation engine
+      recalculateAttendance(subject);
+
+      // Streak & Gamification (Only for today/past to prevent future streaks)
+      const today = new Date().toISOString().split('T')[0];
+      const logDate = targetDate.toISOString().split('T')[0];
+      
+      if (status === 'Present' || status === 'OD' || status === 'Medical') {
+        const today = new Date().toISOString().split('T')[0];
+        const lastDate = user.lastAttendanceDate ? new Date(user.lastAttendanceDate).toISOString().split('T')[0] : null;
+        
+        if (lastDate !== today) {
+          const yesterday = new Date();
+          yesterday.setDate(yesterday.getDate() - 1);
+          const yesterdayStr = yesterday.toISOString().split('T')[0];
+          
+          if (lastDate === yesterdayStr) {
+            user.streak = (user.streak || 0) + 1;
+          } else {
+            user.streak = 1;
+          }
+          user.lastAttendanceDate = new Date();
+        }
+
+        // Badge checks
+        const existingBadges = new Set((user.badges || []).map(b => b.name));
+        if (user.streak >= 7 && !existingBadges.has('Weekly Warrior')) {
+          user.badges.push({ name: 'Weekly Warrior', icon: '🔥' });
+        }
+        if (user.streak >= 30 && !existingBadges.has('Monthly Master')) {
+          user.badges.push({ name: 'Monthly Master', icon: '⭐' });
+        }
+        if (subject.attended >= 50 && !existingBadges.has('Half Century')) {
+          user.badges.push({ name: 'Half Century', icon: '💯' });
+        }
+      }
+    } else {
+      if (name !== undefined) subject.name = name;
+      if (requiredAttendance !== undefined) subject.requiredAttendance = requiredAttendance;
+      if (color !== undefined) subject.color = color;
+      
+      if (initialAttended !== undefined) subject.initialAttended = initialAttended;
+      if (initialTotal !== undefined) subject.initialTotal = initialTotal;
+      if (initialDate !== undefined) subject.initialDate = initialDate ? new Date(initialDate) : null;
+
+      // Use the unified recalculation engine
+      if (initialAttended !== undefined || initialTotal !== undefined || initialDate !== undefined) {
+        recalculateAttendance(subject);
+      }
+    }
+
+    await user.save();
+    res.json(subject);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server error');
+  }
 });
 
 // @route   GET api/subjects/projections

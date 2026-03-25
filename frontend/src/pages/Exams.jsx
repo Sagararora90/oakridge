@@ -39,7 +39,7 @@ const Exams = () => {
                onClick={() => setSidebarOpen(true)}
                className="lg:hidden w-10 h-10 bg-primary rounded-xl flex items-center justify-center shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all"
              >
-               <Menu size={18} color="#fff" />
+               <Menu size={18} color="white" />
              </button>
              <div>
                <h1 className="text-2xl lg:text-3xl font-black text-[var(--color-text)] tracking-tight">Active Assessments</h1>
@@ -59,11 +59,11 @@ const Exams = () => {
             const days = Math.ceil((new Date(e.date) - new Date()) / (1000 * 60 * 60 * 24));
             return days >= 0 && days < 3;
         }) && (
-          <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="bg-red-50 border border-red-100 rounded-2xl p-4 flex items-center gap-4 shadow-sm">
-             <div className="w-10 h-10 rounded-xl bg-red-100 flex items-center justify-center shrink-0">
-               <AlertCircle size={20} className="text-red-600" />
+          <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="bg-[var(--color-danger-lo)] border border-[var(--color-danger)]/20 rounded-2xl p-4 flex items-center gap-4 shadow-sm">
+             <div className="w-10 h-10 rounded-xl bg-[var(--color-danger)]/10 flex items-center justify-center shrink-0">
+               <AlertCircle size={20} className="text-[var(--color-danger)]" />
              </div>
-             <p className="text-xs lg:text-sm font-bold text-red-800">High Priority: Several assessments are due within the next 48-72 hours.</p>
+             <p className="text-xs lg:text-sm font-bold text-[var(--color-danger)]">High Priority: Several assessments are due within the next 48-72 hours.</p>
           </motion.div>
         )}
 
@@ -95,8 +95,8 @@ const Exams = () => {
                       <div className="flex flex-wrap items-center gap-3 mb-2">
                         <span className="text-[9px] font-black uppercase tracking-widest text-[var(--color-subtext)] bg-[var(--color-bg)] px-2 py-0.5 rounded-md border border-[var(--color-border)]/50">{exam.type}</span>
                         <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-md ${
-                          isPassed ? 'bg-neutral-100 text-neutral-500' : 
-                          isUrgent ? 'bg-red-50 text-red-600 border border-red-100' : 'bg-green-50 text-green-600 border border-green-100'
+                          isPassed ? 'bg-[var(--color-border)] text-[var(--color-subtext)]' : 
+                          isUrgent ? 'bg-[var(--color-danger-lo)] text-[var(--color-danger)] border border-[var(--color-danger)]/20' : 'bg-[var(--color-success-lo)] text-[var(--color-success)] border border-[var(--color-success)]/20'
                         }`}>
                           {isPassed ? 'Passed' : daysLeft === 0 ? 'Due Today' : `${daysLeft} days left`}
                         </span>
@@ -108,7 +108,7 @@ const Exams = () => {
                          <div className="flex items-center gap-1.5"><Clock size={12} className="shrink-0" /> {new Date(exam.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</div>
                       </div>
                     </div>
-                    <button onClick={() => { deleteExam(exam._id); toast.success('Deadline removed'); }} className="p-2.5 rounded-xl text-[#c8c5bf] hover:text-red-600 hover:bg-red-50 transition-all">
+                    <button onClick={() => { deleteExam(exam._id); toast.success('Deadline removed'); }} className="p-2.5 rounded-xl text-[var(--color-subtext)] hover:text-[var(--color-danger)] hover:bg-[var(--color-danger-lo)] transition-all">
                       <Trash2 size={18} />
                     </button>
                   </div>
@@ -128,9 +128,9 @@ const Exams = () => {
               initial={{ scale: 0.95, opacity: 0, y: 10 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.95, opacity: 0, y: 10 }}
-              className="bg-card-bg rounded-[32px] w-full max-w-[440px] shadow-2xl overflow-hidden relative z-10 border border-[var(--color-border)]"
+              className="bg-card-bg rounded-[32px] w-full max-w-[440px] shadow-2xl overflow-hidden relative z-10 border border-[var(--color-border)] backdrop-blur-2xl"
             >
-               <div className="p-6 border-b border-[var(--color-border)] bg-[var(--color-bg)] flex items-center justify-between">
+               <div className="p-6 border-b border-[var(--color-border)] bg-[var(--color-bg)]/50 flex items-center justify-between">
                   <div>
                     <h2 className="text-xl font-extrabold text-[var(--color-text)] tracking-tight">New Deadline</h2>
                     <p className="text-xs text-[var(--color-subtext)] font-bold mt-1">Track an upcoming academic requirement.</p>

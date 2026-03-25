@@ -2,8 +2,8 @@ import React from 'react';
 
 const Skeleton = ({ className, style }) => (
   <div 
-    className={`animate-pulse bg-neutral-200 dark:bg-neutral-800 rounded-md ${className}`} 
-    style={{ ...style }}
+    className={`animate-pulse ${className}`} 
+    style={{ ...style, background: 'var(--color-surface)' }}
   />
 );
 

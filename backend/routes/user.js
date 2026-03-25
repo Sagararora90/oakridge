@@ -3,6 +3,14 @@ const router = express.Router();
 const User = require('../models/User');
 const auth = require('../middleware/auth');
 
+// Helper for Safe Date Conversion
+const toSafeISO = (d) => {
+  if (!d) return null;
+  const date = new Date(d);
+  if (isNaN(date.getTime())) return null;
+  return date.toISOString().split('T')[0];
+};
+
 // @route   GET api/user/holidays
 // @desc    Get all holidays
 router.get('/holidays', auth, async (req, res) => {
@@ -35,7 +43,7 @@ router.post('/holidays', auth, async (req, res) => {
 router.delete('/holidays/:id', auth, async (req, res) => {
   try {
     const user = await User.findById(req.user.id);
-    user.holidays.id(req.params.id).deleteOne();
+    user.holidays.pull({ _id: req.params.id });
     await user.save();
     res.json(user.holidays);
   } catch (err) {
@@ -107,7 +115,7 @@ router.post('/extra-classes', auth, async (req, res) => {
 router.delete('/extra-classes/:id', auth, async (req, res) => {
   try {
     const user = await User.findById(req.user.id);
-    user.extraClasses.id(req.params.id).deleteOne();
+    user.extraClasses.pull({ _id: req.params.id });
     await user.save();
     res.json(user.extraClasses);
   } catch (err) {
@@ -138,6 +146,61 @@ router.put('/settings', auth, async (req, res) => {
   } catch (err) {
     console.error(err.message);
     res.status(500).send('Server error');
+  }
+});
+
+// @route   GET api/user/daily-status/:date
+// @desc    Get timetable and attendance status for a specific day
+router.get('/daily-status/:date', auth, async (req, res) => {
+  try {
+    const { date } = req.params;
+    const dateStr = toSafeISO(date);
+    if (!dateStr) return res.status(400).json({ message: 'Invalid date format' });
+    
+    const targetDate = new Date(date);
+    const user = await User.findById(req.user.id);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
+    // Check for holidays
+    const holiday = (user.holidays || []).find(h => 
+      toSafeISO(h.date) === dateStr
+    );
+    if (holiday) return res.json({ date: dateStr, isHoliday: true, label: holiday.label });
+
+    // Check for day overrides (extra classes)
+    const override = (user.extraClasses || []).find(ec => 
+      toSafeISO(ec.date) === dateStr
+    );
+    const dayToFollow = override ? override.followsDay : dayNames[targetDate.getDay()];
+
+    const daySchedule = user.timetable.find(t => t.day.toLowerCase() === dayToFollow.toLowerCase());
+    if (!daySchedule) return res.json({ date: dateStr, day: dayToFollow, sessions: [] });
+
+    const sessions = daySchedule.slots.map(slot => {
+      const subject = user.subjects.id(slot.subject);
+      // Look for a record on this date
+      const record = subject ? subject.attendanceRecords.find(r => 
+        toSafeISO(r.date) === dateStr
+      ) : null;
+
+      return {
+        time: slot.time,
+        subjectId: slot.subject,
+        subjectName: subject ? subject.name : 'Unknown Subject',
+        subjectColor: subject ? subject.color : '#3b82f6',
+        professor: subject ? subject.professor : '',
+        credit: slot.credit || 1,
+        status: record ? record.status : null,
+        recordId: record ? record._id : null
+      };
+    }).filter(s => s.subjectId);
+
+    res.json({ date: dateStr, day: dayToFollow, sessions });
+  } catch (err) {
+    console.error(`Daily Status Error [${req.params.date}]:`, err.message);
+    res.status(500).send('Server error fetching daily status');
   }
 });
 

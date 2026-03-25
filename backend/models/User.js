@@ -18,6 +18,7 @@ const SubjectSchema = new mongoose.Schema({
   odCount: { type: Number, default: 0 },
   medicalCount: { type: Number, default: 0 },
   color: { type: String, default: '#3b82f6' }, // Default blue
+  professor: { type: String, default: '' },
   attendanceRecords: [AttendanceRecordSchema]
 });
 

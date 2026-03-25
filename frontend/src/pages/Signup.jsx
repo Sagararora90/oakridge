@@ -25,7 +25,7 @@ const Signup = () => {
       <div className="flex w-full">
 
         {/* ── LEFT brand panel (hidden on mall/medium screens) ── */}
-        <div className="hidden lg:flex flex-[0_0_42%] bg-gradient-to-br from-[#0F6E56] to-primary items-center justify-center p-12 lg:p-10 relative overflow-hidden">
+        <div className="hidden lg:flex flex-[0_0_42%] bg-gradient-to-br from-[#0F6E56] to-[var(--color-primary)] items-center justify-center p-12 lg:p-10 relative overflow-hidden">
            {/* Background decoration */}
            <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -mr-32 -mt-32 blur-3xl pointer-events-none" />
            <div className="absolute bottom-0 left-0 w-64 h-64 bg-black/5 rounded-full -ml-32 -mb-32 blur-3xl pointer-events-none" />
@@ -34,7 +34,7 @@ const Signup = () => {
             <motion.div 
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              className="w-14 h-14 bg-white/15 rounded-[14px] flex items-center justify-center mb-5 border border-white/20 shadow-xl shadow-black/5"
+              className="w-14 h-14 bg-white/10 rounded-[14px] flex items-center justify-center mb-5 border border-white/20 shadow-xl"
             >
               <GraduationCap size={28} color="#fff" />
             </motion.div>
@@ -72,7 +72,7 @@ const Signup = () => {
           >
             {/* Mobile logo */}
             <div className="lg:hidden flex items-center gap-2.5 mb-8">
-              <div className="w-9 h-9 bg-primary rounded-[9px] flex items-center justify-center shadow-lg shadow-primary/20">
+              <div className="w-9 h-9 bg-[var(--color-primary)] rounded-[9px] flex items-center justify-center shadow-lg shadow-[rgba(var(--primary-rgb),0.2)]">
                 <GraduationCap size={20} color="#fff" />
               </div>
               <span className="text-lg font-extrabold text-[var(--color-text)] tracking-tight">Oakridge</span>
@@ -108,7 +108,7 @@ const Signup = () => {
                     value={formData.name}
                     onChange={set('name')}
                     placeholder="Your name"
-                    className="w-full bg-white lg:bg-card-bg border border-[var(--color-border)] focus:border-primary/50 focus:ring-4 focus:ring-primary/5 rounded-[10px] py-2.5 pl-10 pr-4 text-sm font-medium text-[var(--color-text)] outline-none transition-all placeholder:text-[#c8c5bf]"
+                    className="w-full bg-[var(--color-surface)] border border-[var(--color-border)] focus:border-[var(--color-primary)]/50 focus:ring-4 focus:ring-[var(--color-primary)]/5 rounded-[10px] py-2.5 pl-10 pr-4 text-sm font-medium text-[var(--color-text)] outline-none transition-all placeholder:text-[var(--color-subtext)]/50"
                   />
                 </div>
               </div>
@@ -123,7 +123,7 @@ const Signup = () => {
                     value={formData.email}
                     onChange={set('email')}
                     placeholder="you@example.com"
-                    className="w-full bg-white lg:bg-card-bg border border-[var(--color-border)] focus:border-primary/50 focus:ring-4 focus:ring-primary/5 rounded-[10px] py-2.5 pl-10 pr-4 text-sm font-medium text-[var(--color-text)] outline-none transition-all placeholder:text-[#c8c5bf]"
+                    className="w-full bg-[var(--color-surface)] border border-[var(--color-border)] focus:border-[var(--color-primary)]/50 focus:ring-4 focus:ring-[var(--color-primary)]/5 rounded-[10px] py-2.5 pl-10 pr-4 text-sm font-medium text-[var(--color-text)] outline-none transition-all placeholder:text-[var(--color-subtext)]/50"
                   />
                 </div>
               </div>
@@ -138,7 +138,7 @@ const Signup = () => {
                     value={formData.password}
                     onChange={set('password')}
                     placeholder="Min. 8 characters"
-                    className="w-full bg-white lg:bg-card-bg border border-[var(--color-border)] focus:border-primary/50 focus:ring-4 focus:ring-primary/5 rounded-[10px] py-2.5 pl-10 pr-4 text-sm font-medium text-[var(--color-text)] outline-none transition-all placeholder:text-[#c8c5bf]"
+                    className="w-full bg-[var(--color-surface)] border border-[var(--color-border)] focus:border-[var(--color-primary)]/50 focus:ring-4 focus:ring-[var(--color-primary)]/5 rounded-[10px] py-2.5 pl-10 pr-4 text-sm font-medium text-[var(--color-text)] outline-none transition-all placeholder:text-[var(--color-subtext)]/50"
                   />
                 </div>
               </div>
@@ -146,7 +146,7 @@ const Signup = () => {
               <button
                 type="submit"
                 disabled={loading}
-                className="mt-2 flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-primary text-white text-sm font-bold shadow-lg shadow-primary/25 hover:shadow-primary/35 hover:-translate-y-0.5 active:translate-y-0 active:scale-98 transition-all disabled:opacity-70 disabled:pointer-events-none"
+                className="mt-2 flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-[var(--color-primary)] text-white text-sm font-bold shadow-lg shadow-[rgba(var(--primary-rgb),0.25)] hover:shadow-[rgba(var(--primary-rgb),0.35)] hover:-translate-y-0.5 active:translate-y-0 active:scale-98 transition-all disabled:opacity-70 disabled:pointer-events-none"
               >
                 {loading ? (
                   <span className="flex items-center gap-2">

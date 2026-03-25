@@ -35,14 +35,14 @@ const AttendanceHeatmap = ({ subjects }) => {
 
   const getColor = (date) => {
     const stat = dailyStats[date.toDateString()];
-    if (!stat) return '#f2f0ec'; // No record
+    if (!stat) return 'var(--color-border)'; // No record
     
     const pct = stat.total > 0 ? (stat.attended / stat.total) : 0;
-    if (pct >= 1)   return '#0F6E56'; // Perfect
-    if (pct >= 0.7) return '#10b981'; // Good
-    if (pct >= 0.5) return '#facc15'; // Mixed
-    if (pct > 0)    return '#f97316'; // Poor
-    return '#A32D2D'; // Failed entirely
+    if (pct >= 1)   return 'var(--color-success)'; // Perfect
+    if (pct >= 0.7) return 'var(--color-success-lo)'; // Good
+    if (pct >= 0.5) return 'var(--color-warning)'; // Mixed
+    if (pct > 0)    return 'var(--color-warning-lo)'; // Poor
+    return 'var(--color-danger)'; // Failed entirely
   };
 
   return (
@@ -62,8 +62,8 @@ const AttendanceHeatmap = ({ subjects }) => {
       <div style={s.footer}>
         <span style={s.label}>Last 3 months</span>
         <div style={s.legend}>
-          <div style={{ ...s.legendDot, background: '#f2f0ec' }} />
-          <div style={{ ...s.legendDot, background: '#0F6E56' }} />
+          <div style={{ ...s.legendDot, background: 'var(--color-border)' }} />
+          <div style={{ ...s.legendDot, background: 'var(--color-success)' }} />
         </div>
       </div>
     </div>
@@ -91,7 +91,7 @@ const s = {
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  label: { fontSize: '10px', color: '#b0ada8', textTransform: 'uppercase', letterSpacing: '0.04em' },
+  label: { fontSize: '10px', color: 'var(--color-subtext)', textTransform: 'uppercase', letterSpacing: '0.04em' },
   legend: { display: 'flex', gap: '4px' },
   legendDot: { width: '6px', height: '6px', borderRadius: '1px' },
 };

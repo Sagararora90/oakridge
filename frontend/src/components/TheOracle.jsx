@@ -135,11 +135,12 @@ const TheOracle = () => {
           exit={{ opacity: 0, y: 50, scale: 0.9 }}
           transition={{ type: 'spring', damping: 24, stiffness: 200 }}
           style={s.overlayWrap}
+          className="oracle-container"
         >
-          <div style={s.card}>
+          <div style={s.card} className="oracle-card">
             {/* Header / Icon */}
             <div style={s.iconWrap}>
-              <BellRing size={16} style={{ color: '#BA7517' }} />
+              <BellRing size={16} style={{ color: 'var(--color-warning)' }} />
             </div>
 
             {/* Content */}
@@ -158,7 +159,7 @@ const TheOracle = () => {
                </p>
                <div style={s.actions}>
                   {activePrompt.type === 'pre-class' ? (
-                     <button onClick={handleDismiss} style={{ ...s.btnYes, background: '#10b981' }} className="hover:opacity-90 active:scale-95 transition-all">
+                     <button onClick={handleDismiss} style={{ ...s.btnYes, background: 'var(--color-success)' }} className="hover:opacity-90 active:scale-95 transition-all">
                         <Check size={14} style={{ marginRight: 6 }} /> I'm on it
                      </button>
                   ) : (
@@ -193,15 +194,18 @@ const s = {
     zIndex: 9999,
   },
   card: {
-    background: 'var(--card-bg)',
-    border: '1px solid var(--border)',
-    borderRadius: 16,
-    boxShadow: '0 12px 40px rgba(0,0,0,0.12)',
+    background: 'rgba(var(--bg-rgb), 0.98)',
+    backdropFilter: 'blur(24px) saturate(180%)',
+    WebkitBackdropFilter: 'blur(24px) saturate(180%)',
+    border: '1px solid var(--color-border)',
+    borderRadius: 18,
+    boxShadow: 'var(--shadow-xl)',
     padding: '16px 20px',
     display: 'flex',
     alignItems: 'flex-start',
     gap: 16,
     maxWidth: 360,
+    width: 'calc(100vw - 32px)',
     position: 'relative',
     overflow: 'hidden'
   },
@@ -209,7 +213,8 @@ const s = {
     width: 36,
     height: 36,
     borderRadius: 10,
-    background: 'var(--bg)',
+    background: 'var(--color-surface)',
+    border: '1px solid var(--color-border)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -225,13 +230,13 @@ const s = {
     fontWeight: 800,
     letterSpacing: '0.1em',
     textTransform: 'uppercase',
-    color: 'var(--warning)',
+    color: 'var(--color-warning)',
     margin: 0,
     marginBottom: 4
   },
   text: {
     fontSize: 13,
-    color: 'var(--text)',
+    color: 'var(--color-text)',
     margin: 0,
     lineHeight: 1.4,
     marginBottom: 12
@@ -242,27 +247,28 @@ const s = {
   },
   btnYes: {
     flex: 1,
-    background: 'var(--secondary)',
-    color: '#fff',
+    background: 'var(--color-primary)',
+    color: 'white',
     border: 'none',
     padding: '8px 12px',
     borderRadius: 8,
     fontSize: 12,
-    fontWeight: 600,
+    fontWeight: 700,
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    cursor: 'pointer'
+    cursor: 'pointer',
+    boxShadow: 'var(--shadow-sm)'
   },
   btnNo: {
     flex: 1,
-    background: 'var(--danger)',
-    color: '#fff',
+    background: 'var(--color-danger)',
+    color: 'white',
     border: 'none',
     padding: '8px 12px',
     borderRadius: 8,
     fontSize: 12,
-    fontWeight: 600,
+    fontWeight: 700,
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -274,7 +280,7 @@ const s = {
     right: 12,
     background: 'transparent',
     border: 'none',
-    color: 'var(--subtext)',
+    color: 'var(--color-subtext)',
     cursor: 'pointer',
     padding: 4,
     display: 'flex',
@@ -285,3 +291,28 @@ const s = {
 };
 
 export default TheOracle;
+
+/* ─── Styles ─── */
+const styles = `
+  @media (max-width: 768px) {
+    .oracle-container {
+      left: 16px !important;
+      right: 16px !important;
+      bottom: 84px !important;
+      display: flex !important;
+      justify-content: center !important;
+    }
+    .oracle-card {
+      max-width: 100% !important;
+      width: 100% !important;
+      padding: 14px 16px !important;
+    }
+  }
+`;
+
+if (typeof document !== 'undefined') {
+  const styleTag = document.createElement('style');
+  styleTag.id = 'oracle-styles';
+  styleTag.textContent = styles;
+  document.head.appendChild(styleTag);
+}

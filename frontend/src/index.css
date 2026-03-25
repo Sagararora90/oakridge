@@ -3,22 +3,22 @@
 
 :root {
   /* Apple Light (System Neutral) */
-  --bg: #F2F2F7; /* System Background */
+  --bg: #F2F2F7;
   --bg-rgb: 242, 242, 247;
   --card-bg: #FFFFFF;
   --surface: #FFFFFF;
   --text: #000000;
   --subtext: #8E8E93; /* System Gray */
-  --border: rgba(0, 0, 0, 0.08);
+  --border: rgba(0, 0, 0, 0.06);
   --sidebar-bg: #FFFFFF;
   --sidebar-text: #3A3A3C;
-  --hover: #E5E5EA;
+  --hover: #F2F2F7;
   
   /* Apple System Accents */
   --primary: #007AFF;   /* System Blue */
   --primary-lo: rgba(0, 122, 255, 0.08);
   --success: #34C759;   /* System Green */
-  --success-lo: rgba(52, 199, 255, 0.08);
+  --success-lo: rgba(52, 199, 89, 0.08);
   --danger: #FF3B30;    /* System Red */
   --danger-lo: rgba(255, 59, 48, 0.08);
   --warning: #FF9500;   /* System Orange */
@@ -30,9 +30,9 @@
   
   /* Shadows */
   --shadow-sm: 0 1px 2px rgba(0,0,0,0.02);
-  --shadow-md: 0 4px 12px rgba(0,0,0,0.03);
-  --shadow-lg: 0 8px 32px rgba(0,0,0,0.05);
-  --shadow-xl: 0 16px 48px rgba(0,0,0,0.08);
+  --shadow-md: 0 4px 18px rgba(0,0,0,0.035);
+  --shadow-lg: 0 12px 40px rgba(0,0,0,0.055);
+  --shadow-xl: 0 20px 60px rgba(0,0,0,0.085);
 }
 
 .dark {
@@ -42,7 +42,7 @@
   --card-bg: #1C1C1E;
   --surface: #2C2C2E;
   --text: #FFFFFF;
-  --subtext: #8E8E93;
+  --subtext: #AEAEB2; /* System Gray 2 Dark */
   --border: rgba(255, 255, 255, 0.12);
   --sidebar-bg: #000000;
   --sidebar-text: #AEAEB2;
@@ -112,7 +112,7 @@
     overscroll-behavior-y: none;
     -webkit-tap-highlight-color: transparent;
     -webkit-touch-callout: none;
-    background: radial-gradient(circle at top left, rgba(238, 242, 255, 0.4), transparent 40%), var(--color-bg);
+    background: radial-gradient(circle at 0% 0%, rgba(var(--bg-rgb), 0.4), transparent 50%), var(--color-bg);
   }
 
   .dark body {

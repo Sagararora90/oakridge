@@ -19,11 +19,11 @@ const FADE_UP = {
 const STAGGER = { show: { transition: { staggerChildren: 0.05, delayChildren: 0.02 } } };
 
 const STATUS_MAP = {
-  Present:   { color: '#1A6632', bg: '#E8F8ED' },
-  Absent:    { color: '#C0241C', bg: '#FFEEED' },
-  Medical:   { color: '#0C6691', bg: '#E0F4FF' },
-  OD:        { color: '#6B3AA8', bg: '#F0E9FF' },
-  Cancelled: { color: '#5C5C61', bg: '#F2F2F7' },
+  Present:   { color: 'var(--color-success)', bg: 'var(--color-success-lo)' },
+  Absent:    { color: 'var(--color-danger)', bg: 'var(--color-danger-lo)' },
+  Medical:   { color: 'var(--color-accent)', bg: 'var(--color-accent-lo)' },
+  OD:        { color: 'var(--color-primary)', bg: 'var(--color-primary-lo)' },
+  Cancelled: { color: 'var(--color-subtext)', bg: 'var(--color-border)' },
 };
 
 /* ─── Helpers ────────────────────────────────────────────────── */
@@ -49,33 +49,33 @@ function useIsMobile(bp = 1024) {
 
 /* ─── Shared style atoms ─────────────────────────────────────── */
 const card = {
-  background: '#FFFFFF',
-  border: '1px solid rgba(0,0,0,0.07)',
+  background: 'var(--color-card-bg)',
+  border: '1px solid var(--color-border)',
   borderRadius: 18,
 };
 
 const labelSt = {
   fontSize: 11, fontWeight: 700,
-  color: '#86868B',
+  color: 'var(--color-subtext)',
   letterSpacing: '0.07em', textTransform: 'uppercase', margin: 0,
   fontFamily: FONT,
 };
 
 const iconBtnSt = {
   width: 30, height: 30, borderRadius: 8,
-  border: '1px solid rgba(0,0,0,0.1)',
-  background: '#F5F5F7',
+  border: '1px solid var(--color-border)',
+  background: 'var(--color-surface)',
   display: 'flex', alignItems: 'center', justifyContent: 'center',
   cursor: 'pointer', flexShrink: 0, fontFamily: FONT,
-  color: '#86868B', transition: 'background .12s, color .12s',
+  color: 'var(--color-subtext)', transition: 'background .12s, color .12s',
 };
 
 const inputSt = {
   width: '100%', padding: '10px 13px',
-  background: '#F5F5F7',
-  border: '1px solid rgba(0,0,0,0.08)',
+  background: 'var(--color-surface)',
+  border: '1px solid var(--color-border)',
   borderRadius: 10, fontSize: 13, fontWeight: 500,
-  color: '#1D1D1F', fontFamily: FONT,
+  color: 'var(--color-text)', fontFamily: FONT,
   outline: 'none', appearance: 'none', WebkitAppearance: 'none',
   boxSizing: 'border-box',
 };
@@ -86,12 +86,12 @@ function BarTooltip({ active, payload }) {
   const d = payload[0];
   return (
     <div style={{
-      background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.09)',
+      background: 'var(--color-card-bg)', border: '1px solid var(--color-border)',
       borderRadius: 10, padding: '8px 12px', fontFamily: FONT,
-      fontSize: 12, boxShadow: '0 8px 24px rgba(0,0,0,0.1)',
+      fontSize: 12, boxShadow: 'var(--shadow-lg)',
     }}>
-      <p style={{ fontWeight: 700, color: '#1D1D1F', margin: '0 0 2px' }}>{d.payload.full}</p>
-      <p style={{ color: d.payload.pct >= 75 ? '#1A6632' : '#C0241C', fontWeight: 600, margin: 0 }}>
+      <p style={{ fontWeight: 700, color: 'var(--color-text)', margin: '0 0 2px' }}>{d.payload.full}</p>
+      <p style={{ color: d.payload.pct >= 75 ? 'var(--color-success)' : 'var(--color-danger)', fontWeight: 600, margin: 0 }}>
         {d.payload.pct}%
       </p>
     </div>
@@ -231,10 +231,17 @@ export default function Dashboard() {
   const ring   = 2 * Math.PI * 42;
   const isHealthy = pctNum >= 75;
 
+  const glassStyle = {
+    background: 'rgba(var(--bg-rgb), 0.98)',
+    backdropFilter: 'blur(20px)',
+    WebkitBackdropFilter: 'blur(20px)',
+    border: '1px solid var(--color-border)',
+  };
+
   /* ════ RENDER ════ */
   return (
     <div style={{
-      background: '#F5F5F7',
+      background: 'var(--color-bg)',
       minHeight: '100svh',
       paddingBottom: isMobile ? 104 : 40,
       fontFamily: FONT,
@@ -248,16 +255,16 @@ export default function Dashboard() {
             exit={{ height: 0, opacity: 0 }} style={{ overflow: 'hidden' }}
           >
             <div style={{
-              background: '#FFF4E0',
-              borderBottom: '1px solid rgba(255,149,0,0.2)',
+              background: 'var(--color-warning-lo)',
+              borderBottom: '1px solid var(--color-border)',
               padding: '10px 20px',
               display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12,
             }}>
               <div>
-                <p style={{ fontSize: 13, fontWeight: 600, color: '#7D4C00', margin: 0 }}>
+                <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-warning)', margin: 0 }}>
                   {catchUp.days} day{catchUp.days > 1 ? 's' : ''} unlogged
                 </p>
-                <p style={{ fontSize: 11, color: '#86868B', margin: '2px 0 0', fontWeight: 400 }}>
+                <p style={{ fontSize: 11, color: 'var(--color-subtext)', margin: '2px 0 0', fontWeight: 400 }}>
                   Auto-fill marks missed slots as Present
                 </p>
               </div>
@@ -268,7 +275,7 @@ export default function Dashboard() {
                   autoFillMissed(s.toISOString(), catchUp.yest.toISOString(), 'Present');
                 }}
                 style={{
-                  background: '#FF9F0A', color: '#FFFFFF', border: 'none',
+                  background: 'var(--color-warning)', color: '#FFFFFF', border: 'none',
                   borderRadius: 9, padding: '7px 14px',
                   fontSize: 12, fontWeight: 600, cursor: 'pointer',
                   fontFamily: FONT, whiteSpace: 'nowrap', flexShrink: 0,
@@ -284,16 +291,15 @@ export default function Dashboard() {
       {/* ── STICKY HEADER ── */}
       <header style={{
         position: 'sticky', top: 0, zIndex: 30,
-        background: 'rgba(245,245,247,0.88)',
-        backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
-        borderBottom: '1px solid rgba(0,0,0,0.06)',
+        ...glassStyle,
+        borderTop: 'none', borderLeft: 'none', borderRight: 'none',
         height: 52, padding: '0 20px',
         display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12,
       }}>
 
         {/* left: title + day */}
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, minWidth: 0, overflow: 'hidden' }}>
-          <span style={{ fontSize: 14, fontWeight: 700, color: '#1D1D1F', letterSpacing: '-0.02em', flexShrink: 0 }}>
+          <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--color-text)', letterSpacing: '-0.02em', flexShrink: 0 }}>
             Dashboard
           </span>
           <AnimatePresence>
@@ -301,7 +307,7 @@ export default function Dashboard() {
               <motion.span
                 key="day"
                 initial={{ opacity: 0, x: -4 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -4 }}
-                style={{ fontSize: 12, fontWeight: 500, color: '#86868B', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+                style={{ fontSize: 12, fontWeight: 500, color: 'var(--color-subtext)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
               >
                 {today}
               </motion.span>
@@ -327,8 +333,8 @@ export default function Dashboard() {
                   placeholder="Search subjects…"
                   style={{
                     width: '100%', height: 32, padding: '0 11px',
-                    background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.1)',
-                    borderRadius: 9, fontSize: 13, color: '#1D1D1F',
+                    background: 'var(--color-card-bg)', border: '1px solid var(--color-border)',
+                    borderRadius: 9, fontSize: 13, color: 'var(--color-text)',
                     fontFamily: FONT, outline: 'none', boxSizing: 'border-box',
                   }}
                 />
@@ -353,9 +359,9 @@ export default function Dashboard() {
               onClick={() => setNotifOpen(v => !v)}
               style={{
                 ...iconBtnSt, width: 32, height: 32, borderRadius: 9, position: 'relative',
-                background: notifOpen ? '#E8F0FF' : '#F5F5F7',
-                border: notifOpen ? '1px solid rgba(0,113,227,.25)' : '1px solid rgba(0,0,0,0.1)',
-                color: notifOpen ? '#0071E3' : '#86868B',
+                background: notifOpen ? 'var(--color-primary-lo)' : 'var(--color-surface)',
+                border: notifOpen ? '1px solid var(--color-primary)' : '1px solid var(--color-border)',
+                color: notifOpen ? 'var(--color-primary)' : 'var(--color-subtext)',
               }}
             >
               <svg width="14" height="14" viewBox="0 0 15 15" fill="none">
@@ -367,7 +373,7 @@ export default function Dashboard() {
                 <span style={{
                   position: 'absolute', top: 6, right: 6,
                   width: 5, height: 5, borderRadius: '50%',
-                  background: '#FF3B30', border: '1.5px solid #F5F5F7',
+                  background: 'var(--color-danger)', border: '1.5px solid var(--color-bg)',
                 }} />
               )}
             </button>
@@ -381,25 +387,27 @@ export default function Dashboard() {
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: 6, scale: 0.97 }} transition={SPRING}
                     style={{
-                      position: 'absolute', right: 0, top: 'calc(100% + 8px)',
-                      width: isMobile ? 'calc(100vw - 40px)' : 280,
-                      maxHeight: 340, zIndex: 50,
-                      background: '#FFFFFF',
-                      border: '1px solid rgba(0,0,0,0.09)',
+                      position: isMobile ? 'fixed' : 'absolute',
+                      right: isMobile ? 12 : 0, 
+                      left: isMobile ? 12 : 'auto',
+                      top: isMobile ? 64 : 'calc(100% + 8px)',
+                      width: isMobile ? 'auto' : 280,
+                      maxHeight: 400, zIndex: 50,
+                      ...glassStyle,
                       borderRadius: 16,
-                      boxShadow: '0 16px 48px rgba(0,0,0,0.12)',
+                      boxShadow: 'var(--shadow-lg)',
                       overflow: 'hidden', display: 'flex', flexDirection: 'column',
                     }}
                   >
                     <div style={{
-                      padding: '11px 14px', borderBottom: '1px solid rgba(0,0,0,0.06)',
+                      padding: '11px 14px', borderBottom: '1px solid var(--color-border)',
                       display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                     }}>
-                      <span style={{ fontSize: 13, fontWeight: 700, color: '#1D1D1F' }}>Notifications</span>
+                      <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-text)' }}>Notifications</span>
                       {unread > 0 && (
                         <button onClick={markNotificationsRead} style={{
                           background: 'none', border: 'none', fontSize: 12,
-                          fontWeight: 600, color: '#0071E3', cursor: 'pointer', fontFamily: FONT,
+                          fontWeight: 600, color: 'var(--color-primary)', cursor: 'pointer', fontFamily: FONT,
                         }}>
                           Mark all read
                         </button>
@@ -407,16 +415,16 @@ export default function Dashboard() {
                     </div>
                     <div style={{ overflowY: 'auto', padding: 8, display: 'flex', flexDirection: 'column', gap: 3 }}>
                       {notifications.length === 0
-                        ? <p style={{ fontSize: 13, color: '#86868B', textAlign: 'center', padding: '24px 0', margin: 0 }}>All clear</p>
+                        ? <p style={{ fontSize: 13, color: 'var(--color-subtext)', textAlign: 'center', padding: '24px 0', margin: 0 }}>All clear</p>
                         : notifications.map(n => (
                           <div key={n._id} style={{
                             padding: '9px 11px', borderRadius: 10,
-                            background: n.read ? 'transparent' : '#EEF4FF',
-                            border: `1px solid ${n.read ? 'transparent' : 'rgba(0,113,227,.12)'}`,
+                            background: n.read ? 'transparent' : 'var(--color-primary-lo)',
+                            border: `1px solid ${n.read ? 'transparent' : 'var(--color-primary-lo)'}`,
                             opacity: n.read ? 0.55 : 1,
                           }}>
-                            <p style={{ fontSize: 12, fontWeight: 600, color: '#1D1D1F', margin: '0 0 2px' }}>{n.title}</p>
-                            <p style={{ fontSize: 11, color: '#86868B', margin: 0, lineHeight: 1.5 }}>{n.message}</p>
+                            <p style={{ fontSize: 12, fontWeight: 600, color: 'var(--color-text)', margin: '0 0 2px' }}>{n.title}</p>
+                            <p style={{ fontSize: 11, color: 'var(--color-subtext)', margin: 0, lineHeight: 1.5 }}>{n.message}</p>
                           </div>
                         ))}
                     </div>
@@ -430,7 +438,7 @@ export default function Dashboard() {
           <img
             src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.name || 'U'}&backgroundColor=007AFF`}
             alt={user?.name || 'User'}
-            style={{ width: 30, height: 30, borderRadius: '50%', border: '1.5px solid rgba(0,0,0,0.1)', flexShrink: 0, cursor: 'pointer' }}
+            style={{ width: 30, height: 30, borderRadius: '50%', border: '1.5px solid var(--color-border)', flexShrink: 0, cursor: 'pointer' }}
           />
         </div>
       </header>
@@ -459,9 +467,9 @@ export default function Dashboard() {
             <div style={{ ...card, padding: 16, display: 'flex', alignItems: 'center', gap: 16 }}>
               <div style={{ position: 'relative', flexShrink: 0 }}>
                 <svg width="72" height="72" viewBox="0 0 100 100" style={{ transform: 'rotate(-90deg)' }}>
-                  <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(0,0,0,0.07)" strokeWidth="9"/>
+                  <circle cx="50" cy="50" r="42" fill="none" stroke="var(--color-border)" strokeWidth="9"/>
                   <motion.circle cx="50" cy="50" r="42" fill="none"
-                    stroke={isHealthy ? '#34C759' : '#FF3B30'} strokeWidth="9" strokeLinecap="round"
+                    stroke={isHealthy ? 'var(--success)' : 'var(--danger)'} strokeWidth="9" strokeLinecap="round"
                     strokeDasharray={ring}
                     initial={{ strokeDashoffset: ring }}
                     animate={{ strokeDashoffset: ring * (1 - Math.min(pctNum, 100) / 100) }}
@@ -469,16 +477,16 @@ export default function Dashboard() {
                   />
                 </svg>
                 <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                  <span style={{ fontSize: 16, fontWeight: 700, color: '#1D1D1F', letterSpacing: '-0.04em', lineHeight: 1 }}>{stats.pct}</span>
-                  <span style={{ fontSize: 9, fontWeight: 600, color: '#86868B' }}>%</span>
+                  <span style={{ fontSize: 16, fontWeight: 700, color: 'var(--color-text)', letterSpacing: '-0.04em', lineHeight: 1 }}>{stats.pct}</span>
+                  <span style={{ fontSize: 9, fontWeight: 600, color: 'var(--color-subtext)' }}>%</span>
                 </div>
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <p style={labelSt}>Overall attendance</p>
-                <p style={{ fontSize: 13, fontWeight: 700, color: isHealthy ? '#1A6632' : '#C0241C', margin: '5px 0 3px' }}>
+                <p style={{ fontSize: 13, fontWeight: 700, color: isHealthy ? 'var(--color-success)' : 'var(--color-danger)', margin: '5px 0 3px' }}>
                   {isHealthy ? '↑ On track' : '↓ Below target'}
                 </p>
-                <p style={{ fontSize: 11, color: '#86868B', margin: 0, fontWeight: 400 }}>
+                <p style={{ fontSize: 11, color: 'var(--color-subtext)', margin: 0, fontWeight: 400 }}>
                   {stats.att} of {stats.tot} sessions
                 </p>
               </div>
@@ -487,13 +495,13 @@ export default function Dashboard() {
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
               <div style={{ ...card, padding: 16 }}>
                 <p style={labelSt}>Safe skips</p>
-                <p style={{ fontSize: 34, fontWeight: 700, color: '#1A6632', letterSpacing: '-0.04em', margin: '10px 0 2px', lineHeight: 1 }}>{stats.bunks}</p>
-                <p style={{ fontSize: 11, color: '#86868B', margin: 0 }}>can miss</p>
+                <p style={{ fontSize: 34, fontWeight: 700, color: 'var(--color-success)', letterSpacing: '-0.04em', margin: '10px 0 2px', lineHeight: 1 }}>{stats.bunks}</p>
+                <p style={{ fontSize: 11, color: 'var(--color-subtext)', margin: 0 }}>can miss</p>
               </div>
               <div style={{ ...card, padding: 16 }}>
                 <p style={labelSt}>Need to attend</p>
-                <p style={{ fontSize: 34, fontWeight: 700, color: stats.need > 0 ? '#C0241C' : '#1D1D1F', letterSpacing: '-0.04em', margin: '10px 0 2px', lineHeight: 1 }}>{stats.need}</p>
-                <p style={{ fontSize: 11, color: '#86868B', margin: 0 }}>to hit 75%</p>
+                <p style={{ fontSize: 34, fontWeight: 700, color: stats.need > 0 ? 'var(--color-danger)' : 'var(--color-text)', letterSpacing: '-0.04em', margin: '10px 0 2px', lineHeight: 1 }}>{stats.need}</p>
+                <p style={{ fontSize: 11, color: 'var(--color-subtext)', margin: 0 }}>to hit 75%</p>
               </div>
             </div>
           </motion.div>
@@ -508,14 +516,14 @@ export default function Dashboard() {
           }}>
             {/* ring — spans 2 rows */}
             <div style={{ ...card, gridRow: '1 / 3', padding: 22, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', position: 'relative', overflow: 'hidden' }}>
-              <div style={{ position: 'absolute', top: 0, right: 0, width: '55%', height: '100%', background: `linear-gradient(135deg, transparent 50%, ${isHealthy ? 'rgba(52,199,89,0.05)' : 'rgba(255,59,48,0.05)'} 100%)`, pointerEvents: 'none' }} />
+              <div style={{ position: 'absolute', top: 0, right: 0, width: '55%', height: '100%', background: `linear-gradient(135deg, transparent 50%, ${isHealthy ? 'var(--color-success-lo)' : 'var(--color-danger-lo)'} 100%)`, pointerEvents: 'none' }} />
               <div>
                 <p style={labelSt}>Overall</p>
                 <div style={{ marginTop: 16, position: 'relative', display: 'inline-block' }}>
                   <svg width="96" height="96" viewBox="0 0 100 100" style={{ transform: 'rotate(-90deg)' }}>
-                    <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(0,0,0,0.07)" strokeWidth="7"/>
+                    <circle cx="50" cy="50" r="42" fill="none" stroke="var(--color-border)" strokeWidth="7"/>
                     <motion.circle cx="50" cy="50" r="42" fill="none"
-                      stroke={isHealthy ? '#34C759' : '#FF3B30'} strokeWidth="7" strokeLinecap="round"
+                      stroke={isHealthy ? 'var(--success)' : 'var(--danger)'} strokeWidth="7" strokeLinecap="round"
                       strokeDasharray={ring}
                       initial={{ strokeDashoffset: ring }}
                       animate={{ strokeDashoffset: ring * (1 - Math.min(pctNum, 100) / 100) }}
@@ -523,14 +531,14 @@ export default function Dashboard() {
                     />
                   </svg>
                   <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                    <span style={{ fontSize: 22, fontWeight: 700, color: '#1D1D1F', letterSpacing: '-0.04em', lineHeight: 1 }}>{stats.pct}</span>
-                    <span style={{ fontSize: 10, color: '#86868B', fontWeight: 600 }}>%</span>
+                    <span style={{ fontSize: 22, fontWeight: 700, color: 'var(--color-text)', letterSpacing: '-0.04em', lineHeight: 1 }}>{stats.pct}</span>
+                    <span style={{ fontSize: 10, color: 'var(--color-subtext)', fontWeight: 600 }}>%</span>
                   </div>
                 </div>
               </div>
               <div>
-                <p style={{ fontSize: 12, color: '#86868B', margin: '0 0 3px', fontWeight: 400 }}>{stats.att} of {stats.tot} sessions</p>
-                <p style={{ fontSize: 12, fontWeight: 700, margin: 0, color: isHealthy ? '#1A6632' : '#C0241C' }}>
+                <p style={{ fontSize: 12, color: 'var(--color-subtext)', margin: '0 0 3px', fontWeight: 400 }}>{stats.att} of {stats.tot} sessions</p>
+                <p style={{ fontSize: 12, fontWeight: 700, margin: 0, color: isHealthy ? 'var(--color-success)' : 'var(--color-danger)' }}>
                   {isHealthy ? '↑ On track' : '↓ Below target'}
                 </p>
               </div>
@@ -540,8 +548,8 @@ export default function Dashboard() {
             <div style={{ ...card, padding: 20, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
               <p style={labelSt}>Safe skips</p>
               <div>
-                <p style={{ fontSize: 38, fontWeight: 700, color: '#1A6632', letterSpacing: '-0.04em', margin: 0, lineHeight: 1 }}>{stats.bunks}</p>
-                <p style={{ fontSize: 11, color: '#86868B', margin: '5px 0 0' }}>can miss</p>
+                <p style={{ fontSize: 38, fontWeight: 700, color: 'var(--color-success)', letterSpacing: '-0.04em', margin: 0, lineHeight: 1 }}>{stats.bunks}</p>
+                <p style={{ fontSize: 11, color: 'var(--color-subtext)', margin: '5px 0 0' }}>can miss</p>
               </div>
             </div>
 
@@ -549,8 +557,8 @@ export default function Dashboard() {
             <div style={{ ...card, padding: 20, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
               <p style={labelSt}>Need to attend</p>
               <div>
-                <p style={{ fontSize: 38, fontWeight: 700, color: stats.need > 0 ? '#C0241C' : '#1D1D1F', letterSpacing: '-0.04em', margin: 0, lineHeight: 1 }}>{stats.need}</p>
-                <p style={{ fontSize: 11, color: '#86868B', margin: '5px 0 0' }}>to hit 75%</p>
+                <p style={{ fontSize: 38, fontWeight: 700, color: stats.need > 0 ? 'var(--color-danger)' : 'var(--color-text)', letterSpacing: '-0.04em', margin: 0, lineHeight: 1 }}>{stats.need}</p>
+                <p style={{ fontSize: 11, color: 'var(--color-subtext)', margin: '5px 0 0' }}>to hit 75%</p>
               </div>
             </div>
 
@@ -558,8 +566,8 @@ export default function Dashboard() {
             <div style={{ ...card, padding: 20, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
               <p style={labelSt}>Sessions</p>
               <div>
-                <p style={{ fontSize: 38, fontWeight: 700, color: '#1D1D1F', letterSpacing: '-0.04em', margin: 0, lineHeight: 1 }}>{stats.tot}</p>
-                <p style={{ fontSize: 11, color: '#86868B', margin: '5px 0 0' }}>{stats.att} attended</p>
+                <p style={{ fontSize: 38, fontWeight: 700, color: 'var(--color-text)', letterSpacing: '-0.04em', margin: 0, lineHeight: 1 }}>{stats.tot}</p>
+                <p style={{ fontSize: 11, color: 'var(--color-subtext)', margin: '5px 0 0' }}>{stats.att} attended</p>
               </div>
             </div>
 
@@ -567,16 +575,16 @@ export default function Dashboard() {
             <div style={{
               ...card, gridColumn: '2 / 5', padding: '16px 20px',
               display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12,
-              background: '#EEF4FF', border: '1px solid rgba(0,113,227,.14)',
+              background: 'var(--color-primary-lo)', border: '1px solid var(--color-primary-lo)',
             }}>
               <div>
-                <p style={{ ...labelSt, color: '#0071E3' }}>AI Planner</p>
-                <p style={{ fontSize: 13, fontWeight: 600, color: '#1D1D1F', margin: '3px 0 0', letterSpacing: '-0.01em' }}>
+                <p style={{ ...labelSt, color: 'var(--color-primary)' }}>AI Planner</p>
+                <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-text)', margin: '3px 0 0', letterSpacing: '-0.01em' }}>
                   Get a personalised attendance plan
                 </p>
               </div>
               <Link to="/ai-planner" style={{
-                flexShrink: 0, background: '#0071E3', color: '#FFFFFF',
+                flexShrink: 0, background: 'var(--primary)', color: '#FFFFFF',
                 borderRadius: 980, padding: '8px 16px',
                 fontSize: 12.5, fontWeight: 700, textDecoration: 'none', whiteSpace: 'nowrap',
                 display: 'flex', alignItems: 'center', gap: 5,
@@ -590,16 +598,16 @@ export default function Dashboard() {
         {/* mobile AI CTA */}
         {isMobile && (
           <motion.div variants={FADE_UP} style={{
-            ...card, padding: '14px 16px', background: '#EEF4FF',
-            border: '1px solid rgba(0,113,227,.14)',
+            ...card, padding: '14px 16px', background: 'var(--color-primary-lo)',
+            border: '1px solid var(--color-primary-lo)',
             display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12,
           }}>
             <div>
-              <p style={{ ...labelSt, color: '#0071E3' }}>AI Planner</p>
-              <p style={{ fontSize: 13, fontWeight: 600, color: '#1D1D1F', margin: '3px 0 0' }}>Personalised plan</p>
+              <p style={{ ...labelSt, color: 'var(--color-primary)' }}>AI Planner</p>
+              <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-text)', margin: '3px 0 0' }}>Personalised plan</p>
             </div>
             <Link to="/ai-planner" style={{
-              flexShrink: 0, background: '#0071E3', color: '#FFFFFF',
+              flexShrink: 0, background: 'var(--color-primary)', color: 'white',
               borderRadius: 980, padding: '7px 14px',
               fontSize: 12, fontWeight: 700, textDecoration: 'none',
             }}>
@@ -614,38 +622,38 @@ export default function Dashboard() {
           {/* SCHEDULE */}
           <div style={{ ...card, padding: 0, overflow: 'hidden' }}>
             <div style={{
-              padding: '13px 16px', borderBottom: '1px solid rgba(0,0,0,0.06)',
+              padding: '13px 16px', borderBottom: '1px solid var(--color-border)',
               display: 'flex', alignItems: 'center', justifyContent: 'space-between',
             }}>
               <div>
                 <p style={labelSt}>Today</p>
-                <p style={{ fontSize: 14, fontWeight: 700, color: '#1D1D1F', margin: '2px 0 0', letterSpacing: '-0.02em' }}>{today}</p>
+                <p style={{ fontSize: 14, fontWeight: 700, color: 'var(--color-text)', margin: '2px 0 0', letterSpacing: '-0.02em' }}>{today}</p>
               </div>
               <div style={{ display: 'flex', gap: 6 }}>
                 {todaySlots.length > 0 && dayProgress < 100 && (
                   <button onClick={handleMarkAll} disabled={savingAll} style={{
-                    background: '#E8F8ED', border: '1px solid rgba(52,199,89,.2)',
+                    background: 'var(--color-success-lo)', border: '1px solid var(--color-success-lo)',
                     borderRadius: 9, padding: '6px 11px',
-                    fontSize: 12, fontWeight: 600, color: '#1A6632',
+                    fontSize: 12, fontWeight: 600, color: 'var(--color-success)',
                     cursor: 'pointer', fontFamily: FONT,
                     display: 'flex', alignItems: 'center', gap: 5,
                     transition: 'background .12s',
                   }}
-                    onMouseEnter={e => e.currentTarget.style.background = '#D4F0DE'}
-                    onMouseLeave={e => e.currentTarget.style.background = '#E8F8ED'}
+                    onMouseEnter={e => e.currentTarget.style.background = 'var(--color-success)'}
+                    onMouseLeave={e => e.currentTarget.style.background = 'var(--color-success-lo)'}
                   >
                     <Check size={12} strokeWidth={2.5} /> Mark all
                   </button>
                 )}
                 <button onClick={() => setExtraOpen(true)} style={{
                   display: 'flex', alignItems: 'center', gap: 5,
-                  background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.1)',
+                  background: 'var(--color-card-bg)', border: '1px solid var(--color-border)',
                   borderRadius: 9, padding: '6px 11px',
-                  fontSize: 12, fontWeight: 600, color: '#1D1D1F',
+                  fontSize: 12, fontWeight: 600, color: 'var(--color-text)',
                   cursor: 'pointer', fontFamily: FONT, transition: 'background .12s',
                 }}
-                  onMouseEnter={e => e.currentTarget.style.background = '#F5F5F7'}
-                  onMouseLeave={e => e.currentTarget.style.background = '#FFFFFF'}
+                  onMouseEnter={e => e.currentTarget.style.background = 'var(--hover)'}
+                  onMouseLeave={e => e.currentTarget.style.background = 'var(--color-card-bg)'}
                 >
                   <Plus size={12} strokeWidth={2.5} /> Add
                 </button>
@@ -654,11 +662,11 @@ export default function Dashboard() {
 
             {/* day progress bar */}
             {todaySlots.length > 0 && (
-              <div style={{ height: 3, background: 'rgba(0,0,0,0.05)', position: 'relative' }}>
+              <div style={{ height: 3, background: 'var(--color-border)', position: 'relative' }}>
                 <motion.div
                   initial={{ width: 0 }} animate={{ width: `${dayProgress}%` }}
                   transition={{ duration: 0.5, ease: 'easeOut' }}
-                  style={{ position: 'absolute', height: '100%', background: '#0071E3' }}
+                  style={{ position: 'absolute', height: '100%', background: 'var(--color-primary)' }}
                 />
               </div>
             )}
@@ -669,13 +677,13 @@ export default function Dashboard() {
                 : todaySlots.length === 0
                 ? (
                   <div style={{ padding: '32px 16px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
-                    <div style={{ width: 36, height: 36, borderRadius: 10, background: '#F5F5F7', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <div style={{ width: 36, height: 36, borderRadius: 10, background: 'var(--color-surface)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
-                        <rect x="1.5" y="2.5" width="12" height="10" rx="2" stroke="#86868B" strokeWidth="1.4"/>
-                        <path d="M4.5 1v2M10.5 1v2M1.5 6h12" stroke="#86868B" strokeWidth="1.4" strokeLinecap="round"/>
+                        <rect x="1.5" y="2.5" width="12" height="10" rx="2" stroke="var(--color-subtext)" strokeWidth="1.4"/>
+                        <path d="M4.5 1v2M10.5 1v2M1.5 6h12" stroke="var(--color-subtext)" strokeWidth="1.4" strokeLinecap="round"/>
                       </svg>
                     </div>
-                    <p style={{ fontSize: 13, color: '#86868B', margin: 0, fontWeight: 500 }}>No classes today</p>
+                    <p style={{ fontSize: 13, color: 'var(--color-subtext)', margin: 0, fontWeight: 500 }}>No classes today</p>
                   </div>
                 )
                 : todaySlots.map((slot, i) => {
@@ -697,15 +705,25 @@ export default function Dashboard() {
                     <motion.div key={i} layout style={{
                       display: 'flex', alignItems: 'center', gap: 10,
                       padding: isMobile ? '11px 12px' : '9px 12px',
-                      borderRadius: 10, background: '#F9F9FB',
+                      borderRadius: 10, background: 'var(--color-surface)',
                       opacity: busy ? 0.4 : 1,
                       borderLeft: `3px solid ${accent}`,
                       transition: 'opacity .2s',
                     }}>
-                      <span style={{ fontSize: 10, fontWeight: 600, color: '#AEAEB2', width: 44, flexShrink: 0, fontVariantNumeric: 'tabular-nums' }}>
+                      <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--color-subtext)', width: 44, flexShrink: 0, fontVariantNumeric: 'tabular-nums' }}>
                         {slot.time || `S${i + 1}`}
                       </span>
-                      <span style={{ flex: 1, fontSize: 13, fontWeight: 600, color: '#1D1D1F', letterSpacing: '-0.01em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      <span style={{ 
+                        flex: 1, 
+                        fontSize: 13, 
+                        fontWeight: 600, 
+                        color: 'var(--color-text)', 
+                        letterSpacing: '-0.01em', 
+                        overflow: 'hidden', 
+                        textOverflow: 'ellipsis', 
+                        whiteSpace: 'nowrap',
+                        minWidth: 0 // Crucial for ellipsis inside flex
+                      }}>
                         {sub?.name || 'Unmapped'}
                       </span>
 
@@ -724,9 +742,9 @@ export default function Dashboard() {
                           <button
                             onClick={() => markAttendance(sub._id, 'Present', slot.credit || 1)}
                             disabled={busy}
-                            style={{ ...iconBtnSt, width: btnH, height: btnH, background: '#E8F8ED', color: '#1A6632', border: 'none' }}
-                            onMouseEnter={e => e.currentTarget.style.background = '#D4F0DE'}
-                            onMouseLeave={e => e.currentTarget.style.background = '#E8F8ED'}
+                            style={{ ...iconBtnSt, width: btnH, height: btnH, background: 'var(--color-success-lo)', color: 'var(--color-success)', border: 'none' }}
+                            onMouseEnter={e => e.currentTarget.style.background = 'var(--color-success-lo)'}
+                            onMouseLeave={e => e.currentTarget.style.background = 'var(--color-success-lo)'}
                           >
                             <Check size={isMobile ? 15 : 13} strokeWidth={2.5} />
                           </button>
@@ -735,9 +753,9 @@ export default function Dashboard() {
                               onClick={e => { e.stopPropagation(); setSlotMenu(slotMenu === i ? null : i); }}
                               style={{
                                 ...iconBtnSt, width: btnH, height: btnH,
-                                background: slotMenu === i ? '#E8F0FF' : '#F5F5F7',
-                                border: slotMenu === i ? '1px solid rgba(0,113,227,.2)' : '1px solid rgba(0,0,0,0.1)',
-                                color: slotMenu === i ? '#0071E3' : '#86868B',
+                                background: slotMenu === i ? 'var(--color-primary-lo)' : 'var(--color-surface)',
+                                border: slotMenu === i ? '1px solid var(--color-primary)' : '1px solid var(--color-border)',
+                                color: slotMenu === i ? 'var(--color-primary)' : 'var(--color-subtext)',
                               }}
                             >
                               <ChevronDown size={12} style={{ transform: slotMenu === i ? 'rotate(180deg)' : 'none', transition: 'transform .2s' }} />
@@ -752,8 +770,8 @@ export default function Dashboard() {
                                     exit={{ opacity: 0, y: 5, scale: 0.97 }} transition={SPRING}
                                     style={{
                                       position: 'absolute', right: 0, top: 'calc(100% + 6px)',
-                                      background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.09)',
-                                      borderRadius: 12, boxShadow: '0 10px 36px rgba(0,0,0,0.12)',
+                                      background: 'var(--color-card-bg)', border: '1px solid var(--color-border)',
+                                      borderRadius: 12, boxShadow: 'var(--shadow-lg)',
                                       padding: 4, minWidth: 118, zIndex: 50,
                                     }}
                                   >
@@ -788,7 +806,7 @@ export default function Dashboard() {
           {/* CHART */}
           <div style={{ ...card, padding: 18, display: 'flex', flexDirection: 'column' }}>
             <p style={labelSt}>By subject</p>
-            <p style={{ fontSize: 14, fontWeight: 700, color: '#1D1D1F', margin: '2px 0 14px', letterSpacing: '-0.02em' }}>
+            <p style={{ fontSize: 14, fontWeight: 700, color: 'var(--color-text)', margin: '2px 0 14px', letterSpacing: '-0.02em' }}>
               Attendance %
             </p>
             <ResponsiveContainer width="100%" height={isMobile ? 100 : 120}>
@@ -805,7 +823,7 @@ export default function Dashboard() {
         {/* ── HEATMAP ── */}
         <motion.div variants={FADE_UP} style={{ ...card, padding: 18, overflow: 'hidden' }}>
           <p style={labelSt}>Activity</p>
-          <p style={{ fontSize: 14, fontWeight: 700, color: '#1D1D1F', margin: '2px 0 16px', letterSpacing: '-0.02em' }}>
+          <p style={{ fontSize: 14, fontWeight: 700, color: 'var(--color-text)', margin: '2px 0 16px', letterSpacing: '-0.02em' }}>
             Attendance flow
           </p>
           <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
@@ -817,7 +835,7 @@ export default function Dashboard() {
         <motion.div variants={FADE_UP} style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 4px' }}>
             <p style={labelSt}>Your Subjects</p>
-            <Link to="/subjects" style={{ fontSize: 11, fontWeight: 700, color: '#0071E3', textDecoration: 'none', letterSpacing: '0.05em', textTransform: 'uppercase' }}>
+            <Link to="/subjects" style={{ fontSize: 11, fontWeight: 700, color: 'var(--color-primary)', textDecoration: 'none', letterSpacing: '0.05em', textTransform: 'uppercase' }}>
               Manage →
             </Link>
           </div>
@@ -828,7 +846,7 @@ export default function Dashboard() {
           }}>
             {subjects.map(s => {
               const p = s.total > 0 ? (s.attended / s.total * 100).toFixed(0) : 0;
-              const bc = p >= (s.requiredAttendance || 75) ? '#34C759' : (p >= (s.requiredAttendance || 75) - 15 ? '#FF9F0A' : '#FF3B30');
+              const bc = p >= (s.requiredAttendance || 75) ? 'var(--success)' : (p >= (s.requiredAttendance || 75) - 15 ? 'var(--warning)' : 'var(--danger)');
               return (
                 <div key={s._id} 
                   onClick={() => navigate(`/subjects?view=${s._id}`)}
@@ -836,20 +854,20 @@ export default function Dashboard() {
                     ...card, padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer',
                     transition: 'transform 0.2s ease, background 0.2s ease',
                   }}
-                  onMouseEnter={e => { e.currentTarget.style.background = 'rgba(0,113,227,0.04)'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
-                  onMouseLeave={e => { e.currentTarget.style.background = '#FFFFFF'; e.currentTarget.style.transform = 'translateY(0)'; }}
+                  onMouseEnter={e => { e.currentTarget.style.background = 'var(--color-primary-lo)'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = 'var(--color-card-bg)'; e.currentTarget.style.transform = 'translateY(0)'; }}
                 >
                   <div style={{ width: 8, height: 8, borderRadius: '50%', background: s.color || '#007AFF', flexShrink: 0 }} />
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <p style={{ fontSize: 13, fontWeight: 700, color: '#1D1D1F', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', letterSpacing: '-0.01em' }}>
+                    <p style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-text)', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', letterSpacing: '-0.01em' }}>
                       {s.name}
                     </p>
-                    <div style={{ height: 3, background: 'rgba(0,0,0,0.05)', borderRadius: 99, marginTop: 6, position: 'relative', overflow: 'hidden' }}>
+                    <div style={{ height: 3, background: 'var(--color-border)', borderRadius: 99, marginTop: 6, position: 'relative', overflow: 'hidden' }}>
                       <div style={{ position: 'absolute', top: 0, left: 0, height: '100%', width: `${p}%`, background: bc, borderRadius: 99 }} />
                     </div>
                   </div>
                   <span style={{ fontSize: 12, fontWeight: 800, color: bc, flexShrink: 0 }}>{p}%</span>
-                  <ChevronRight size={14} style={{ color: '#86868B', opacity: 0.6 }} />
+                  <ChevronRight size={14} style={{ color: 'var(--color-subtext)', opacity: 0.6 }} />
                 </div>
               );
             })}
@@ -879,16 +897,16 @@ export default function Dashboard() {
               style={{
                 position: 'relative', zIndex: 1,
                 width: '100%', maxWidth: isMobile ? '100%' : 390,
-                background: '#F5F5F7',
+                background: 'var(--color-bg)',
                 borderRadius: isMobile ? '22px 22px 0 0' : 20,
-                border: '1px solid rgba(0,0,0,0.09)',
-                boxShadow: '0 32px 80px rgba(0,0,0,0.18)',
+                border: '1px solid var(--color-border)',
+                boxShadow: 'var(--shadow-xl)',
                 overflow: 'hidden',
               }}
             >
               {isMobile && (
                 <div style={{ display: 'flex', justifyContent: 'center', padding: '12px 0 4px' }}>
-                  <div style={{ width: 40, height: 4, borderRadius: 99, background: 'rgba(0,0,0,0.15)' }} />
+                  <div style={{ width: 40, height: 4, borderRadius: 99, background: 'var(--color-border)' }} />
                 </div>
               )}
 
@@ -903,12 +921,12 @@ export default function Dashboard() {
                 </div>
                 <button onClick={() => setExtraOpen(false)} style={{
                   width: 28, height: 28, borderRadius: '50%', border: 'none',
-                  background: 'rgba(0,0,0,0.08)', display: 'flex', alignItems: 'center',
-                  justifyContent: 'center', cursor: 'pointer', color: '#86868B',
+                  background: 'var(--color-surface)', display: 'flex', alignItems: 'center',
+                  justifyContent: 'center', cursor: 'pointer', color: 'var(--color-subtext)',
                   transition: 'background .12s',
                 }}
-                  onMouseEnter={e => e.currentTarget.style.background = 'rgba(0,0,0,0.14)'}
-                  onMouseLeave={e => e.currentTarget.style.background = 'rgba(0,0,0,0.08)'}
+                  onMouseEnter={e => e.currentTarget.style.background = 'var(--hover)'}
+                  onMouseLeave={e => e.currentTarget.style.background = 'var(--color-surface)'}
                 >
                   <X size={12} strokeWidth={2.5} />
                 </button>
@@ -917,9 +935,9 @@ export default function Dashboard() {
               <div style={{ padding: '14px 16px 24px', display: 'flex', flexDirection: 'column', gap: 10 }}>
 
                 {/* subject */}
-                <div style={{ background: '#FFFFFF', borderRadius: 14, overflow: 'hidden' }}>
+                <div style={{ background: 'var(--color-card-bg)', borderRadius: 14, overflow: 'hidden', border: '1px solid var(--color-border)' }}>
                   <div style={{ padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 12 }}>
-                    <span style={{ fontSize: 13, fontWeight: 500, color: '#1D1D1F', flex: '0 0 80px' }}>Subject</span>
+                    <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--color-text)', flex: '0 0 80px' }}>Subject</span>
                     <select
                       value={extraForm.subjectId}
                       onChange={e => setExtraForm(f => ({ ...f, subjectId: e.target.value }))}
@@ -931,10 +949,9 @@ export default function Dashboard() {
                   </div>
                 </div>
 
-                {/* status + credit */}
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-                  <div style={{ background: '#FFFFFF', borderRadius: 14, padding: '12px 16px' }}>
-                    <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: '#86868B', marginBottom: 6 }}>Status</div>
+                  <div style={{ background: 'var(--color-card-bg)', borderRadius: 14, padding: '12px 16px', border: '1px solid var(--color-border)' }}>
+                    <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--color-subtext)', marginBottom: 6 }}>Status</div>
                     <select
                       value={extraForm.status}
                       onChange={e => setExtraForm(f => ({ ...f, status: e.target.value }))}
@@ -943,8 +960,8 @@ export default function Dashboard() {
                       {['Present', 'Absent', 'OD', 'Medical'].map(s => <option key={s}>{s}</option>)}
                     </select>
                   </div>
-                  <div style={{ background: '#FFFFFF', borderRadius: 14, padding: '12px 16px' }}>
-                    <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: '#86868B', marginBottom: 6 }}>Credit</div>
+                  <div style={{ background: 'var(--color-card-bg)', borderRadius: 14, padding: '12px 16px', border: '1px solid var(--color-border)' }}>
+                    <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--color-subtext)', marginBottom: 6 }}>Credit</div>
                     <input
                       type="number" min="1"
                       value={extraForm.credit}
@@ -955,8 +972,8 @@ export default function Dashboard() {
                 </div>
 
                 {/* date */}
-                <div style={{ background: '#FFFFFF', borderRadius: 14, padding: '12px 16px' }}>
-                  <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: '#86868B', marginBottom: 6 }}>Date</div>
+                <div style={{ background: 'var(--color-card-bg)', borderRadius: 14, padding: '12px 16px', border: '1px solid var(--color-border)' }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--color-subtext)', marginBottom: 6 }}>Date</div>
                   <input
                     type="date" value={extraForm.date}
                     onChange={e => setExtraForm(f => ({ ...f, date: e.target.value }))}
@@ -967,25 +984,25 @@ export default function Dashboard() {
                 <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
                   <button onClick={() => setExtraOpen(false)} style={{
                     flex: 1, padding: '13px 0', borderRadius: 14,
-                    border: '1.5px solid rgba(0,0,0,0.1)', background: '#FFFFFF',
-                    color: '#1D1D1F', cursor: 'pointer', fontFamily: FONT,
+                    border: '1.5px solid var(--color-border)', background: 'var(--color-card-bg)',
+                    color: 'var(--color-text)', cursor: 'pointer', fontFamily: FONT,
                     fontSize: 15, fontWeight: 600, transition: 'background .12s',
                   }}
-                    onMouseEnter={e => e.currentTarget.style.background = '#F0F0F5'}
-                    onMouseLeave={e => e.currentTarget.style.background = '#FFFFFF'}
+                    onMouseEnter={e => e.currentTarget.style.background = 'var(--hover)'}
+                    onMouseLeave={e => e.currentTarget.style.background = 'var(--color-card-bg)'}
                   >
                     Cancel
                   </button>
                   <button onClick={handleExtra} style={{
                     flex: 2, padding: '13px 0', borderRadius: 14,
-                    border: 'none', background: '#0071E3', color: '#FFFFFF',
+                    border: 'none', background: 'var(--color-primary)', color: '#FFFFFF',
                     cursor: 'pointer', fontFamily: FONT,
                     fontSize: 15, fontWeight: 700,
                     display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7,
                     transition: 'background .12s',
                   }}
-                    onMouseEnter={e => e.currentTarget.style.background = '#0077ED'}
-                    onMouseLeave={e => e.currentTarget.style.background = '#0071E3'}
+                    onMouseEnter={e => e.currentTarget.style.background = 'var(--color-primary)'}
+                    onMouseLeave={e => e.currentTarget.style.background = 'var(--color-primary)'}
                   >
                     <Check size={15} strokeWidth={2.5} /> Log Session
                   </button>

@@ -23,6 +23,9 @@ const sendEmailNotification = async (to, subject, text) => {
       auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS
+      },
+      tls: {
+        rejectUnauthorized: false // This helps with some SMTP connection issues
       }
     });
 
@@ -33,10 +36,14 @@ const sendEmailNotification = async (to, subject, text) => {
       text
     };
 
-    await transporter.sendMail(mailOptions);
-    console.log(`[EMAIL SUCCESS] Sent to: ${to}`);
+    console.log(`[EMAIL ATTEMPT] Sending to: ${to}...`);
+    const info = await transporter.sendMail(mailOptions);
+    console.log(`[EMAIL SUCCESS] Sent to: ${to}. MessageId: ${info.messageId}`);
   } catch (err) {
     console.error(`[EMAIL ERROR] Failed to send to ${to}:`, err.message);
+    if (err.code === 'EAUTH') {
+      console.error('[EMAIL ERROR] Authentication failed. Check if EMAIL_PASS is an App Password.');
+    }
   }
 };
 

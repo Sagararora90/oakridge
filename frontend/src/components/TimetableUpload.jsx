@@ -62,13 +62,13 @@ const TimetableUpload = ({ onComplete }) => {
         {isOpen && (
           <div
             className="fixed inset-0 z-50 flex items-center justify-center p-4"
-            style={{ background: 'rgba(0,0,0,0.35)', backdropFilter: 'blur(4px)' }}
+            style={{ background: 'rgba(var(--bg-rgb), 0.4)', backdropFilter: 'blur(12px)' }}
             onClick={(e) => { if (e.target === e.currentTarget) handleClose(); }}
           >
             <motion.div
-              initial={{ scale: 0.95, opacity: 0, y: 10 }}
-              animate={{ scale: 1,    opacity: 1, y: 0  }}
-              exit={{   scale: 0.95, opacity: 0, y: 10  }}
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1,   opacity: 1, y: 0  }}
+              exit={{    scale: 0.9, opacity: 0, y: 20 }}
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
               style={modal.wrap}
             >
@@ -77,9 +77,9 @@ const TimetableUpload = ({ onComplete }) => {
                 <div style={modal.iconWrap}>
                   <Upload size={18} style={{ color: 'var(--accent, #7c3aed)' }} />
                 </div>
-                <div style={{ flex: 1 }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
                   <h2 style={modal.title}>Smart Timetable Upload</h2>
-                  <p style={modal.subtitle}>Upload a photo or PDF — we'll read your schedule automatically.</p>
+                  <p style={modal.subtitle}>Select a photo or PDF — we'll scan it.</p>
                 </div>
                 <button onClick={handleClose} style={modal.closeBtn} className="hover:bg-bg transition-all">
                   <X size={16} />
@@ -149,7 +149,7 @@ const TimetableUpload = ({ onComplete }) => {
                     ...modal.uploadBtn,
                     opacity:       (!file || loading) ? 0.5 : 1,
                     cursor:        (!file || loading) ? 'not-allowed' : 'pointer',
-                    background:    'var(--accent, #7c3aed)',
+                    background:    'var(--color-accent)',
                   }}
                 >
                   {loading ? (
@@ -183,13 +183,17 @@ const TimetableUpload = ({ onComplete }) => {
 
 const modal = {
   wrap: {
-    background:   '#fff',
+    background:   'var(--color-bg)',
     borderRadius: 16,
-    border:       '0.5px solid var(--color-border)',
-    boxShadow:    '0 24px 60px rgba(0,0,0,0.12)',
+    border:       '1px solid var(--color-border)',
+    boxShadow:    'var(--shadow-xl)',
     width:        '100%',
     maxWidth:     480,
-    overflow:     'hidden',
+    maxHeight:    '90vh',
+    margin:       'auto 0', // Help centering
+    display: 'flex',
+    flexDirection: 'column',
+    overflow: 'hidden',
   },
   header: {
     display:       'flex',
@@ -202,7 +206,7 @@ const modal = {
     width:           38,
     height:          38,
     borderRadius:    10,
-    background:      'rgba(124,58,237,0.08)',
+    background:      'var(--color-accent-lo)',
     display:         'flex',
     alignItems:      'center',
     justifyContent:  'center',
@@ -259,7 +263,7 @@ const modal = {
     width:           52,
     height:          52,
     borderRadius:    12,
-    background:      '#f2f0ec',
+    background:      'var(--color-surface)',
     display:         'flex',
     alignItems:      'center',
     justifyContent:  'center',
@@ -287,8 +291,8 @@ const modal = {
     bottom:         0,
     left:           0,
     right:          0,
-    background:     'rgba(255,255,255,0.92)',
-    backdropFilter: 'blur(4px)',
+    background:     'rgba(var(--bg-rgb), 0.7)',
+    backdropFilter: 'blur(12px) saturate(180%)',
     padding:        '8px 12px',
     display:        'flex',
     alignItems:     'center',
@@ -309,8 +313,8 @@ const modal = {
     gap:            4,
     fontSize:       11,
     fontWeight:     600,
-    color:          '#A32D2D',
-    background:     '#FCEBEB',
+    color:          'var(--color-danger)',
+    background:     'var(--color-danger-lo)',
     border:         'none',
     borderRadius:   6,
     padding:        '4px 8px',

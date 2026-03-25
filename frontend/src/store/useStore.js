@@ -106,7 +106,7 @@ const useStore = create((set, get) => ({
     } catch (err) {}
   },
 
-  markAttendance: async (id, status, credit = 1) => {
+  markAttendance: async (id, status, credit = 1, date = null) => {
     if (get().updatingAttendance[id]) return;
     
     set((state) => ({ 
@@ -114,7 +114,7 @@ const useStore = create((set, get) => ({
     }));
 
     try {
-      const res = await api.put(`/subjects/${id}`, { status, credit });
+      const res = await api.put(`/subjects/${id}`, { status, credit, date });
       set((state) => ({
         subjects: state.subjects.map((s) => (s._id === id ? res.data : s)),
         updatingAttendance: { ...state.updatingAttendance, [id]: false }
@@ -591,6 +591,16 @@ const useStore = create((set, get) => ({
         notifications: state.notifications.map(n => ({ ...n, read: true }))
       }));
     } catch (err) {}
+  },
+  
+  fetchDailyStatus: async (date) => {
+    try {
+      const res = await api.get(`/user/daily-status/${date}`);
+      return res.data;
+    } catch (err) {
+      console.error('Fetch daily status failed:', err);
+      throw err;
+    }
   },
 }));
 

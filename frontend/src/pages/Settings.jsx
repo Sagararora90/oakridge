@@ -2,31 +2,272 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   User, Moon, Sun, Download, Calendar,
-  Trash2, Plus, Sparkles, Zap, ShieldCheck, FileText, ChevronRight, LogOut, GraduationCap
+  Trash2, Plus, Sparkles, Zap, ShieldCheck,
+  FileText, ChevronRight, LogOut, GraduationCap,
+  Bell, Palette
 } from 'lucide-react';
 import useStore from '../store/useStore';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 
+/* ─── Design tokens ───────────────────────────────────────────── */
+const FONT = "'SF Pro Text', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif";
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
 
-const Settings = () => {
+/* ─── Inject Styles ───────────────────────────────────────────── */
+const STYLES = `
+  .st-page {
+    background: var(--color-bg);
+    min-height: 100svh;
+    font-family: ${FONT};
+    padding-bottom: 40px;
+  }
+
+  /* ── Section card ── */
+  .st-section {
+    background: var(--color-card-bg);
+    border-radius: 16px;
+    border: 1px solid var(--color-border);
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+  }
+
+  /* ── Section header (sticky within card) ── */
+  .st-section-header {
+    display: flex; align-items: center; gap: 10px;
+    padding: 14px 16px 10px;
+  }
+  .st-section-label {
+    font-size: 11px; font-weight: 700;
+    letter-spacing: 0.05em; text-transform: uppercase;
+    color: var(--color-subtext);
+    padding: 0 4px;
+  }
+
+  /* ── Row (inset grouped style) ── */
+  .st-row {
+    display: flex; align-items: center;
+    padding: 0 16px;
+    min-height: 52px;
+    border-top: 1px solid var(--color-border);
+    gap: 12px;
+    transition: background 0.12s;
+  }
+  .st-row:first-of-type { border-top: none; }
+  .st-row:hover { background: var(--color-surface); }
+  .st-row-label {
+    flex: 1;
+    font-size: 14px; font-weight: 500;
+    color: var(--color-text);
+  }
+  .st-row-value {
+    font-size: 14px; font-weight: 500;
+    color: var(--color-subtext);
+    text-align: right; max-width: 180px;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+
+  /* ── Toggle ── */
+  .st-toggle {
+    position: relative;
+    width: 51px; height: 31px; border-radius: 99px;
+    border: none; cursor: pointer;
+    transition: background 0.25s;
+    flex-shrink: 0;
+    padding: 0;
+  }
+  .st-toggle-thumb {
+    position: absolute; top: 2px; left: 2px;
+    width: 27px; height: 27px;
+    border-radius: 50%; background: white;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+  }
+
+  /* ── Input ── */
+  .st-input {
+    width: 100%; padding: 11px 14px;
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
+    border-radius: 12px;
+    font-size: 14px; font-weight: 500;
+    color: var(--color-text); font-family: inherit;
+    outline: none; box-sizing: border-box;
+    transition: border-color 0.15s;
+  }
+  .st-input:focus { border-color: var(--color-primary); }
+  .st-input::placeholder { color: var(--color-subtext); opacity: 0.5; }
+
+  /* ── Button primary ── */
+  .st-btn-primary {
+    width: 100%; padding: 12px 0;
+    background: var(--color-primary); color: white;
+    border: none; border-radius: 12px;
+    font-size: 14px; font-weight: 700;
+    font-family: inherit; cursor: pointer;
+    transition: filter 0.15s, transform 0.1s;
+    box-shadow: var(--shadow-sm);
+  }
+  .st-btn-primary:hover { filter: brightness(1.06); }
+  .st-btn-primary:active { transform: scale(0.98); }
+  .st-btn-primary:disabled { opacity: 0.5; cursor: default; filter: none; }
+
+  /* ── Button tinted ── */
+  .st-btn-tinted {
+    width: 100%; padding: 12px 0;
+    background: var(--color-primary-lo); color: var(--color-primary);
+    border: none; border-radius: 12px;
+    font-size: 14px; font-weight: 700;
+    font-family: inherit; cursor: pointer;
+    transition: all 0.15s;
+  }
+  .st-btn-tinted:hover { background: var(--color-primary); color: white; }
+
+  /* ── Button destructive ── */
+  .st-btn-destructive {
+    width: 100%; padding: 13px 0;
+    background: transparent;
+    border: 1px solid var(--color-danger);
+    border-radius: 16px;
+    color: var(--color-danger); font-size: 14px; font-weight: 700;
+    font-family: inherit; cursor: pointer;
+    transition: all 0.15s;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .st-btn-destructive:hover { background: var(--color-danger-lo); }
+
+  /* ── Calendar list item ── */
+  .st-cal-item {
+    display: flex; align-items: center;
+    padding: 12px 16px; gap: 14px;
+    border-top: 1px solid var(--color-border);
+    transition: background 0.12s;
+  }
+  .st-cal-item:first-child { border-top: none; }
+  .st-cal-item:hover { background: var(--color-surface); }
+
+  /* ── Select ── */
+  .st-select {
+    width: 100%; padding: 11px 14px;
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
+    border-radius: 12px;
+    font-size: 14px; font-weight: 500;
+    color: var(--color-text); font-family: inherit;
+    outline: none; appearance: none;
+    box-sizing: border-box;
+  }
+
+  /* ── Export card ── */
+  .st-export-card {
+    border-radius: 20px;
+    border: 1px solid var(--color-border);
+    padding: 22px 24px;
+    display: flex; align-items: center; justify-content: space-between; gap: 16px;
+    background: var(--color-card-bg);
+    box-shadow: var(--shadow-sm);
+  }
+
+  /* ── Profile avatar ── */
+  .st-avatar {
+    width: 52px; height: 52px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--color-primary), var(--color-success));
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    font-size: 20px; font-weight: 700; color: white;
+    letter-spacing: -0.02em;
+    box-shadow: 0 4px 12px rgba(var(--primary-rgb), 0.2);
+  }
+
+  /* ── Page header ── */
+  .st-header {
+    position: sticky; top: 0; z-index: 30;
+    background: rgba(var(--bg-rgb), 0.7);
+    backdrop-filter: saturate(180%) blur(24px);
+    -webkit-backdrop-filter: saturate(180%) blur(24px);
+    border-bottom: 1px solid var(--color-border);
+    height: 56px; padding: 0 20px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+
+  .st-nav-title {
+    font-size: 13px; font-weight: 600; color: var(--color-text);
+  }
+  .st-nav-sub {
+    font-size: 13px; color: var(--color-subtext); font-weight: 400;
+  }
+`;
+
+function injectStyles() {
+  if (typeof document === 'undefined') return;
+  if (document.getElementById('st-styles')) return;
+  const tag = document.createElement('style');
+  tag.id = 'st-styles';
+  tag.textContent = STYLES;
+  document.head.appendChild(tag);
+}
+
+/* ─── Toggle component ─────────────────────────────────────────── */
+function Toggle({ on, onChange }) {
+  return (
+    <button
+      className="st-toggle"
+      onClick={onChange}
+      style={{ background: on ? 'var(--color-success)' : 'rgba(var(--bg-rgb), 0.2)' }}
+    >
+      <motion.div
+        className="st-toggle-thumb"
+        animate={{ x: on ? 20 : 0 }}
+        transition={{ type: 'spring', stiffness: 500, damping: 38 }}
+      />
+    </button>
+  );
+}
+
+/* ─── Section wrapper ───────────────────────────────────────────── */
+function Section({ label, children }) {
+  return (
+    <div>
+      {label && <div className="st-section-label" style={{ marginBottom: 6 }}>{label}</div>}
+      <div className="st-section">{children}</div>
+    </div>
+  );
+}
+
+/* ─── Row ──────────────────────────────────────────────────────── */
+function Row({ label, children, onClick, disclosure }) {
+  return (
+    <div
+      className="st-row"
+      onClick={onClick}
+      style={{ cursor: onClick ? 'pointer' : 'default' }}
+    >
+      <span className="st-row-label">{label}</span>
+      {children}
+      {disclosure && <ChevronRight size={14} style={{ color: 'var(--color-subtext)', opacity: 0.4, flexShrink: 0 }} />}
+    </div>
+  );
+}
+
+/* ════════════════════════════════════════════════════════════════ */
+export default function Settings() {
+  injectStyles();
+
   const navigate = useNavigate();
   const {
     user, subjects, theme, toggleTheme,
     holidays, fetchHolidays, addHoliday, deleteHoliday,
     extraClasses, fetchExtraClasses, addExtraClass, deleteExtraClass,
-    logout, updateUserSettings
+    logout, updateUserSettings,
   } = useStore();
 
-  const [holidayDate,  setHolidayDate]  = useState('');
+  const [holidayDate, setHolidayDate] = useState('');
   const [holidayLabel, setHolidayLabel] = useState('');
-  const [extraDate,    setExtraDate]    = useState('');
-  const [followsDay,   setFollowsDay]   = useState('Monday');
-
+  const [extraDate, setExtraDate] = useState('');
+  const [followsDay, setFollowsDay] = useState('Monday');
   const [emailEnabled, setEmailEnabled] = useState(user?.notificationSettings?.emailEnabled || false);
-  const [notifEmail, setNotifEmail]     = useState(user?.notificationSettings?.notificationEmail || user?.email || '');
-  const [savingNotif, setSavingNotif]   = useState(false);
+  const [notifEmail, setNotifEmail] = useState(user?.notificationSettings?.notificationEmail || user?.email || '');
+  const [savingNotif, setSavingNotif] = useState(false);
+  const [showCalendarForm, setShowCalendarForm] = useState(false);
 
   useEffect(() => {
     fetchHolidays();
@@ -36,8 +277,7 @@ const Settings = () => {
   const handleAddHoliday = async () => {
     if (!holidayDate) return;
     await addHoliday(holidayDate, holidayLabel || 'Holiday');
-    setHolidayDate('');
-    setHolidayLabel('');
+    setHolidayDate(''); setHolidayLabel('');
     toast.success('Holiday added');
   };
 
@@ -51,296 +291,312 @@ const Settings = () => {
   const exportToPDF = async () => {
     const { jsPDF } = await import('jspdf');
     const doc = new jsPDF();
-    doc.setFontSize(24);
-    doc.setTextColor(24, 95, 165); // Oakridge primary
-    doc.text('Oakridge Attendance Report', 14, 20);
-    doc.setFontSize(10);
-    doc.setTextColor(140, 138, 135);
-    doc.text(`Generated: ${new Date().toLocaleDateString('en-IN', { dateStyle: 'full' })}`, 14, 28);
-    doc.text(`Student: ${user?.name || 'Scholar'}`, 14, 34);
-    doc.setDrawColor(227, 224, 218);
-    doc.line(14, 40, 196, 40);
-    let y = 50;
-    doc.setFontSize(11);
-    doc.setTextColor(15, 14, 13);
-    doc.setFont(undefined, 'bold');
-    const headers   = ['Subject', 'Attended', 'Total', 'Pct', 'Target'];
-    const colWidths = [70, 30, 30, 30, 30];
+    doc.setFontSize(22); doc.setTextColor(0, 113, 227);
+    doc.text('Attendance Report', 14, 22);
+    doc.setFontSize(10); doc.setTextColor(130, 130, 135);
+    doc.text(`Generated: ${new Date().toLocaleDateString('en-IN', { dateStyle: 'full' })}`, 14, 30);
+    doc.text(`Student: ${user?.name || 'Scholar'}`, 14, 36);
+    doc.setDrawColor(220, 220, 225); doc.line(14, 42, 196, 42);
+    let y = 52;
+    doc.setFontSize(11); doc.setTextColor(20, 20, 22); doc.setFont(undefined, 'bold');
+    const headers = ['Subject', 'Attended', 'Total', '%', 'Target'];
+    const colW = [72, 28, 28, 26, 28];
     let x = 14;
-    headers.forEach((h, i) => { doc.text(h, x, y); x += colWidths[i]; });
-    y += 10;
-    doc.setFont(undefined, 'normal');
+    headers.forEach((h, i) => { doc.text(h, x, y); x += colW[i]; });
+    y += 10; doc.setFont(undefined, 'normal');
     subjects.forEach(s => {
-      const pct = s.total > 0 ? (s.attended / s.total) * 100 : 0;
+      const p = s.total > 0 ? (s.attended / s.total) * 100 : 0;
       x = 14;
-      [s.name, String(s.attended), String(s.total), `${pct.toFixed(0)}%`, `${s.requiredAttendance}%`]
-        .forEach((cell, i) => { doc.text(String(cell), x, y); x += colWidths[i]; });
+      [s.name, String(s.attended), String(s.total), `${p.toFixed(0)}%`, `${s.requiredAttendance}%`]
+        .forEach((cell, i) => { doc.text(String(cell), x, y); x += colW[i]; });
       y += 8;
     });
-    doc.save(`Oakridge_Report_${new Date().toISOString().split('T')[0]}.pdf`);
-    toast.success('PDF Downloaded');
+    doc.save(`Attendance_${new Date().toISOString().split('T')[0]}.pdf`);
+    toast.success('PDF downloaded');
   };
 
+  const initials = user?.name
+    ? user.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()
+    : '?';
+
+  const calendarCount = (holidays?.length || 0) + (extraClasses?.length || 0);
+
   return (
-    <div className="flex-1 bg-bg min-h-screen pb-24 animate-in">
-      <div className="max-w-[1100px] mx-auto px-4 lg:px-7 py-6 lg:py-10 flex flex-col gap-8">
-        
-        {/* ── HEADER ── */}
-        <header className="flex items-center gap-3">
-           <div className="lg:hidden w-10 h-10 bg-primary rounded-xl flex items-center justify-center shadow-lg shadow-primary/20">
-             <GraduationCap size={18} color="#fff" />
-           </div>
-           <div>
-             <h1 className="text-2xl lg:text-3xl font-black text-[var(--color-text)] tracking-tight">System Configuration</h1>
-             <p className="text-[10px] lg:text-xs text-[var(--color-subtext)] font-black uppercase tracking-[0.15em] mt-1 opacity-80">Personalize Your Academic Environment</p>
-           </div>
-        </header>
+    <div className="st-page">
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
-          
-          {/* ── PROFILE & ACCOUNT ── */}
-          <Section icon={<ShieldCheck size={18} className="text-primary" />} title="Profile & Account" subtitle="Identity and security settings">
-             <div className="space-y-3">
-                <InfoCard label="Full Name" value={user?.name || 'Guest Student'} />
-                <InfoCard label="Email Address" value={user?.email || 'Not connected'} />
-             </div>
+      {/* ══ HEADER ══ */}
+      <header className="st-header">
+        <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+          <span className="st-nav-sub">Attend</span>
+          <ChevronRight size={11} style={{ color: 'var(--color-subtext)', opacity: 0.4 }} />
+          <span className="st-nav-title">Settings</span>
+        </div>
+      </header>
+
+      {/* ══ CONTENT ══ */}
+      <div style={{ maxWidth: 560, margin: '0 auto', padding: '28px 16px', display: 'flex', flexDirection: 'column', gap: 28 }}>
+
+        {/* ── PROFILE ── */}
+        <motion.div
+          initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.35, ease: [0.16,1,0.3,1] }}
+          style={{
+            display: 'flex', alignItems: 'center', gap: 14,
+            padding: '18px 20px',
+            background: 'var(--color-surface)',
+            borderRadius: 16, border: '0.5px solid var(--color-border)',
+            boxShadow: '0 1px 6px rgba(0,0,0,0.05)',
+          }}
+        >
+          <div className="st-avatar">{initials}</div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: 16, fontWeight: 600, color: 'var(--color-text)', letterSpacing: '-0.015em', lineHeight: 1.2 }}>
+              {user?.name || 'Guest Student'}
+            </div>
+            <div style={{ fontSize: 13, color: 'var(--color-subtext)', marginTop: 2, fontWeight: 400 }}>
+              {user?.email || 'Not connected'}
+            </div>
+          </div>
+          <div style={{
+            padding: '4px 10px', borderRadius: 99,
+            background: 'var(--color-success-lo)', color: 'var(--color-success)',
+            fontSize: 11, fontWeight: 700,
+          }}>
+            Active
+          </div>
+        </motion.div>
+
+        {/* ── APPEARANCE ── */}
+        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35, delay: 0.04 }}>
+          <Section label="Appearance">
+            <Row
+              label="Appearance"
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span className="st-row-value">{theme === 'light' ? 'Light' : 'Dark'}</span>
+                <Toggle on={theme === 'dark'} onChange={toggleTheme} />
+              </div>
+            </Row>
           </Section>
+        </motion.div>
 
-          {/* ── SCHEDULE ── */}
-          <Section 
-             icon={<Calendar size={18} className="text-orange-500" />} 
-             title="Schedule Management" 
-             subtitle="Timetable & Slots"
-          >
-             <div className="flex flex-col gap-4">
-                <p className="text-[10px] font-bold text-subtext leading-relaxed">
-                   Adjust your weekly classes or timing slots.
-                </p>
-                <button 
-                  onClick={() => navigate('/timetable')}
-                  className="w-full flex items-center justify-center gap-2 py-3 bg-orange-50 text-orange-700 rounded-xl text-[10px] font-black uppercase tracking-wider hover:bg-orange-600 hover:text-white transition-all dark:bg-orange-950 dark:text-orange-300"
+        {/* ── NOTIFICATIONS ── */}
+        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35, delay: 0.08 }}>
+          <Section label="Notifications">
+            <Row label="Email Alerts">
+              <Toggle on={emailEnabled} onChange={() => setEmailEnabled(!emailEnabled)} />
+            </Row>
+            <AnimatePresence>
+              {emailEnabled && (
+                <motion.div
+                  initial={{ height: 0 }} animate={{ height: 'auto' }} exit={{ height: 0 }}
+                  style={{ overflow: 'hidden' }}
                 >
-                  Edit Timetable
-                </button>
-             </div>
-          </Section>
-          
-          {/* ── NOTIFICATIONS ── */}
-          <Section icon={<Sparkles size={18} className="text-primary" />} title="Smart Notifications" subtitle="Alerts and Reminders">
-             <div className="space-y-4">
-               {/* Theme Toggle for Mobile (also visible on Desktop) */}
-               <div className="md:hidden bg-bg border border-border rounded-2xl p-4 flex items-center justify-between group hover:border-primary/30 transition-all">
-                  <div className="flex items-center gap-3">
-                     <div className="w-10 h-10 rounded-xl bg-card-bg border border-border flex items-center justify-center shadow-sm">
-                        {theme === 'light' ? <Moon size={18} className="text-primary" /> : <Sun size={18} className="text-primary" />}
-                     </div>
-                     <div>
-                        <p className="text-sm font-bold text-text">Display Theme</p>
-                        <p className="text-[10px] font-bold text-subtext uppercase tracking-wider">{theme === 'light' ? 'Light Mode' : 'Dark Mode'}</p>
-                     </div>
+                  <div style={{ padding: '14px 16px', borderTop: '0.5px solid var(--color-border)', display: 'flex', flexDirection: 'column', gap: 10 }}>
+                    <input
+                      type="email"
+                      value={notifEmail}
+                      onChange={e => setNotifEmail(e.target.value)}
+                      placeholder="Notification email"
+                      className="st-input"
+                    />
+                    <button
+                      className="st-btn-primary"
+                      disabled={savingNotif}
+                      onClick={async () => {
+                        setSavingNotif(true);
+                        await updateUserSettings({ notificationSettings: { emailEnabled: true, notificationEmail: notifEmail } });
+                        setSavingNotif(false);
+                        toast.success('Saved');
+                      }}
+                    >
+                      {savingNotif ? 'Saving…' : 'Save'}
+                    </button>
                   </div>
-                  <button 
-                    onClick={toggleTheme} 
-                    className={`w-12 h-6 rounded-full p-1 transition-colors relative ${theme === 'dark' ? 'bg-primary' : 'bg-border'}`}
-                  >
-                     <motion.div animate={{ x: theme === 'dark' ? 24 : 0 }} className="w-4 h-4 bg-white rounded-full shadow-sm" />
-                  </button>
-               </div>
-
-               <div className="bg-bg border border-border rounded-2xl p-4 flex items-center justify-between group hover:border-primary/30 transition-all">
-                  <div className="flex items-center gap-3">
-                     <div className="w-10 h-10 rounded-xl bg-card-bg border border-border flex items-center justify-center shadow-sm">
-                        <Zap size={18} className={emailEnabled ? 'text-primary' : 'text-subtext'} />
-                     </div>
-                     <div>
-                        <p className="text-sm font-bold text-text">Email Alerts</p>
-                        <p className="text-[10px] font-bold text-subtext uppercase tracking-wider">Upcoming class reminders</p>
-                     </div>
-                  </div>
-                  <button 
-                    onClick={() => setEmailEnabled(!emailEnabled)} 
-                    className={`w-12 h-6 rounded-full p-1 transition-colors relative ${emailEnabled ? 'bg-primary' : 'bg-border'}`}
-                  >
-                     <motion.div animate={{ x: emailEnabled ? 24 : 0 }} className="w-4 h-4 bg-white rounded-full shadow-sm" />
-                  </button>
-               </div>
-
-               <AnimatePresence>
-                 {emailEnabled && (
-                   <motion.div 
-                     initial={{ height: 0, opacity: 0 }}
-                     animate={{ height: 'auto', opacity: 1 }}
-                     exit={{ height: 0, opacity: 0 }}
-                     className="overflow-hidden"
-                   >
-                     <div className="bg-bg border border-border rounded-2xl p-4 space-y-3">
-                        <span className="text-[9px] font-black text-subtext uppercase tracking-widest block px-1">Notification Email</span>
-                        <input 
-                          type="email" 
-                          value={notifEmail} 
-                          onChange={e => setNotifEmail(e.target.value)}
-                          placeholder="your@email.com"
-                          className="w-full bg-card-bg border border-border rounded-xl py-2.5 px-3 text-xs font-bold text-text outline-none focus:border-primary/50"
-                        />
-                        <button 
-                          onClick={async () => {
-                            setSavingNotif(true);
-                            await updateUserSettings({
-                              notificationSettings: {
-                                emailEnabled: true,
-                                notificationEmail: notifEmail
-                              }
-                            });
-                            setSavingNotif(false);
-                          }}
-                          disabled={savingNotif}
-                          className="w-full py-2.5 bg-primary/10 text-primary rounded-xl text-[10px] font-black uppercase tracking-wider hover:bg-primary hover:text-white transition-all disabled:opacity-50"
-                        >
-                          {savingNotif ? 'Saving...' : 'Save Preferences'}
-                        </button>
-                     </div>
-                   </motion.div>
-                 )}
-               </AnimatePresence>
-             </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </Section>
+        </motion.div>
 
-          {/* ── ACADEMIC CALENDAR ── */}
-          <div className="md:col-span-2 bg-card-bg border border-border rounded-[32px] p-6 lg:p-8 shadow-sm flex flex-col gap-8">
-             <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-orange-50 dark:bg-orange-950/20 rounded-2xl flex items-center justify-center border border-orange-100 dark:border-orange-900/40">
-                   <Calendar size={20} className="text-orange-600" />
-                </div>
-                <div>
-                   <h2 className="text-xl font-extrabold text-text leading-none mb-1.5">Academic Calendar</h2>
-                   <p className="text-xs font-bold text-subtext uppercase tracking-wider">Holidays and Schedule adjustments</p>
-                </div>
-             </div>
+        {/* ── SCHEDULE ── */}
+        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35, delay: 0.12 }}>
+          <Section label="Schedule">
+            <Row label="Timetable" onClick={() => navigate('/timetable')} disclosure>
+              <span className="st-row-value">Edit slots</span>
+            </Row>
+          </Section>
+        </motion.div>
 
-             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
-                <div className="space-y-6">
-                   {/* Holiday Form */}
-                   <div className="bg-bg border border-border p-5 rounded-2xl space-y-4 shadow-sm hover:shadow-xl transition-all">
-                      <span className="text-[10px] font-black text-subtext uppercase tracking-widest block px-1">Register Holiday</span>
-                      <div className="grid grid-cols-2 gap-3">
-                         <input type="date" value={holidayDate} onChange={e => setHolidayDate(e.target.value)} className="w-full bg-card-bg border border-border rounded-xl py-2.5 px-3 text-xs font-bold text-text outline-none focus:border-orange-400" />
-                         <input type="text" value={holidayLabel} onChange={e => setHolidayLabel(e.target.value)} placeholder="e.g. Diwali" className="w-full bg-card-bg border border-border rounded-xl py-2.5 px-3 text-xs font-bold text-text outline-none focus:border-orange-400" />
+        {/* ── ACADEMIC CALENDAR ── */}
+        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35, delay: 0.16 }}>
+          <div className="st-section-label" style={{ marginBottom: 6 }}>Academic Calendar</div>
+          <div className="st-section">
+            {/* Saved items */}
+            {calendarCount === 0 ? (
+              <div style={{ padding: '24px 16px', textAlign: 'center' }}>
+                <Calendar size={20} style={{ color: 'var(--color-subtext)', opacity: 0.4, margin: '0 auto 8px' }} />
+                <div style={{ fontSize: 13, color: 'var(--color-subtext)', fontWeight: 400 }}>No calendar items</div>
+              </div>
+            ) : (
+              <>
+                {holidays.map(h => (
+                  <div key={h._id} className="st-cal-item">
+                    <div style={{ width: 3, height: 32, borderRadius: 2, background: 'var(--color-warning, #FF9F0A)', flexShrink: 0 }} />
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--color-text)' }}>{h.label}</div>
+                      <div style={{ fontSize: 12, color: 'var(--color-subtext)', marginTop: 1 }}>
+                        {new Date(h.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
                       </div>
-                      <button onClick={handleAddHoliday} className="w-full flex items-center justify-center gap-2 py-3 bg-orange-50 text-orange-700 rounded-xl text-[11px] font-black uppercase tracking-wider hover:bg-orange-600 hover:text-white transition-all dark:bg-orange-950 dark:text-orange-300">
-                         <Plus size={14} /> Add Holiday
+                    </div>
+                    <button
+                      onClick={() => { deleteHoliday(h._id); toast.success('Removed'); }}
+                      style={{ padding: '6px 8px', borderRadius: 8, border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--color-subtext)', transition: 'color 0.15s, background 0.15s' }}
+                      onMouseEnter={e => { e.currentTarget.style.color = '#FF3B30'; e.currentTarget.style.background = 'rgba(255,59,48,0.08)'; }}
+                      onMouseLeave={e => { e.currentTarget.style.color = 'var(--color-subtext)'; e.currentTarget.style.background = 'transparent'; }}
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                ))}
+                {extraClasses.map(ec => (
+                  <div key={ec._id} className="st-cal-item">
+                    <div style={{ width: 3, height: 32, borderRadius: 2, background: 'var(--color-primary)', flexShrink: 0 }} />
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--color-text)' }}>Follows {ec.followsDay}</div>
+                      <div style={{ fontSize: 12, color: 'var(--color-subtext)', marginTop: 1 }}>
+                        {new Date(ec.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => { deleteExtraClass(ec._id); toast.success('Removed'); }}
+                      style={{ padding: '6px 8px', borderRadius: 8, border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--color-subtext)', transition: 'color 0.15s, background 0.15s' }}
+                      onMouseEnter={e => { e.currentTarget.style.color = 'var(--color-danger)'; e.currentTarget.style.background = 'var(--color-danger-lo)'; }}
+                      onMouseLeave={e => { e.currentTarget.style.color = 'var(--color-subtext)'; e.currentTarget.style.background = 'transparent'; }}
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                ))}
+              </>
+            )}
+
+            {/* Add button */}
+            <div style={{ padding: '12px 16px', borderTop: '0.5px solid var(--color-border)' }}>
+              <button
+                className="st-btn-tinted"
+                onClick={() => setShowCalendarForm(!showCalendarForm)}
+                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
+              >
+                <Plus size={14} /> Add Entry
+              </button>
+            </div>
+
+            {/* Expandable forms */}
+            <AnimatePresence>
+              {showCalendarForm && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }}
+                  style={{ overflow: 'hidden' }}
+                >
+                  <div style={{ padding: '0 16px 16px', display: 'flex', flexDirection: 'column', gap: 12, borderTop: '0.5px solid var(--color-border)' }}>
+
+                    {/* Holiday */}
+                    <div style={{ paddingTop: 14 }}>
+                      <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--color-subtext)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>
+                        Holiday
+                      </div>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 8 }}>
+                        <input type="date" value={holidayDate} onChange={e => setHolidayDate(e.target.value)} className="st-input" />
+                        <input type="text" value={holidayLabel} onChange={e => setHolidayLabel(e.target.value)} placeholder="e.g. Diwali" className="st-input" />
+                      </div>
+                      <button
+                        className="st-btn-tinted"
+                        onClick={handleAddHoliday}
+                        style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
+                      >
+                        <Plus size={13} /> Add Holiday
                       </button>
-                   </div>
+                    </div>
 
-                   {/* Override Form */}
-                   <div className="bg-bg border border-border p-5 rounded-2xl space-y-4 shadow-sm hover:shadow-xl transition-all">
-                      <div className="px-1">
-                        <span className="text-[10px] font-black text-subtext uppercase tracking-widest block">Schedule Override</span>
-                        <p className="text-[9px] font-medium text-subtext mt-1 italic">Force a date to follow a specific day's timetable.</p>
+                    {/* Schedule override */}
+                    <div>
+                      <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--color-subtext)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>
+                        Schedule Override
                       </div>
-                      <div className="grid grid-cols-2 gap-3">
-                         <input type="date" value={extraDate} onChange={e => setExtraDate(e.target.value)} className="w-full bg-card-bg border border-border rounded-xl py-2.5 px-3 text-xs font-bold text-text outline-none focus:border-primary/50" />
-                         <select value={followsDay} onChange={e => setFollowsDay(e.target.value)} className="w-full bg-card-bg border border-border rounded-xl py-2.5 px-3 text-xs font-bold text-text outline-none appearance-none">
-                            {DAYS.map(d => <option key={d}>{d}</option>)}
-                         </select>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 8 }}>
+                        <input type="date" value={extraDate} onChange={e => setExtraDate(e.target.value)} className="st-input" />
+                        <select value={followsDay} onChange={e => setFollowsDay(e.target.value)} className="st-select">
+                          {DAYS.map(d => <option key={d}>{d}</option>)}
+                        </select>
                       </div>
-                      <button onClick={handleAddExtra} className="w-full flex items-center justify-center gap-2 py-3 bg-primary/5 text-primary rounded-xl text-[11px] font-black uppercase tracking-wider hover:bg-primary hover:text-white transition-all dark:bg-primary/10">
-                         <Plus size={14} /> Add Override
+                      <button
+                        className="st-btn-tinted"
+                        onClick={handleAddExtra}
+                        style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
+                      >
+                        <Plus size={13} /> Add Override
                       </button>
-                   </div>
-                </div>
-
-                <div className="bg-card-bg border border-border rounded-2xl overflow-hidden min-h-[220px] max-h-[400px] overflow-y-auto no-scrollbar shadow-inner">
-                   <div className="p-4 bg-bg border-b border-border flex items-center justify-between sticky top-0 z-10">
-                      <span className="text-[10px] font-black text-text uppercase tracking-widest">Saved Calendar Items</span>
-                      <Calendar size={14} className="text-subtext" />
-                   </div>
-                   
-                   {holidays.length === 0 && extraClasses.length === 0 ? (
-                     <div className="py-20 text-center opacity-30">
-                        <Calendar size={32} className="mx-auto text-subtext mb-3" />
-                        <p className="text-[11px] font-bold text-text">Empty Calendar</p>
-                     </div>
-                   ) : (
-                     <div className="divide-y divide-border/50">
-                        {holidays.map(h => (
-                           <div key={h._id} className="p-4 flex items-center justify-between group hover:bg-bg transition-all">
-                              <div className="flex items-center gap-4">
-                                 <div className="w-1.5 h-8 rounded-full bg-orange-400" />
-                                 <div>
-                                    <p className="text-sm font-extrabold text-text">{h.label}</p>
-                                    <p className="text-[10px] font-bold text-subtext uppercase tracking-wider">{new Date(h.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</p>
-                                 </div>
-                              </div>
-                              <button onClick={() => { deleteHoliday(h._id); toast.success('Removed'); }} className="p-2 text-subtext hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"><Trash2 size={16} /></button>
-                           </div>
-                        ))}
-                        {extraClasses.map(ec => (
-                           <div key={ec._id} className="p-4 flex items-center justify-between group hover:bg-bg transition-all">
-                              <div className="flex items-center gap-4">
-                                 <div className="w-1.5 h-8 rounded-full bg-primary" />
-                                 <div>
-                                    <p className="text-sm font-extrabold text-text">Follows {ec.followsDay}</p>
-                                    <p className="text-[10px] font-bold text-subtext uppercase tracking-wider">{new Date(ec.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</p>
-                                 </div>
-                              </div>
-                              <button onClick={() => { deleteExtraClass(ec._id); toast.success('Removed'); }} className="p-2 text-subtext hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"><Trash2 size={16} /></button>
-                           </div>
-                        ))}
-                     </div>
-                   )}
-                </div>
-             </div>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
+        </motion.div>
 
-          {/* ── REPORTS & EXPORT ── */}
-          <div className="md:col-span-2 bg-card-bg border border-[var(--color-border)] rounded-[32px] p-6 lg:p-10 shadow-sm flex flex-col md:flex-row items-center justify-between gap-8 hover:shadow-xl transition-all relative overflow-hidden group">
-             <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -mr-16 -mt-16 blur-3xl group-hover:bg-primary/10 transition-colors" />
-             <div className="flex items-center gap-5 relative z-10">
-                <div className="w-16 h-16 bg-primary/5 rounded-2xl flex items-center justify-center border border-primary/10 shadow-inner group-hover:scale-110 transition-transform">
-                   <FileText size={28} className="text-primary" />
-                </div>
-                <div>
-                   <h2 className="text-xl lg:text-2xl font-black text-[var(--color-text)] leading-none mb-2">Academic Transcript</h2>
-                   <p className="text-[10px] lg:text-xs font-black text-[var(--color-subtext)] uppercase tracking-[0.15em]">Consolidated Attendance Assessment (PDF)</p>
-                </div>
-             </div>
-             <button onClick={exportToPDF} className="relative z-10 flex items-center gap-3 px-10 py-5 bg-primary text-white rounded-2xl text-[11px] font-black uppercase tracking-widest shadow-xl shadow-primary/25 hover:scale-[1.05] active:scale-95 transition-all text-center">
-                <Download size={18} strokeWidth={3} /> Generate Document
-             </button>
+        {/* ── EXPORT ── */}
+        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35, delay: 0.20 }}>
+          <div className="st-export-card">
+            <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+              <div style={{
+                width: 44, height: 44, borderRadius: 12,
+                background: 'var(--color-primary-lo)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}>
+                <FileText size={20} style={{ color: 'var(--color-primary)' }} />
+              </div>
+              <div>
+                <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--color-text)', letterSpacing: '-0.01em' }}>Export Report</div>
+                <div style={{ fontSize: 12, color: 'var(--color-subtext)', marginTop: 2 }}>Download as PDF</div>
+              </div>
+            </div>
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.96 }}
+              onClick={exportToPDF}
+               style={{
+                display: 'flex', alignItems: 'center', gap: 7,
+                padding: '10px 18px', borderRadius: 10,
+                background: 'var(--color-primary)', color: 'white',
+                border: 'none', cursor: 'pointer',
+                fontSize: 13, fontWeight: 700, fontFamily: FONT,
+                boxShadow: 'var(--shadow-sm)',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              <Download size={14} strokeWidth={2.5} />
+              Export
+            </motion.button>
           </div>
+        </motion.div>
 
-          {/* ── LOGOUT ── */}
-          <div className="md:col-span-2 pt-4">
-             <button onClick={() => { logout(); navigate('/login'); }} className="w-full flex items-center justify-center gap-3 py-5 bg-card-bg border border-red-100 rounded-[24px] text-red-600 text-sm font-black uppercase tracking-widest hover:bg-red-50 transition-all shadow-sm">
-                <LogOut size={20} /> Logout from Secure Session
-             </button>
-          </div>
+        {/* ── LOGOUT ── */}
+        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35, delay: 0.24 }}>
+          <button
+            className="st-btn-destructive"
+            onClick={() => { logout(); navigate('/login'); }}
+          >
+            <LogOut size={15} strokeWidth={2} />
+            Sign Out
+          </button>
+        </motion.div>
+
+        {/* App version */}
+        <div style={{ textAlign: 'center', fontSize: 11, color: 'var(--color-subtext)', opacity: 0.4, fontWeight: 400 }}>
+          Attend · Version 1.0
         </div>
       </div>
     </div>
   );
-};
-
-const Section = ({ icon, title, subtitle, children }) => (
-  <div className="bg-card-bg border border-border rounded-[32px] p-6 lg:p-8 shadow-sm flex flex-col gap-6 hover:shadow-xl transition-all">
-     <div className="flex items-center gap-4">
-        <div className="w-10 h-10 bg-bg rounded-xl flex items-center justify-center border border-border">
-           {icon}
-        </div>
-        <div>
-           <h2 className="text-base font-extrabold text-text leading-none mb-1">{title}</h2>
-           <p className="text-[10px] font-bold text-subtext uppercase tracking-widest">{subtitle}</p>
-        </div>
-     </div>
-     {children}
-  </div>
-);
-
-const InfoCard = ({ label, value }) => (
-  <div className="bg-bg border border-border rounded-2xl p-4 flex flex-col gap-1">
-     <span className="text-[9px] font-black text-subtext uppercase tracking-widest">{label}</span>
-     <span className="text-sm font-bold text-text truncate">{value}</span>
-  </div>
-);
-
-export default Settings;
+}
