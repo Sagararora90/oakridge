@@ -5,7 +5,7 @@ const pdf = require('pdf-parse');
 const sharp = require('sharp');
 const { GoogleGenAI } = require('@google/genai');
 
-const genAI = new GoogleGenAI(process.env.GOOGLE_API_KEY);
+const genAI = new GoogleGenAI({ apiKey: process.env.GOOGLE_API_KEY });
 
 const safeParseJSON = (text) => {
   try {
@@ -79,18 +79,18 @@ Return ONLY valid JSON in format:
 }`;
 
   try {
-    const model = genAI.getGenerativeModel({ 
-      model: "gemini-1.5-flash",
-      generationConfig: { responseMimeType: "application/json" }
+    const result = await genAI.models.generateContent({
+      model: "gemini-2.5-flash",
+      contents: [
+        { inlineData: { mimeType, data: imageBase64 } },
+        { text: prompt }
+      ],
+      config: {
+        responseMimeType: "application/json"
+      }
     });
 
-    const result = await model.generateContent([
-      { inlineData: { mimeType, data: imageBase64 } },
-      prompt,
-    ]);
-
-    const response = await result.response;
-    return safeParseJSON(response.text());
+    return safeParseJSON(result.text);
   } catch (error) {
     console.error(`[OCR] Gemini API error:`, error);
     throw error;
@@ -231,18 +231,18 @@ Return ONLY valid JSON in format:
 }`;
 
   try {
-    const model = genAI.getGenerativeModel({ 
-      model: "gemini-1.5-flash",
-      generationConfig: { responseMimeType: "application/json" }
+    const result = await genAI.models.generateContent({
+      model: "gemini-2.5-flash",
+      contents: [
+        { inlineData: { mimeType, data: imageBase64 } },
+        { text: prompt }
+      ],
+      config: {
+        responseMimeType: "application/json"
+      }
     });
 
-    const result = await model.generateContent([
-      { inlineData: { mimeType, data: imageBase64 } },
-      prompt,
-    ]);
-
-    const response = await result.response;
-    return safeParseJSON(response.text());
+    return safeParseJSON(result.text);
   } catch (error) {
     console.error(`[Portal Sync] Gemini API error:`, error);
     throw error;
@@ -260,11 +260,13 @@ Today: ${JSON.stringify(timetable.find(t => t.day === today)?.slots || [])}
 Generate a 2-sentence max briefing.`;
 
   try {
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    return response.text().trim();
+    const result = await genAI.models.generateContent({
+      model: "gemini-2.5-flash",
+      contents: prompt
+    });
+    return result.text ? result.text.trim() : `Stay focused today, ${name}! Your consistency is key to success.`;
   } catch (error) {
+    console.error(`[Briefing] Gemini API error:`, error);
     return `Stay focused today, ${name}! Your consistency is key to success.`;
   }
 };

@@ -3,12 +3,15 @@ const router = express.Router();
 const User = require('../models/User');
 const auth = require('../middleware/auth');
 
-// Helper for Safe Date Conversion
+// Helper for Safe Date Conversion (Local-friendly YYYY-MM-DD)
 const toSafeISO = (d) => {
   if (!d) return null;
   const date = new Date(d);
   if (isNaN(date.getTime())) return null;
-  return date.toISOString().split('T')[0];
+  const yyyy = date.getFullYear();
+  const mm = String(date.getMonth() + 1).padStart(2, '0');
+  const dd = String(date.getDate()).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}`;
 };
 
 // @route   GET api/user/holidays
@@ -156,8 +159,10 @@ router.get('/daily-status/:date', auth, async (req, res) => {
     const { date } = req.params;
     const dateStr = toSafeISO(date);
     if (!dateStr) return res.status(400).json({ message: 'Invalid date format' });
-    
-    const targetDate = new Date(date);
+
+    // Parse date parts manually to create a local date object, avoiding UTC shifts
+    const parts = date.split('-').map(Number);
+    const targetDate = new Date(parts[0], parts[1] - 1, parts[2]);
     const user = await User.findById(req.user.id);
     if (!user) return res.status(404).json({ message: 'User not found' });
 

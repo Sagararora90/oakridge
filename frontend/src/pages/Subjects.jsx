@@ -51,7 +51,12 @@ const STYLES = `
     border: 0.5px solid var(--color-border); background: var(--color-surface);
     display: flex; align-items: center; justify-content: center;
     cursor: pointer; color: var(--color-text); transition: all 0.2s;
-    transition: all 0.2s ease;
+    position: relative; /* For touch expansion */
+  }
+  /* Invisible Touch Expansion for Mobile */
+  .att-icon-btn::after {
+    content: ''; position: absolute; inset: -12px;
+    z-index: 10;
   }
   .att-icon-btn:hover {
     background: var(--color-bg); color: var(--color-text);
@@ -730,6 +735,7 @@ export default function Subjects() {
       paddingBottom: isMobile ? 100 : 60,
       fontFamily: FONT,
     }}>
+      <style>{STYLES}</style>
 
       {/* ══ HEADER ══ */}
       <header style={{

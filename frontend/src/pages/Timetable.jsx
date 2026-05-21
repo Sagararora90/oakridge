@@ -275,13 +275,14 @@ export default function Timetable() {
                         ref={el => { if (isSelected && el) el.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' }); }}
                         style={{
                           flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-                          width: 56, height: 68, borderRadius: 16, border: 'none', cursor: 'pointer', fontFamily: FONT,
+                          width: 56, height: 68, borderRadius: 16, cursor: 'pointer', fontFamily: FONT,
                           background: isSelected ? 'var(--color-text)' : 'var(--color-surface)',
                           color: isSelected ? 'var(--color-bg)' : 'var(--color-subtext)',
                           border: isSelected ? 'none' : '1px solid var(--color-border)',
-                           position: 'relative', transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
-                           boxShadow: isSelected ? 'var(--shadow-md)' : 'none',
-                         }}
+                          position: 'relative',
+                          transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
+                          boxShadow: isSelected ? 'var(--shadow-md)' : 'none',
+                        }}
                       >
                          <span style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: isSelected ? 'rgba(var(--bg-rgb), 0.7)' : 'var(--color-subtext)', marginBottom: 2 }}>
                            {date.toLocaleDateString('en-US', { weekday: 'short' })}

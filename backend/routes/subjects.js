@@ -97,12 +97,15 @@ router.post('/', auth, async (req, res) => {
 // @desc    Update a subject (edit details or mark attendance legacy)
 // [NOTE] Moved generic /:id route below more specific /:id/log routes to prevent potential overlap issues
 
-// Helper for Safe Date Conversion
+// Helper for Safe Date Conversion (Local-friendly YYYY-MM-DD)
 const toSafeISO = (d) => {
   if (!d) return null;
   const date = new Date(d);
   if (isNaN(date.getTime())) return null;
-  return date.toISOString().split('T')[0];
+  const yyyy = date.getFullYear();
+  const mm = String(date.getMonth() + 1).padStart(2, '0');
+  const dd = String(date.getDate()).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}`;
 };
 
 // Helper for Recalculation Engine
@@ -112,12 +115,21 @@ const recalculateAttendance = (subject) => {
   
   const baseDateStr = toSafeISO(subject.initialDate);
 
+  // Group records by date to handle potential duplicates (though we aim to prevent them)
+  const recordsByDate = {};
+  
   subject.attendanceRecords.forEach(record => {
     const recDateStr = toSafeISO(record.date);
+    if (!recDateStr) return;
 
     // Lock logic: Ignore entries BEFORE the snapshot date
-    if (baseDateStr && recDateStr && recDateStr < baseDateStr) return;
+    if (baseDateStr && recDateStr < baseDateStr) return;
     
+    // If multiple records exist for the same day, the latest one in the array wins for counting
+    recordsByDate[recDateStr] = record;
+  });
+
+  Object.values(recordsByDate).forEach(record => {
     // Cancelled classes increment NEITHER attended nor total
     if (record.status === 'Cancelled') return;
 
@@ -227,36 +239,61 @@ router.put('/:id', auth, async (req, res) => {
     if (!subject) return res.status(404).json({ message: 'Subject not found' });
 
     const increment = credit || 1;
-    const targetDate = date ? new Date(date) : new Date();
+    
+    // targetDate handles date as YYYY-MM-DD string or defaults to now
+    let targetDate;
+    if (date) {
+      // Parse YYYY-MM-DD as local mid-night to avoid UTC shifts
+      const parts = date.split('-').map(Number);
+      targetDate = new Date(parts[0], parts[1] - 1, parts[2]);
+    } else {
+      targetDate = new Date();
+    }
 
     if (status) {
-      subject.attendanceRecords.push({ date: targetDate, status, credit: increment });
+      const logDateStr = toSafeISO(targetDate);
+      
+      // Prevent duplicates: Check if a record already exists for this date
+      const existingRecord = subject.attendanceRecords.find(r => toSafeISO(r.date) === logDateStr);
+      
+      if (existingRecord) {
+        existingRecord.status = status;
+        existingRecord.credit = increment;
+      } else {
+        subject.attendanceRecords.push({ date: targetDate, status, credit: increment });
+      }
       
       // Use the unified recalculation engine
       recalculateAttendance(subject);
 
-      // Streak & Gamification (Only for today/past to prevent future streaks)
-      const today = new Date().toISOString().split('T')[0];
-      const logDate = targetDate.toISOString().split('T')[0];
-      
+      // Streak & Gamification
       if (status === 'Present' || status === 'OD' || status === 'Medical') {
-        const today = new Date().toISOString().split('T')[0];
-        const lastDate = user.lastAttendanceDate ? new Date(user.lastAttendanceDate).toISOString().split('T')[0] : null;
+        const todayStr = toSafeISO(new Date());
+        const lastDateStr = user.lastAttendanceDate ? toSafeISO(user.lastAttendanceDate) : null;
         
-        if (lastDate !== today) {
-          const yesterday = new Date();
-          yesterday.setDate(yesterday.getDate() - 1);
-          const yesterdayStr = yesterday.toISOString().split('T')[0];
+        // Only trigger streak logic if marking for TODAY or a date NEWER than lastAttendanceDate
+        if (logDateStr === todayStr || (lastDateStr && logDateStr > lastDateStr) || !lastDateStr) {
           
-          if (lastDate === yesterdayStr) {
-            user.streak = (user.streak || 0) + 1;
-          } else {
-            user.streak = 1;
+          if (lastDateStr !== logDateStr) {
+             const yesterday = new Date();
+             yesterday.setDate(yesterday.getDate() - 1);
+             const yesterdayStr = toSafeISO(yesterday);
+             
+             if (lastDateStr === yesterdayStr) {
+               user.streak = (user.streak || 0) + 1;
+             } else if (lastDateStr !== logDateStr) {
+               // If it's not consecutive but it's a new day, we reset or start streak
+               user.streak = 1;
+             }
+             
+             // Update lastAttendanceDate to the date actually marked (if it's newer)
+             if (!user.lastAttendanceDate || targetDate > user.lastAttendanceDate) {
+               user.lastAttendanceDate = targetDate;
+             }
           }
-          user.lastAttendanceDate = new Date();
         }
 
-        // Badge checks
+        // Badge checks (independent of streak timing)
         const existingBadges = new Set((user.badges || []).map(b => b.name));
         if (user.streak >= 7 && !existingBadges.has('Weekly Warrior')) {
           user.badges.push({ name: 'Weekly Warrior', icon: '🔥' });
